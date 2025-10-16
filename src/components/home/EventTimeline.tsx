@@ -18,8 +18,8 @@ export default function EventTimeline() {
         'Team Formation (3 members max)',
         'Problem Statement Release',
         'Workshop & Mentorship Sessions',
-        'Resource Access & Guidelines'
-      ]
+        'Resource Access & Guidelines',
+      ],
     },
     {
       title: 'Hacking Phase',
@@ -32,8 +32,8 @@ export default function EventTimeline() {
         '24-Hour Non-Stop Hacking',
         'Real-time Mentor Support',
         'Tech Talks & Mini-Challenges',
-        'Midnight Surprise Events'
-      ]
+        'Midnight Surprise Events',
+      ],
     },
     {
       title: 'Judging & Awards',
@@ -46,31 +46,31 @@ export default function EventTimeline() {
         'Project Demonstrations',
         'Panel Judging Sessions',
         'Winner Announcements',
-        'Prize Distribution & Networking'
-      ]
-    }
+        'Prize Distribution & Networking',
+      ],
+    },
   ];
 
   return (
-    <div className="py-16">
+    <div>
       {/* Section Header */}
-      <div className="text-center mb-16">
-        <div className="inline-flex items-center gap-2 px-4 py-2 glass-panel mb-6">
+      <div className="text-center mb-12 md:mb-14">
+        <div className="inline-flex items-center gap-2 px-4 py-2 glass-panel mb-5">
           <Calendar className="w-4 h-4 text-cyber-blue-400" />
           <span className="text-sm font-semibold text-cyber-blue-400">Event Timeline</span>
         </div>
-        
-        <h2 className="text-4xl md:text-6xl font-bold mb-4">
+
+        <h2 className="text-4xl md:text-6xl font-bold mb-3">
           <span className="text-gradient">Three Phases</span>
           <span className="text-white"> to Glory</span>
         </h2>
-        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
           From registration to victory - here's your journey through AlgoVibe 2025
         </p>
       </div>
 
       {/* Timeline Boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
         {phases.map((phase, index) => {
           const Icon = phase.icon;
           const isHovered = hoveredPhase === index;
@@ -89,13 +89,13 @@ export default function EventTimeline() {
 
               {/* Phase Card */}
               <div
-                className={`glass-panel-strong p-8 h-full transition-all duration-500 relative overflow-hidden ${
+                className={`glass-panel-strong p-7 md:p-8 h-full transition-all duration-500 relative overflow-hidden ${
                   isHovered ? 'scale-105' : ''
                 }`}
                 style={{
                   boxShadow: isHovered
                     ? `0 0 40px ${phase.glowColor}, 0 0 80px ${phase.glowColor}`
-                    : 'none'
+                    : 'none',
                 }}
               >
                 {/* Scan Line Effect */}
@@ -109,39 +109,37 @@ export default function EventTimeline() {
                 </div>
 
                 {/* Icon */}
-                <div className="relative mb-6">
+                <div className="relative mb-5">
                   <div
                     className={`w-16 h-16 rounded-xl bg-${phase.color}/10 border border-${phase.color}/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
                   >
                     <Icon className={`w-8 h-8 text-${phase.color}`} />
                   </div>
                   {isHovered && (
-                    <div
-                      className={`absolute inset-0 bg-${phase.color}/20 blur-xl rounded-xl`}
-                    ></div>
+                    <div className={`absolute inset-0 bg-${phase.color}/20 blur-xl rounded-xl`}></div>
                   )}
                 </div>
 
                 {/* Content */}
-                <h3 className={`text-2xl font-bold mb-2 text-${phase.color}`}>
-                  {phase.title}
-                </h3>
+                <h3 className={`text-2xl font-bold mb-2 text-${phase.color}`}>{phase.title}</h3>
 
-                <div className="flex items-center gap-2 text-gray-400 mb-4">
+                <div className="flex items-center gap-2 text-gray-400 mb-3">
                   <Calendar className="w-4 h-4" />
                   <span className="text-sm font-medium">{phase.date}</span>
                 </div>
 
-                <p className="text-gray-300 mb-6">{phase.description}</p>
+                <p className="text-gray-300 mb-5">{phase.description}</p>
 
                 {/* Highlights */}
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {phase.highlights.map((highlight, idx) => (
                     <div
                       key={idx}
                       className="flex items-start gap-3 text-sm text-gray-400 group/item"
                     >
-                      <CheckCircle className={`w-4 h-4 text-${phase.color} mt-0.5 flex-shrink-0 group-hover/item:scale-110 transition-transform`} />
+                      <CheckCircle
+                        className={`w-4 h-4 text-${phase.color} mt-0.5 flex-shrink-0 group-hover/item:scale-110 transition-transform`}
+                      />
                       <span className="group-hover/item:text-gray-300 transition-colors">
                         {highlight}
                       </span>
@@ -158,7 +156,7 @@ export default function EventTimeline() {
       </div>
 
       {/* Launch Indicator */}
-      <div className="mt-16 text-center">
+      <div className="mt-12 md:mt-14 text-center">
         <div className="inline-flex items-center gap-3 glass-panel px-6 py-4">
           <Rocket className="w-5 h-5 text-cyber-blue-400 animate-bounce" />
           <span className="text-gray-300">
