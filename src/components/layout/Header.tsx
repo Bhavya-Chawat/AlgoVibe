@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Menu, X, Zap } from 'lucide-react';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Menu, X, Zap } from "lucide-react";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -12,23 +12,24 @@ export default function Header() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const navLinks = [
-    { name: 'Home', href: '/#home' },
-    { name: 'Timeline', href: '/#timeline' },
-    { name: 'Opportunities', href: '/#opportunities' },
+    { name: "Home", href: "/#home" },
+    { name: "Timeline", href: "/#timeline" },
+    { name: "Event Details", href: "/#details" },
+    { name: "Opportunities", href: "/#opportunities" },
+    // added
   ];
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-hack-navy/80 backdrop-blur-2xl border-b border-white/10'
-          : 'bg-transparent'
+          ? "bg-hack-navy/80 backdrop-blur-2xl border-b border-white/10"
+          : "bg-transparent"
       }`}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

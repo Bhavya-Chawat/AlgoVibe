@@ -64,18 +64,24 @@ export default function HeroSection() {
 
           {/* Main Title */}
           <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold mb-5 tracking-tight">
-            <span className="block text-gradient glitch-text">{glitchText}</span>
+            <span className="block text-gradient glitch-text">
+              {glitchText}
+            </span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-xl md:text-3xl text-gray-300 mb-3 max-w-4xl mx-auto">
-            <span className="text-neon-blue font-semibold">Hack the Matrix</span>{" "}
-            ·<span className="text-electric-cyan"> Decode the Future</span>
+            <span className="text-neon-blue font-semibold">
+              Visualize the Logic
+            </span>{" "}
+            ·<span className="text-electric-cyan"> Vibe the Code</span>
           </p>
 
           <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-3xl mx-auto">
-            Join the ultimate algorithmic hackathon at RVCE. Build groundbreaking
-            solutions, compete with the best, and win amazing prizes.
+            Join the ultimate Algorithm Visualization Challenge for the ISE
+            branch. Turn complex DSA concepts into stunning, simple web
+            visualizations. Compete with your peers and prove that logic can be
+            beautiful!
           </p>
 
           {/* CTA Buttons */}

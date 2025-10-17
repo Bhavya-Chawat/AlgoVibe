@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import RegistrationForm from '@/components/register/RegistrationForm';
-import Beams from '@/components/background/Beams';
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import RegistrationForm from "@/components/register/RegistrationForm";
+import Beams from "@/components/background/Beams";
 
 export default function RegisterPage() {
   return (
@@ -13,7 +13,7 @@ export default function RegisterPage() {
       {/* Content */}
       <div className="relative z-10">
         <Header />
-        
+
         <div className="min-h-screen flex items-center justify-center px-4 py-20">
           <div className="w-full max-w-5xl">
             {/* Title Section */}
@@ -22,7 +22,7 @@ export default function RegisterPage() {
                 Register for AlgoVibe
               </h1>
               <p className="text-xl text-gray-400">
-                Join the ultimate algorithmic hackathon experience
+                Join the ultimate algorithmic visualization experience
               </p>
               <div className="mt-6 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-cyber-blue-400 to-transparent"></div>
             </div>

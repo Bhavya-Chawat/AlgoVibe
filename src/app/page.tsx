@@ -5,6 +5,8 @@ import HeroSection from "@/components/home/HeroSection";
 import EventTimeline from "@/components/home/EventTimeline";
 import OpportunitiesSection from "@/components/home/OpportunitiesSection";
 import ScrollIndicator from "@/components/home/ScrollIndicator";
+import EventDetailsSection from "@/components/home/EventDetailsSection";
+import ReadyToParticipateCTA from "@/components/home/ReadyToParticipateCTA";
 
 export default function Home() {
   return (
@@ -27,6 +29,16 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Event Details — consistent outer rhythm via section py */}
+      <section
+        id="details"
+        className="relative py-16 md:py-20 px-4 scroll-mt-20 md:scroll-mt-24"
+      >
+        <div className="max-w-7xl mx-auto">
+          <EventDetailsSection />
+        </div>
+      </section>
+
       {/* Opportunities Section — consistent outer rhythm via section py */}
       <section
         id="opportunities"
@@ -34,6 +46,16 @@ export default function Home() {
       >
         <div className="max-w-7xl mx-auto">
           <OpportunitiesSection />
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section
+        id="cta"
+        className="relative py-16 md:py-20 px-4 scroll-mt-20 md:scroll-mt-24"
+      >
+        <div className="max-w-7xl mx-auto">
+          <ReadyToParticipateCTA />
         </div>
       </section>
 

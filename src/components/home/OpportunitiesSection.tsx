@@ -7,55 +7,58 @@ import {
   Lightbulb,
   Network,
   Briefcase,
+  Sparkles,
+  Palette,
+  Zap,
 } from "lucide-react";
 
 export default function OpportunitiesSection() {
   const opportunities = [
     {
-      icon: Brain,
-      title: "Skill Development",
+      icon: Sparkles, // Changed to a more VIBE/Creative icon
+      title: "Vibe Coding",
       description:
-        "Master cutting-edge algorithms, data structures, and problem-solving techniques through hands-on challenges.",
+        "Go beyond the terminal. Develop your unique style by transforming dry code into dynamic, visual, and engaging web experiences.",
+      color: "matrix-green", // A vibrant color for creativity
+      gradient: "from-matrix-green/20 to-transparent",
+    },
+    {
+      icon: Brain,
+      title: "Logic Refinement",
+      description:
+        "Sharpen your DSA skills under pressure. Master algorithms and data structures through a focused, hands-on challenge.",
       color: "cyber-blue-400",
       gradient: "from-cyber-blue-400/20 to-transparent",
     },
     {
-      icon: Users2,
-      title: "Networking",
+      icon: Palette, // New icon for Design/Creativity
+      title: "Creative Web Dev",
       description:
-        "Connect with like-minded developers, industry experts, and potential co-founders in the tech ecosystem.",
-      color: "neon-blue",
-      gradient: "from-neon-blue/20 to-transparent",
-    },
-    {
-      icon: Award,
-      title: "Win Big",
-      description:
-        "Compete for exciting prizes, internship opportunities, and recognition from leading tech companies.",
-      color: "matrix-green",
-      gradient: "from-matrix-green/20 to-transparent",
-    },
-    {
-      icon: Lightbulb,
-      title: "Innovation Lab",
-      description:
-        "Transform your ideas into reality with access to mentors, resources, and state-of-the-art technology.",
-      color: "electric-cyan",
-      gradient: "from-electric-cyan/20 to-transparent",
-    },
-    {
-      icon: Network,
-      title: "Industry Exposure",
-      description:
-        "Get insights from tech leaders, attend workshops, and understand real-world problem-solving approaches.",
+        "Practice your front-end skills (HTML, CSS, JS) by building a complete, aesthetic, and functional visualization from scratch.",
       color: "warning-orange",
       gradient: "from-warning-orange/20 to-transparent",
     },
     {
-      icon: Briefcase,
-      title: "Career Boost",
+      icon: Users2,
+      title: "Peer Collaboration",
       description:
-        "Stand out to recruiters with hackathon experience, portfolio projects, and industry connections.",
+        "Strengthen teamwork and communication skills. Work closely with your batchmates in a high-energy, competitive environment.",
+      color: "neon-blue",
+      gradient: "from-neon-blue/20 to-transparent",
+    },
+    {
+      icon: Zap, // New icon for Energy/Fun
+      title: "Bragging Rights",
+      description:
+        "Compete to be the top visualization team in the ISE branch. Win the ultimate badge of honor among your peers.",
+      color: "electric-cyan",
+      gradient: "from-electric-cyan/20 to-transparent",
+    },
+    {
+      icon: Lightbulb,
+      title: "Immediate Feedback",
+      description:
+        "Get direct, applicable feedback on your DSA and visualization approach from faculty and senior judges.",
       color: "cyber-blue-600",
       gradient: "from-cyber-blue-600/20 to-transparent",
     },
@@ -73,12 +76,12 @@ export default function OpportunitiesSection() {
         </div>
 
         <h2 className="text-4xl md:text-6xl font-bold mb-3">
-          <span className="text-white">Opportunities to </span>
-          <span className="text-gradient">Learn & Grow</span>
+          <span className="text-white">Why Join the </span>
+          <span className="text-gradient">Algovibe?</span>
         </h2>
         <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">
-          AlgoVibe 2025 is more than a hackathon - it's a launchpad for your
-          tech career
+          This is your chance to merge your logical mind with your creative
+          vision, right here in the ISE branch.
         </p>
       </div>
 
