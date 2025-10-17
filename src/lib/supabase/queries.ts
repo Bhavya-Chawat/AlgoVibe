@@ -1,77 +1,94 @@
-import { createClient } from './client';
-import type { RegistrationFormData, DatabaseRegistration } from '@/types/registration';
+// src/lib/supabase/queries.ts
+import { createClient } from './client'
+import type { RegistrationInsert, Section } from '@/types/registration'
+import type { Database } from '@/types/database'
 
-const supabase = createClient();
+type TeamRow = Database['public']['Tables']['teams']['Row']
+type MemberRow = Database['public']['Tables']['members']['Row']
+type MemberInsert = Database['public']['Tables']['members']['Insert']
+export type TeamWithMembers = { team: TeamRow; members: MemberRow[] }
 
-export async function createRegistration(data: RegistrationFormData): Promise<DatabaseRegistration> {
-  // Transform form data to match database schema
-  const registrationData = {
-    team_leader_name: data.teamLeaderName.trim(),
-    team_leader_usn: data.teamLeaderUSN.toUpperCase(),
-    team_leader_email: data.teamLeaderEmail.toLowerCase(),
-    team_leader_section: data.teamLeaderSection.toUpperCase(),
-    ...(data.member1Name && {
-      member1_name: data.member1Name.trim(),
-      member1_usn: data.member1USN.toUpperCase(),
-      member1_email: data.member1Email.toLowerCase(),
-      member1_section: data.member1Section.toUpperCase(),
-    }),
-    ...(data.member2Name && {
-      member2_name: data.member2Name.trim(),
-      member2_usn: data.member2USN.toUpperCase(),
-      member2_email: data.member2Email.toLowerCase(),
-      member2_section: data.member2Section.toUpperCase(),
-    })
-  };
+const supabase = createClient()
 
-  const { data: result, error } = await supabase
-    .from('registrations')
-    .insert(registrationData)
-    .select()
-    .single();
+const toSection = (s?: string): Section | null => {
+  if (!s) return null
+  const up = s.toUpperCase()
+  return up === 'B' ? 'B' : 'A'
+}
 
-  if (error) {
-    if (error.code === '23505') { // Unique constraint violation
-      throw new Error('A team member is already registered with this email');
-    }
-    throw new Error(error.message);
+export async function registerTeam(payload: RegistrationInsert): Promise<TeamWithMembers> {
+  // 1) Insert team
+  const { data: team, error: teamError } = await supabase
+    .from('teams')
+    .insert({ team_name: payload.team_name.trim() })
+    .select('team_id, team_name')
+    .single()
+  if (teamError) throw new Error(teamError.message)
+
+  // 2) Insert members
+  const memberRows: MemberInsert[] = payload.members.map((m) => ({
+    team_id: team.team_id,
+    name: m.name.trim(),
+    usn: m.usn ? m.usn.toUpperCase() : null,
+    email: m.email ? m.email.toLowerCase() : null,
+    phone_number: m.phone_number ?? null,
+    section: toSection(m.section || undefined),
+    github_profile: m.github_profile ?? null,
+    linkedin_profile: m.linkedin_profile ?? null,
+    role: m.role,
+  }))
+
+  if (memberRows.length > 0) {
+    const { error: membersError } = await supabase.from('members').insert(memberRows)
+    if (membersError) throw new Error(membersError.message)
   }
 
-  if (!result) {
-    throw new Error('Failed to create registration');
-  }
+  // 3) Read back members
+  const { data: members, error: readErr } = await supabase
+    .from('members')
+    .select('member_id, team_id, name, usn, email, phone_number, section, github_profile, linkedin_profile, role')
+    .eq('team_id', team.team_id)
+  if (readErr) throw new Error(readErr.message)
 
-  return result as DatabaseRegistration;
+  return { team, members: members ?? [] }
 }
 
 export async function checkEmailExists(email: string): Promise<boolean> {
-  const normalizedEmail = email.toLowerCase();
-
-  const { data, error } = await supabase
-    .from('registrations')
-    .select('id')
-    .or(`team_leader_email.eq.${normalizedEmail},member1_email.eq.${normalizedEmail},member2_email.eq.${normalizedEmail}`)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error('Failed to check email existence');
-  }
-
-  return data !== null;
+  const normalized = email.toLowerCase()
+  const { count, error } = await supabase
+    .from('members')
+    .select('member_id', { head: true, count: 'exact' })
+    .eq('email', normalized)
+  if (error) throw new Error('Failed to check email existence')
+  return (count ?? 0) > 0
 }
 
-export async function getTeamByEmail(email: string): Promise<DatabaseRegistration | null> {
-  const normalizedEmail = email.toLowerCase();
+export async function getTeamByEmail(email: string): Promise<TeamWithMembers | null> {
+  const normalized = email.toLowerCase()
 
-  const { data, error } = await supabase
-    .from('registrations')
-    .select()
-    .or(`team_leader_email.eq.${normalizedEmail},member1_email.eq.${normalizedEmail},member2_email.eq.${normalizedEmail}`)
-    .maybeSingle();
+  // locate a member with that email
+  const { data: member, error: mErr } = await supabase
+    .from('members')
+    .select('team_id')
+    .eq('email', normalized)
+    .limit(1)
+    .maybeSingle()
+  if (mErr) throw new Error('Failed to fetch member by email')
+  if (!member) return null
 
-  if (error) {
-    throw new Error('Failed to fetch team details');
+  // fetch team with embedded members
+  const { data: teamWithMembers, error: tErr } = await supabase
+    .from('teams')
+    .select('team_id, team_name, members(*)')
+    .eq('team_id', member.team_id)
+    .single()
+  if (tErr) throw new Error('Failed to fetch team details')
+
+  const { team_id, team_name, members } = teamWithMembers as unknown as {
+    team_id: number
+    team_name: string
+    members: MemberRow[]
   }
 
-  return data as DatabaseRegistration | null;
+  return { team: { team_id, team_name }, members: members ?? [] }
 }
