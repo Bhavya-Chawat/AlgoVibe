@@ -13,53 +13,55 @@ import {
 export default function EventTimeline() {
   const [hoveredPhase, setHoveredPhase] = useState<number | null>(null);
 
-  const phases = [
-    {
-      title: "Phase 1: Registration & Prep",
-      date: "Oct 16 - Oct 29, 2025",
-      icon: Users,
-      color: "cyber-blue-400",
-      glowColor: "rgba(28, 171, 242, 0.3)",
-      description:
-        "Secure your team spot and attend the mandatory quick workshop.",
-      highlights: [
-        "Team Formation (2-3 members max)",
-        "Visualization Workshop (30 mins prior to challenge)", // NEW
-        "Review any Tech Stack (No Restrictions!)", // UPDATED
-        "Final Event Guidelines Released",
-      ],
-    },
-    {
-      title: "Phase 2: The Visualization Challenge",
-      date: "October 30, 2025 (2 Hours)", // UPDATED duration
-      icon: Code2,
-      color: "neon-blue",
-      glowColor: "rgba(0, 217, 255, 0.3)",
-      description:
-        "The core event: Solve the DSA problem and code its creative web visualization.",
-      highlights: [
-        "Problem Statement Revealed (Surprise!)",
-        "Focused 2-Hour Development Window", // UPDATED duration
-        "In-Classroom Mentor Support",
-        "Final Submission Deadline",
-      ],
-    },
-    {
-      title: "Phase 3: Judging & Results",
-      date: "Post-Event Evaluation",
-      icon: Trophy,
-      color: "matrix-green",
-      glowColor: "rgba(0, 255, 65, 0.3)",
-      description:
-        "Submissions are rigorously evaluated. Winners will be announced later.",
-      highlights: [
-        "Panel Judging Sessions (Focus on Vibe, Clarity, and Correctness)", // Reordered focus
-        "Results Announced after the event",
-        "Top Teams Acknowledged",
-        "Certificate Distribution",
-      ],
-    },
-  ];
+ // Updated phases
+const phases = [
+  {
+    title: "Phase 1: Registration & Prep",
+    date: "Oct 16 - Oct 29, 2025",
+    icon: Users,
+    color: "cyber-blue-400",
+    glowColor: "rgba(28, 171, 242, 0.3)",
+    description:
+      "Secure your team spot and attend the mandatory quick workshop.",
+    highlights: [
+      "Team Formation (2-3 members max)",
+      "Visualization Workshop (30 mins prior to challenge)",
+      "Review any Tech Stack (No Restrictions!)",
+      "Final Event Guidelines Released",
+    ],
+  },
+  {
+    title: "Phase 2: The Visualization Challenge",
+    date: "October 30, 2025 (90 Minutes + 30 min Workshop)",
+    icon: Code2,
+    color: "neon-blue",
+    glowColor: "rgba(0, 217, 255, 0.3)",
+    description:
+      "The core event: Solve the DSA problem and code its creative web visualization.",
+    highlights: [
+      "Problem Statement Revealed (start of the 90-minute window)",
+      "Focused 90-Minute Development Window",
+      "In-Classroom Mentor Support",
+      "Final Submission Deadline",
+    ],
+  },
+  {
+    title: "Phase 3: Judging & Results",
+    date: "Post-Event Evaluation",
+    icon: Trophy,
+    color: "matrix-green",
+    glowColor: "rgba(0, 255, 65, 0.3)",
+    description:
+      "Submissions are rigorously evaluated. Winners will be announced later.",
+    highlights: [
+      "Panel Judging Sessions (Focus on Vibe, Clarity, and Correctness)",
+      "Results Announced after the event",
+      "Top Teams Acknowledged",
+      "Certificate Distribution",
+    ],
+  },
+];
+
   return (
     <div>
       {/* Section Header */}

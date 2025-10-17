@@ -20,8 +20,7 @@ export default function Header() {
     { name: "Home", href: "/#home" },
     { name: "Timeline", href: "/#timeline" },
     { name: "Event Details", href: "/#details" },
-    { name: "Opportunities", href: "/#opportunities" },
-    // added
+    { name: "Guide", href: "/vibe-coding-guide" },
   ];
 
   return (
@@ -65,11 +64,8 @@ export default function Header() {
                 href="/register"
                 className="px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyber-blue-400/50"
               >
-                Register
+                Register Now
               </Link>
-              <button className="px-6 py-2.5 border-2 border-cyber-blue-400 text-cyber-blue-400 font-semibold rounded-lg hover:bg-cyber-blue-400 hover:text-white transition-all duration-300">
-                Login
-              </button>
             </div>
           </div>
 
@@ -106,11 +102,8 @@ export default function Header() {
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block w-full px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg text-center transition-all duration-300"
                 >
-                  Register
+                  Register Now
                 </Link>
-                <button className="w-full px-6 py-2.5 border-2 border-cyber-blue-400 text-cyber-blue-400 font-semibold rounded-lg hover:bg-cyber-blue-400 hover:text-white transition-all duration-300">
-                  Login
-                </button>
               </div>
             </div>
           </div>

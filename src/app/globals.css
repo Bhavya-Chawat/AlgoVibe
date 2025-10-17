@@ -13,6 +13,10 @@
     --alert-red: #ff0055;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   * {
     @apply border-glass-border;
   }

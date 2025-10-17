@@ -113,9 +113,9 @@ const detailsData = [
       "What kind of problem can your team expect on the day of the event?",
     color: "matrix-green",
     highlights: [
-      "Focus: A single, non-trivial DSA problem",
-      "Categories: Likely to involve Sorting, Graph Traversal, or Recursion concepts",
-      "Revealed: Only at the start of the 2-hour challenge window", // UPDATED duration
+      "One DSA problem (Arrays, Linked Lists, Stacks, Queues, Trees, or Graphs)",
+      "Flow: Level 1 solve; Level 2 visualize the algorithm interactively",
+      "Reveal: Announced at the start of the 90-minute window",
       "Goal: The problem is the canvas for your visualization!",
     ],
   },

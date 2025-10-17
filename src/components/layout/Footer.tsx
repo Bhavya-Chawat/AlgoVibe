@@ -66,12 +66,21 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href="/vibe-coding-guide"
+                  className="text-gray-400 hover:text-cyber-blue-400 transition-colors"
+                >
+                  Guide
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/#opportunities"
                   className="text-gray-400 hover:text-cyber-blue-400 transition-colors"
                 >
                   Opportunities
                 </Link>
               </li>
+
               <li>
                 <Link
                   href="/register"

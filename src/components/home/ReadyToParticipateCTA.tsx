@@ -1,4 +1,4 @@
-    "use client";
+"use client";
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -16,7 +16,8 @@ export default function ReadyToParticipateCTA() {
               <span className="text-gradient">Ready to Participate?</span>
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              It&apos;s time to merge logic with design. Register now for the Algorithm Visualization Challenge
+              It&apos;s time to merge logic with design. Register now for the
+              Algorithm Visualization Challenge
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -30,7 +31,7 @@ export default function ReadyToParticipateCTA() {
 
               {/* Direct anchor link to timeline */}
               <Link
-                href="/#timeline"
+                href="/vibe-coding-guide"
                 aria-label="View timeline details"
                 className="px-8 py-4 border-2 border-cyber-blue-400 text-cyber-blue-400 font-bold rounded-lg hover:bg-cyber-blue-400 hover:text-white transition-all duration-300 hover:scale-105"
               >
