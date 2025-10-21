@@ -26,7 +26,7 @@ export default function LoginPage() {
             const glitched = original
                 .split("")
                 .map((char) => {
-                    if (Math.random() > 0.95 && char !== " ") {
+                    if (Math.random() > 0.90 && char !== " ") {
                         return chars[Math.floor(Math.random() * chars.length)];
                     }
                     return char;
@@ -34,8 +34,8 @@ export default function LoginPage() {
                 .join("");
 
             setGlitchText(glitched);
-            setTimeout(() => setGlitchText(original), 50);
-        }, 3000);
+            setTimeout(() => setGlitchText(original), 30);
+        }, 1500);
 
         return () => clearInterval(glitchInterval);
     }, []);
