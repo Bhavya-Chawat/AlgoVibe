@@ -3,34 +3,80 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PreContestCountdown from "@/components/dashboard/PreContestCountdown";
+import TeamDetailsCard from "@/components/dashboard/TeamDetailsCard";
 
 export default function Page() {
-    return (
-        <div className="relative min-h-screen bg-hack-black">
-            {/* Content */}
-            <div className="relative z-10">
-                <Header />
+  // Sample team data - in a real app this would come from props or API
+  const teamData = {
+    teamName: "Algorithm Avengers",
+    teamMembers: [
+      {
+        id: "1",
+        name: "Alex Johnson",
+        role: "Leader" as const,
+        email: "alex.johnson@rvce.edu.in",
+        phone: "9876543210",
+        section: "A",
+        github: "https://github.com/alexjohnson",
+        linkedin: "https://linkedin.com/in/alexjohnson"
+      },
+      {
+        id: "2",
+        name: "Taylor Smith",
+        role: "Member" as const,
+        email: "taylor.smith@rvce.edu.in",
+        phone: "8765432109",
+        section: "A",
+        github: "https://github.com/taysmith",
+        linkedin: "https://linkedin.com/in/taysmith"
+      },
+      {
+        id: "3",
+        name: "Jordan Williams",
+        role: "Member" as const,
+        email: "jordan.williams@rvce.edu.in",
+        phone: "7654321098",
+        section: "B",
+        github: "https://github.com/jorwilliams",
+        linkedin: "https://linkedin.com/in/jorwilliams"
+      }
+    ]
+  };
 
-                <div className="min-h-screen flex items-center justify-center px-4 py-20">
-                    <div className="w-full max-w-5xl">
-                        {/* Title Section */}
-                        <div className="text-center mb-12">
-                            <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyber-blue-400 to-teal-400">
-                                AlgoVibe 2025
-                            </h1>
-                            <p className="text-xl text-gray-400">
-                                Get ready for the ultimate algorithmic visualization challenge
-                            </p>
-                            <div className="mt-6 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-cyber-blue-400 to-transparent"></div>
-                        </div>
+  return (
+    <div className="relative min-h-screen bg-hack-black">
+      {/* Content */}
+      <div className="relative z-10">
+        <Header />
 
-                        {/* Countdown Component */}
-                        <PreContestCountdown />
-                    </div>
-                </div>
-
-                <Footer />
+        <div className="min-h-screen flex items-center justify-center px-4 py-20">
+          <div className="w-full max-w-6xl">
+            {/* Title Section */}
+            <div className="text-center mb-12">
+              <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyber-blue-400 to-teal-400">
+                AlgoVibe 2025
+              </h1>
+              <p className="text-xl text-gray-400">
+                Get ready for the ultimate algorithmic visualization challenge
+              </p>
+              <div className="mt-6 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-cyber-blue-400 to-transparent"></div>
             </div>
+
+            {/* Team Details Card */}
+            <div className="mb-12">
+              <TeamDetailsCard 
+                teamName={teamData.teamName} 
+                teamMembers={teamData.teamMembers} 
+              />
+            </div>
+
+            {/* Countdown Component */}
+            <PreContestCountdown />
+          </div>
         </div>
-    );
+
+        <Footer />
+      </div>
+    </div>
+  );
 }
