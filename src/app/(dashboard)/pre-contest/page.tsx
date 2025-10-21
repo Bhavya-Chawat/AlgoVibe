@@ -46,6 +46,19 @@ export default function Page() {
 
   return (
     <div className="relative min-h-screen bg-hack-black">
+      {/* Background Grid Overlay - More visible implementation */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{ 
+          opacity: 0.2,
+          backgroundImage: `
+            linear-gradient(rgba(28, 171, 242, 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(28, 171, 242, 0.3) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px'
+        }}
+      ></div>
+      
       {/* Content */}
       <div className="relative z-10">
         <Header />
