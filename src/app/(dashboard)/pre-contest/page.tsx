@@ -49,29 +49,31 @@ export default function Page() {
       <div className="relative z-10">
         <Header />
 
-        <div className="min-h-screen flex items-center justify-center px-4 py-20">
+        <div className="min-h-screen flex flex-col items-center justify-center px-4 py-20">
           <div className="w-full max-w-6xl">
             {/* Title Section */}
             <div className="text-center mb-12">
-              <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyber-blue-400 to-teal-400">
+              <h1 className="text-5xl md:text-8xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyber-blue-400 to-teal-400">
                 AlgoVibe 2025
               </h1>
-              <p className="text-xl text-gray-400">
+              <p className="text-xl md:text-2xl text-gray-400">
                 Get ready for the ultimate algorithmic visualization challenge
               </p>
               <div className="mt-6 h-1 w-32 mx-auto bg-gradient-to-r from-transparent via-cyber-blue-400 to-transparent"></div>
             </div>
 
-            {/* Team Details Card */}
+            {/* Countdown Component - Made bigger */}
             <div className="mb-12">
+              <PreContestCountdown />
+            </div>
+
+            {/* Team Details Card - Made smaller */}
+            <div className="max-w-4xl mx-auto">
               <TeamDetailsCard 
                 teamName={teamData.teamName} 
                 teamMembers={teamData.teamMembers} 
               />
             </div>
-
-            {/* Countdown Component */}
-            <PreContestCountdown />
           </div>
         </div>
 

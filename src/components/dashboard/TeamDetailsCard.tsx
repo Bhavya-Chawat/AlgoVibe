@@ -21,34 +21,34 @@ interface TeamDetailsCardProps {
 
 const TeamDetailsCard: React.FC<TeamDetailsCardProps> = ({ teamName, teamMembers }) => {
   return (
-    <div className="glass-panel-strong p-6 rounded-2xl">
-      <div className="flex items-center gap-3 mb-6">
-        <Users className="text-cyber-blue-400" size={24} />
-        <h2 className="text-2xl font-bold text-cyber-blue-400">Team Details</h2>
+    <div className="glass-panel-strong p-4 rounded-2xl">
+      <div className="flex items-center gap-2 mb-4">
+        <Users className="text-cyber-blue-400" size={20} />
+        <h2 className="text-xl font-bold text-cyber-blue-400">Team Details</h2>
         <Badge variant="success">Registered</Badge>
       </div>
       
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold text-white mb-2">{teamName}</h3>
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-white mb-1">{teamName}</h3>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {teamMembers.map((member) => (
           <div 
             key={member.id} 
-            className="bg-hack-navy/30 backdrop-blur-sm border border-cyber-blue-400/20 rounded-xl p-4 hover:border-cyber-blue-400/50 transition-all duration-300"
+            className="bg-hack-navy/30 backdrop-blur-sm border border-cyber-blue-400/20 rounded-lg p-3 hover:border-cyber-blue-400/50 transition-all duration-300"
           >
-            <div className="flex justify-between items-start mb-3">
-              <h4 className="font-bold text-white">{member.name}</h4>
-              <Badge variant={member.role === 'Leader' ? 'success' : 'default'}>
+            <div className="flex justify-between items-start mb-2">
+              <h4 className="font-bold text-white text-sm">{member.name}</h4>
+              <Badge variant={member.role === 'Leader' ? 'success' : 'default'} className="text-xs">
                 {member.role}
               </Badge>
             </div>
             
-            <div className="space-y-2 text-sm text-gray-300">
+            <div className="space-y-1 text-xs text-gray-300">
               <p className="flex justify-between">
                 <span>Email:</span>
-                <span className="text-cyber-blue-400">{member.email}</span>
+                <span className="text-cyber-blue-400 truncate max-w-[120px]">{member.email}</span>
               </p>
               <p className="flex justify-between">
                 <span>Phone:</span>
