@@ -4,6 +4,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PreContestCountdown from "@/components/dashboard/PreContestCountdown";
 import TeamDetailsCard from "@/components/dashboard/TeamDetailsCard";
+import ContestInfoSection from "@/components/dashboard/ContestInfoSection";
 
 export default function Page() {
   // Sample team data - in a real app this would come from props or API
@@ -68,11 +69,16 @@ export default function Page() {
             </div>
 
             {/* Team Details Card - Made smaller */}
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto mb-12">
               <TeamDetailsCard 
                 teamName={teamData.teamName} 
                 teamMembers={teamData.teamMembers} 
               />
+            </div>
+
+            {/* Contest Information Section */}
+            <div className="max-w-6xl mx-auto">
+              <ContestInfoSection />
             </div>
           </div>
         </div>
