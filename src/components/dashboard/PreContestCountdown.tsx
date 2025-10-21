@@ -53,7 +53,7 @@ const PreContestCountdown = () => {
                     {Object.entries(timeLeft).map(([unit, value]) => (
                         <div key={unit} className="flex flex-col items-center">
                             <div className="w-24 h-24 md:w-32 md:h-32 bg-hack-navy/50 backdrop-blur-md border border-cyber-blue-400/20 rounded-xl flex items-center justify-center hover:border-cyber-blue-400/50 transition-all duration-300 shadow-lg">
-                                <div className="text-3xl md:text-5xl font-bold text-cyber-blue-400">
+                                <div className="text-3xl md:text-5xl font-bold text-gradient">
                                     {value.toString().padStart(2, '0')}
                                 </div>
                             </div>
@@ -64,7 +64,9 @@ const PreContestCountdown = () => {
                     ))}
                 </div>
                 <div className="mt-12 text-center">
-                    <p className="text-cyber-blue-400 font-semibold text-xl md:text-2xl">October 30, 2025 at 2:30 PM IST</p>
+                    <p className="font-semibold text-xl md:text-2xl">
+                        <span className="text-gradient">October 30, 2025 at 2:30 PM IST</span>
+                    </p>
                 </div>
             </CardContent>
         </Card>
