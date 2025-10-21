@@ -81,7 +81,7 @@ export default function LoginPage() {
                         filter: 'blur(20px)'
                     }}
                 ></div>
-                
+
                 {/* Alternative directional glow - from top left */}
                 <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-70 transition-opacity duration-500 delay-100 pointer-events-none"
                     style={{
@@ -89,7 +89,7 @@ export default function LoginPage() {
                         filter: 'blur(15px)'
                     }}
                 ></div>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                     {error && (
                         <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm">

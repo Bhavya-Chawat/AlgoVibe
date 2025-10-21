@@ -10,9 +10,9 @@ export default function AuthLayout({
     <div className="relative min-h-screen bg-black">
       <Beams />
       {/* Background Grid Overlay */}
-      <div 
+      <div
         className="fixed inset-0 pointer-events-none z-0"
-        style={{ 
+        style={{
           opacity: 0.2,
           backgroundImage: `
             linear-gradient(rgba(28, 171, 242, 0.3) 1px, transparent 1px),
