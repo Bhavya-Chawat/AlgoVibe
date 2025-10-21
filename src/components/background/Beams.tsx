@@ -29,7 +29,7 @@ const Beam = forwardRef<THREE.Mesh, BeamProps>((props, ref) => {
       <meshStandardMaterial
         color="#00a8ff"
         transparent
-        opacity={0.6}
+        opacity={0.7}
         metalness={0.8}
         roughness={0.2}
       />
@@ -44,7 +44,7 @@ const Beams: FC<BeamsProps> = ({ children }) => {
     <div className="fixed inset-0 -z-10">
       <Canvas>
         <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-        <ambientLight intensity={0.5} />
+        <ambientLight intensity={0.7} />
         <pointLight position={[10, 10, 10]} />
         <group rotation={[0, 0, 0]}>
           <Beam position={[-2, 0, 0]} />
