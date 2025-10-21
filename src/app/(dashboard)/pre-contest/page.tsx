@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PreContestCountdown from "@/components/dashboard/PreContestCountdown";
@@ -44,6 +45,30 @@ export default function Page() {
     ]
   };
 
+  const [glitchText, setGlitchText] = useState("ALGOVIBE 2025");
+
+  // Implement glitch effect similar to login page
+  useEffect(() => {
+    const glitchInterval = setInterval(() => {
+      const chars = "!@#$%^&*(){}[]<>?/~`";
+      const original = "ALGOVIBE 2025";
+      const glitched = original
+        .split("")
+        .map((char) => {
+          if (Math.random() > 0.90 && char !== " ") {
+            return chars[Math.floor(Math.random() * chars.length)];
+          }
+          return char;
+        })
+        .join("");
+
+      setGlitchText(glitched);
+      setTimeout(() => setGlitchText(original), 30);
+    }, 1500);
+
+    return () => clearInterval(glitchInterval);
+  }, []);
+
   return (
     <div className="relative min-h-screen bg-hack-black">
       {/* Background Grid Overlay - More visible implementation */}
@@ -67,8 +92,8 @@ export default function Page() {
           <div className="w-full max-w-6xl">
             {/* Title Section */}
             <div className="text-center mb-12">
-              <h1 className="text-5xl md:text-8xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyber-blue-400 to-teal-400">
-                AlgoVibe 2025
+              <h1 className="text-5xl md:text-8xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyber-blue-400 to-teal-400 glitch-text">
+                {glitchText}
               </h1>
               <p className="text-xl md:text-2xl text-gray-400">
                 Get ready for the ultimate algorithmic visualization challenge
