@@ -72,9 +72,25 @@ export default function LoginPage() {
                 <p className="text-xl text-gray-300 mt-4">Team Login Portal</p>
             </div>
 
-            {/* Glass Panel Login Box with cyber glow and scan line */}
-            <div className="glass-panel-strong cyber-glow-strong scan-line rounded-2xl p-8 relative">
-                <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Glass Panel Login Box with directional hover glow and scan line */}
+            <div className="glass-panel-strong scan-line rounded-2xl p-8 relative transition-all duration-300 group">
+                {/* Directional glow effect - appears from bottom right on hover */}
+                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                    style={{
+                        background: 'radial-gradient(ellipse at bottom right, rgba(28, 171, 242, 0.4) 0%, transparent 70%)',
+                        filter: 'blur(20px)'
+                    }}
+                ></div>
+                
+                {/* Alternative directional glow - from top left */}
+                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-70 transition-opacity duration-500 delay-100 pointer-events-none"
+                    style={{
+                        background: 'radial-gradient(ellipse at top left, rgba(0, 217, 255, 0.2) 0%, transparent 70%)',
+                        filter: 'blur(15px)'
+                    }}
+                ></div>
+                
+                <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                     {error && (
                         <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm">
                             {error}
@@ -148,7 +164,7 @@ export default function LoginPage() {
 
                 </form>
 
-                <div className="mt-6 text-center">
+                <div className="mt-6 text-center relative z-10">
                     <p className="text-sm text-gray-400">
                         Not registered?{' '}
                         <Link href="/register" className="font-medium text-cyber-blue-400 hover:text-cyber-blue-300 transition">
