@@ -11,6 +11,7 @@ import {
   Phone,
   Github,
   Linkedin,
+  Lock,
 } from "lucide-react";
 import TeamMemberFields from "./TeamMemberFields";
 import FormSuccess from "./FormSuccess";
@@ -37,6 +38,7 @@ type RegistrationData = {
 export interface RegistrationFormData {
   // New: Team Name
   teamName: string;
+  teamPassword: string; // Add this line
 
   // Leader
   teamLeaderName: string;
@@ -68,6 +70,7 @@ export interface RegistrationFormData {
 
 const initialFormData: RegistrationFormData = {
   teamName: "",
+  teamPassword: "", // Add this line
 
   teamLeaderName: "",
   teamLeaderUSN: "",
@@ -143,6 +146,9 @@ export default function RegistrationForm() {
 
     // Team name required
     if (!formData.teamName.trim()) newErrors.teamName = "Team name is required";
+
+    // Team password required
+    if (!formData.teamPassword.trim()) newErrors.teamPassword = "Team password is required"; // Add this line
 
     // Leader required + A/B + phone required
     if (!formData.teamLeaderName.trim())
@@ -488,6 +494,32 @@ export default function RegistrationForm() {
           />
         </div>
         <InlineError id="err-teamName" message={errors.teamName} />
+      </div>
+
+      {/* Team Password */}
+      <div className="mb-8">
+        <label
+          htmlFor="teamPassword"
+          className="block text-sm font-semibold text-gray-300 mb-2"
+        >
+          Team Password <span className="text-alert-red">*</span>
+        </label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+          <input
+            id="teamPassword"
+            type="password"
+            name="teamPassword"
+            value={formData.teamPassword}
+            onChange={handleChange}
+            required
+            placeholder="Enter a strong password"
+            className="input-cyber pl-11"
+            aria-invalid={!!errors.teamPassword}
+            aria-errormessage={errors.teamPassword ? "err-teamPassword" : undefined}
+          />
+        </div>
+        <InlineError id="err-teamPassword" message={errors.teamPassword} />
       </div>
 
       {/* Leader Section */}
