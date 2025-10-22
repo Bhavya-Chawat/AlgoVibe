@@ -11,32 +11,18 @@ import {
   Phone,
   Github,
   Linkedin,
+  Lock,
 } from "lucide-react";
 import TeamMemberFields from "./TeamMemberFields";
 import FormSuccess from "./FormSuccess";
 
-type Section = "A" | "B";
-type MemberRole = "Leader" | "Member";
-
-type TeamMember = {
-  name: string;
-  usn?: string;
-  email?: string;
-  section?: Section;
-  phone_number?: string;
-  github_profile?: string;
-  linkedin_profile?: string;
-  role: MemberRole;
-};
-
-type RegistrationData = {
-  teamName: string;
-  teamMembers: TeamMember[];
-};
+// Use shared types so API payload stays in sync
+import type { RegistrationData, TeamMember, Section } from "@/types/registration";
 
 export interface RegistrationFormData {
-  // New: Team Name
+  // Team
   teamName: string;
+  teamPassword: string;
 
   // Leader
   teamLeaderName: string;
@@ -47,7 +33,7 @@ export interface RegistrationFormData {
   teamLeaderGithub?: string;
   teamLeaderLinkedin?: string;
 
-  // Member 1
+  // Member 1 (required)
   member1Name: string;
   member1USN: string;
   member1Email: string;
@@ -56,7 +42,7 @@ export interface RegistrationFormData {
   member1Github?: string;
   member1Linkedin?: string;
 
-  // Member 2
+  // Member 2 (optional)
   member2Name: string;
   member2USN: string;
   member2Email: string;
@@ -68,6 +54,7 @@ export interface RegistrationFormData {
 
 const initialFormData: RegistrationFormData = {
   teamName: "",
+  teamPassword: "",
 
   teamLeaderName: "",
   teamLeaderUSN: "",
@@ -141,8 +128,10 @@ export default function RegistrationForm() {
   const validateForm = (): FieldErrors => {
     const newErrors: FieldErrors = {};
 
-    // Team name required
+    // Team required
     if (!formData.teamName.trim()) newErrors.teamName = "Team name is required";
+    if (!formData.teamPassword.trim())
+      newErrors.teamPassword = "Team password is required";
 
     // Leader required + A/B + phone required
     if (!formData.teamLeaderName.trim())
@@ -179,49 +168,40 @@ export default function RegistrationForm() {
     )
       newErrors.teamLeaderLinkedin = "Enter a valid LinkedIn URL";
 
-    // Member 1 group (all required if any provided)
-    const m1 = [
-      formData.member1Name,
-      formData.member1USN,
-      formData.member1Email,
-      formData.member1Section,
-      formData.member1Phone,
-    ];
-    const m1On = anyProvided(m1);
-    if (m1On) {
-      if (!formData.member1Name.trim())
-        newErrors.member1Name = "Member 1 name is required";
-      if (!formData.member1USN.trim())
-        newErrors.member1USN = "Member 1 USN is required";
-      if (!formData.member1Email.trim())
-        newErrors.member1Email = "Member 1 email is required";
-      else if (!endsWithRvce(formData.member1Email))
-        newErrors.member1Email = "Member 1 must use @rvce.edu.in email";
-      if (!formData.member1Section.trim())
-        newErrors.member1Section = "Member 1 section is required";
-      else if (!toSection(formData.member1Section))
-        newErrors.member1Section = "Member 1 section must be A or B";
-      if (!formData.member1Phone.trim())
-        newErrors.member1Phone = "Member 1 phone number is required";
-      else if (!validatePhone(formData.member1Phone))
-        newErrors.member1Phone = "Enter a valid 10-digit phone number";
-      if (
-        !validateUrl(
-          formData.member1Github,
-          /^https?:\/\/(www\.)?github\.com\/.+$/i
-        )
+    // Member 1 is required (all core fields must be present)
+    if (!formData.member1Name.trim())
+      newErrors.member1Name = "Member 1 name is required";
+    if (!formData.member1USN.trim())
+      newErrors.member1USN = "Member 1 USN is required";
+    if (!formData.member1Email.trim())
+      newErrors.member1Email = "Member 1 email is required";
+    else if (!endsWithRvce(formData.member1Email))
+      newErrors.member1Email = "Member 1 must use @rvce.edu.in email";
+    if (!formData.member1Section.trim())
+      newErrors.member1Section = "Member 1 section is required";
+    else if (!toSection(formData.member1Section))
+      newErrors.member1Section = "Member 1 section must be A or B";
+    if (!formData.member1Phone.trim())
+      newErrors.member1Phone = "Member 1 phone number is required";
+    else if (!validatePhone(formData.member1Phone))
+      newErrors.member1Phone = "Enter a valid 10-digit phone number";
+    // Member 1 URLs optional but validate if present
+    if (
+      !validateUrl(
+        formData.member1Github,
+        /^https?:\/\/(www\.)?github\.com\/.+$/i
       )
-        newErrors.member1Github = "Enter a valid GitHub URL";
-      if (
-        !validateUrl(
-          formData.member1Linkedin,
-          /^https?:\/\/(www\.)?linkedin\.com\/in\/.+$/i
-        )
+    )
+      newErrors.member1Github = "Enter a valid GitHub URL";
+    if (
+      !validateUrl(
+        formData.member1Linkedin,
+        /^https?:\/\/(www\.)?linkedin\.com\/in\/.+$/i
       )
-        newErrors.member1Linkedin = "Enter a valid LinkedIn URL";
-    }
+    )
+      newErrors.member1Linkedin = "Enter a valid LinkedIn URL";
 
-    // Member 2 group (all required if any provided)
+    // Member 2 optional: if any provided, require all core fields
     const m2 = [
       formData.member2Name,
       formData.member2USN,
@@ -288,7 +268,7 @@ export default function RegistrationForm() {
     const newErrors = validateForm();
     setErrors(newErrors);
 
-    // 2–3 total members: leader + at least one more
+    // Must have Leader + Member 1; Member 2 is optional
     const m1Provided = anyProvided([
       formData.member1Name,
       formData.member1USN,
@@ -304,11 +284,9 @@ export default function RegistrationForm() {
       formData.member2Phone,
     ]);
 
-    if (!m1Provided && !m2Provided) {
+    if (!m1Provided) {
       setIsSubmitting(false);
-      setError(
-        "Team must have 2 to 3 members (add at least one additional member)."
-      );
+      setError("Member 1 is required.");
       return;
     }
 
@@ -345,18 +323,19 @@ export default function RegistrationForm() {
 
     const members: TeamMember[] = [leader];
 
-    if (m1Provided) {
-      members.push({
-        name: formData.member1Name.trim(),
-        usn: formData.member1USN.trim().toUpperCase(),
-        email: formData.member1Email.trim().toLowerCase(),
-        section: toSection(formData.member1Section),
-        phone_number: formData.member1Phone.trim(),
-        github_profile: formData.member1Github?.trim() || undefined,
-        linkedin_profile: formData.member1Linkedin?.trim() || undefined,
-        role: "Member",
-      });
-    }
+    // Member 1 (required)
+    members.push({
+      name: formData.member1Name.trim(),
+      usn: formData.member1USN.trim().toUpperCase(),
+      email: formData.member1Email.trim().toLowerCase(),
+      section: toSection(formData.member1Section),
+      phone_number: formData.member1Phone.trim(),
+      github_profile: formData.member1Github?.trim() || undefined,
+      linkedin_profile: formData.member1Linkedin?.trim() || undefined,
+      role: "Member",
+    });
+
+    // Member 2 (optional)
     if (m2Provided) {
       members.push({
         name: formData.member2Name.trim(),
@@ -376,8 +355,10 @@ export default function RegistrationForm() {
       return;
     }
 
+    // Include teamPassword in payload
     const payload: RegistrationData = {
       teamName: formData.teamName.trim(),
+      teamPassword: formData.teamPassword.trim(),
       teamMembers: members,
     };
 
@@ -488,6 +469,34 @@ export default function RegistrationForm() {
           />
         </div>
         <InlineError id="err-teamName" message={errors.teamName} />
+      </div>
+
+      {/* Team Password */}
+      <div className="mb-8">
+        <label
+          htmlFor="teamPassword"
+          className="block text-sm font-semibold text-gray-300 mb-2"
+        >
+          Team Password <span className="text-alert-red">*</span>
+        </label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+          <input
+            id="teamPassword"
+            type="password"
+            name="teamPassword"
+            value={formData.teamPassword}
+            onChange={handleChange}
+            required
+            placeholder="Enter a strong password"
+            className="input-cyber pl-11"
+            aria-invalid={!!errors.teamPassword}
+            aria-errormessage={
+              errors.teamPassword ? "err-teamPassword" : undefined
+            }
+          />
+        </div>
+        <InlineError id="err-teamPassword" message={errors.teamPassword} />
       </div>
 
       {/* Leader Section */}
@@ -731,12 +740,12 @@ export default function RegistrationForm() {
         </div>
         <div className="relative flex justify-center">
           <span className="px-4 text-sm text-gray-500 glass-panel py-2">
-            Team Members (add 1–2 more to make 2–3 total)
+            Team Members (Member 1 required, Member 2 optional)
           </span>
         </div>
       </div>
 
-      {/* Member 1 */}
+      {/* Member 1 (required star on all core fields, not on GitHub/LinkedIn) */}
       <TeamMemberFields
         memberNumber={1}
         formData={{
@@ -748,6 +757,7 @@ export default function RegistrationForm() {
           github: formData.member1Github,
           linkedin: formData.member1Linkedin,
         }}
+        requiredFields={["name", "usn", "email", "section", "phone"]}
         onChange={(field, value) => {
           const suffix = fieldToSuffix(field);
           const key = `member1${suffix}` as keyof RegistrationFormData;
@@ -772,7 +782,7 @@ export default function RegistrationForm() {
       {/* Divider */}
       <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-8" />
 
-      {/* Member 2 */}
+      {/* Member 2 (optional) */}
       <TeamMemberFields
         memberNumber={2}
         formData={{
@@ -784,6 +794,7 @@ export default function RegistrationForm() {
           github: formData.member2Github,
           linkedin: formData.member2Linkedin,
         }}
+        requiredFields={[]}
         onChange={(field, value) => {
           const suffix = fieldToSuffix(field);
           const key = `member2${suffix}` as keyof RegistrationFormData;

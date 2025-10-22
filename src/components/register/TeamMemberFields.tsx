@@ -4,6 +4,15 @@
 import React from "react";
 import { User, Mail, Hash, Phone, Github, Linkedin } from "lucide-react";
 
+type FieldKey =
+  | "name"
+  | "usn"
+  | "email"
+  | "section"
+  | "phone"
+  | "github"
+  | "linkedin";
+
 interface TeamMemberFieldsProps {
   memberNumber: number;
   formData: {
@@ -15,24 +24,23 @@ interface TeamMemberFieldsProps {
     github?: string;
     linkedin?: string;
   };
-  onChange: (
-    field:
-      | "name"
-      | "usn"
-      | "email"
-      | "section"
-      | "phone"
-      | "github"
-      | "linkedin",
-    value: string
-  ) => void;
+  onChange: (field: FieldKey, value: string) => void;
+  // NEW: which fields should display a red star (Member 1 passes core fields, Member 2 passes [])
+  requiredFields?: Array<"name" | "usn" | "email" | "section" | "phone">;
 }
+
+const RedStar = ({ on }: { on: boolean }) =>
+  on ? <span className="text-alert-red">*</span> : null;
 
 export default function TeamMemberFields({
   memberNumber,
   formData,
   onChange,
+  requiredFields = [],
 }: TeamMemberFieldsProps) {
+  const isReq = (k: "name" | "usn" | "email" | "section" | "phone") =>
+    requiredFields.includes(k);
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-white">
@@ -40,10 +48,10 @@ export default function TeamMemberFields({
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Name (required by parent when member block is active) */}
+        {/* Name */}
         <div>
           <label className="block text-sm font-semibold text-gray-300 mb-2">
-            Full Name
+            Full Name <RedStar on={isReq("name")} />
           </label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -57,10 +65,10 @@ export default function TeamMemberFields({
           </div>
         </div>
 
-        {/* USN (required by parent when member block is active) */}
+        {/* USN */}
         <div>
           <label className="block text-sm font-semibold text-gray-300 mb-2">
-            USN
+            USN <RedStar on={isReq("usn")} />
           </label>
           <div className="relative">
             <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -74,10 +82,10 @@ export default function TeamMemberFields({
           </div>
         </div>
 
-        {/* Email (required by parent when member block is active) */}
+        {/* Email */}
         <div>
           <label className="block text-sm font-semibold text-gray-300 mb-2">
-            RVCE Email ID
+            RVCE Email ID <RedStar on={isReq("email")} />
           </label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -92,10 +100,10 @@ export default function TeamMemberFields({
           </div>
         </div>
 
-        {/* Section as radio (A/B) */}
+        {/* Section */}
         <div>
           <span className="block text-sm font-semibold text-gray-300 mb-2">
-            Section
+            Section <RedStar on={isReq("section")} />
           </span>
           <div className="flex items-center gap-6">
             <label className="inline-flex items-center gap-2">
@@ -121,10 +129,10 @@ export default function TeamMemberFields({
           </div>
         </div>
 
-        {/* Phone (required by parent when member block is active; show as required in UI) */}
+        {/* Phone */}
         <div>
           <label className="block text-sm font-semibold text-gray-300 mb-2">
-            Phone <span className="text-alert-red">*</span>
+            Phone <RedStar on={isReq("phone")} />
           </label>
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -140,7 +148,7 @@ export default function TeamMemberFields({
           </div>
         </div>
 
-        {/* GitHub (not required; no star) */}
+        {/* GitHub (optional) */}
         <div>
           <label className="block text-sm font-semibold text-gray-300 mb-2">
             GitHub
@@ -157,7 +165,7 @@ export default function TeamMemberFields({
           </div>
         </div>
 
-        {/* LinkedIn (not required; no star) */}
+        {/* LinkedIn (optional) */}
         <div className="md:col-span-2">
           <label className="block text-sm font-semibold text-gray-300 mb-2">
             LinkedIn
