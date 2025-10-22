@@ -1,17 +1,20 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { GlassPanel } from '../ui/modern-ui/src/components/ui/GlassPanel';
-import { CheckCircle, ChevronRight, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from "react";
+import { GlassPanel } from "../ui/modern-ui/src/components/ui/GlassPanel";
+import { CheckCircle, ChevronRight, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 interface FormSuccessProps {
   teamLeaderName: string;
   onClose: () => void;
 }
 
-export default function FormSuccess({ teamLeaderName, onClose }: FormSuccessProps) {
+export default function FormSuccess({
+  teamLeaderName,
+  onClose,
+}: FormSuccessProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -20,9 +23,9 @@ export default function FormSuccess({ teamLeaderName, onClose }: FormSuccessProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-hack-black/80 backdrop-blur-lg">
-      <GlassPanel 
+      <GlassPanel
         className={`max-w-2xl w-full mx-4 transform transition-all duration-500 ${
-          isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+          isVisible ? "scale-100 opacity-100" : "scale-95 opacity-0"
         }`}
         blur="heavy"
       >
@@ -32,7 +35,7 @@ export default function FormSuccess({ teamLeaderName, onClose }: FormSuccessProp
           className="glass-panel-strong p-8 md:p-12 flex flex-col items-center justify-center space-y-8"
         >
           {/* Success Icon */}
-          <motion.div 
+          <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             className="relative"
@@ -40,7 +43,7 @@ export default function FormSuccess({ teamLeaderName, onClose }: FormSuccessProp
             <div className="w-20 h-20 rounded-full bg-green-500/10 border-2 border-green-500/30 flex items-center justify-center">
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-            <motion.div 
+            <motion.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ repeat: Infinity, duration: 2 }}
               className="absolute inset-0 rounded-full border-2 border-green-500/20"
@@ -79,9 +82,8 @@ export default function FormSuccess({ teamLeaderName, onClose }: FormSuccessProp
               <h3 className="text-lg font-semibold text-white">Next Steps:</h3>
               <ul className="space-y-3">
                 {[
-                  'Check your email for confirmation details',
-                  'Join our Discord community for updates',
-                  'Start practicing with your team'
+                  "Check your email for confirmation details",
+                  "Start practicing with your team",
                 ].map((step, index) => (
                   <motion.li
                     key={index}
@@ -118,4 +120,4 @@ export default function FormSuccess({ teamLeaderName, onClose }: FormSuccessProp
       </GlassPanel>
     </div>
   );
-};
+}

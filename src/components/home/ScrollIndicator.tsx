@@ -1,50 +1,86 @@
-'use client';
+"use client";
 
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from "lucide-react";
 
 export default function ScrollIndicator() {
   const handleScroll = () => {
-    document.getElementById('timeline')?.scrollIntoView({ behavior: 'smooth' });
+    document
+      .getElementById("timeline")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
-    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">
+    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
       <button
         onClick={handleScroll}
-        className="group flex flex-col items-center gap-2 animate-bounce hover:scale-110 transition-transform duration-300"
         aria-label="Scroll to timeline"
+        className="group flex flex-col items-center gap-2 transition-transform duration-300 hover:scale-110 focus:outline-none focus-visible:ring-4 focus-visible:ring-cyan-400/60 rounded-full"
       >
-        {/* Text */}
-        <span className="text-sm font-semibold text-gray-400 group-hover:text-cyber-blue-400 transition-colors">
+        {/* Label */}
+        <span className="text-sm font-semibold text-gray-400 transition-colors group-hover:text-cyber-blue-400">
           Scroll to Explore
         </span>
 
-        {/* Animated Arrow Container */}
+        {/* Indicator */}
         <div className="relative">
-          {/* Glow Effect */}
-          <div className="absolute inset-0 bg-cyber-blue-400/20 blur-xl rounded-full group-hover:bg-cyber-blue-400/40 transition-all"></div>
+          {/* Glow */}
+          <div className="absolute inset-0 bg-cyber-blue-400/20 blur-xl rounded-full transition-all group-hover:bg-cyber-blue-400/40" />
 
-          {/* Arrow Icon */}
-          <div className="relative w-10 h-10 rounded-full glass-panel flex items-center justify-center group-hover:glass-panel-strong transition-all">
-            <ChevronDown className="w-5 h-5 text-cyber-blue-400 group-hover:text-neon-blue transition-colors" />
-          </div>
-
-          {/* Animated Dots */}
-          <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col gap-1 opacity-50">
-            <div className="w-1 h-1 bg-cyber-blue-400 rounded-full animate-pulse"></div>
-            <div className="w-1 h-1 bg-cyber-blue-400 rounded-full animate-pulse delay-100"></div>
-            <div className="w-1 h-1 bg-cyber-blue-400 rounded-full animate-pulse delay-200"></div>
+          {/* Circle + Chevron */}
+          <div className="relative w-11 h-11 rounded-full glass-panel flex items-center justify-center transition-all group-hover:glass-panel-strong animate-float">
+            {/* Main chevron */}
+            <ChevronDown
+              className="w-5 h-5 text-cyber-blue-400 transition-colors group-hover:text-neon-blue"
+              aria-hidden
+            />
+            {/* Ghost trail chevron */}
+            <ChevronDown
+              className="w-5 h-5 absolute text-cyber-blue-400/45 translate-y-2 animate-chev-ghost"
+              aria-hidden
+            />
           </div>
         </div>
       </button>
 
-      {/* CSS for delay classes */}
+      {/* Scoped animations with reduced-motion support */}
       <style jsx>{`
-        .delay-100 {
-          animation-delay: 0.1s;
+        @keyframes floatY {
+          0% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(6px);
+          }
+          100% {
+            transform: translateY(0);
+          }
         }
-        .delay-200 {
-          animation-delay: 0.2s;
+        @keyframes chevGhost {
+          0% {
+            opacity: 0;
+            transform: translateY(-4px);
+          }
+          50% {
+            opacity: 0.6;
+            transform: translateY(4px);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+        }
+        .animate-float {
+          animation: floatY 2.2s ease-in-out infinite;
+        }
+        .animate-chev-ghost {
+          animation: chevGhost 2.2s ease-in-out infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-float,
+          .animate-chev-ghost {
+            animation: none !important;
+          }
         }
       `}</style>
     </div>
