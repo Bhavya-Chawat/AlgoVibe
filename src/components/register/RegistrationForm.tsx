@@ -12,6 +12,7 @@ import {
   Github,
   Linkedin,
   Lock,
+  Lock,
 } from "lucide-react";
 import TeamMemberFields from "./TeamMemberFields";
 import FormSuccess from "./FormSuccess";
@@ -22,7 +23,7 @@ import type { RegistrationData, TeamMember, Section } from "@/types/registration
 export interface RegistrationFormData {
   // Team
   teamName: string;
-  teamPassword: string;
+  teamPassword: string; // Add this line
 
   // Leader
   teamLeaderName: string;
@@ -54,7 +55,7 @@ export interface RegistrationFormData {
 
 const initialFormData: RegistrationFormData = {
   teamName: "",
-  teamPassword: "",
+  teamPassword: "", // Add this line
 
   teamLeaderName: "",
   teamLeaderUSN: "",
@@ -130,8 +131,9 @@ export default function RegistrationForm() {
 
     // Team required
     if (!formData.teamName.trim()) newErrors.teamName = "Team name is required";
-    if (!formData.teamPassword.trim())
-      newErrors.teamPassword = "Team password is required";
+
+    // Team password required
+    if (!formData.teamPassword.trim()) newErrors.teamPassword = "Team password is required"; // Add this line
 
     // Leader required + A/B + phone required
     if (!formData.teamLeaderName.trim())
@@ -491,9 +493,7 @@ export default function RegistrationForm() {
             placeholder="Enter a strong password"
             className="input-cyber pl-11"
             aria-invalid={!!errors.teamPassword}
-            aria-errormessage={
-              errors.teamPassword ? "err-teamPassword" : undefined
-            }
+            aria-errormessage={errors.teamPassword ? "err-teamPassword" : undefined}
           />
         </div>
         <InlineError id="err-teamPassword" message={errors.teamPassword} />
