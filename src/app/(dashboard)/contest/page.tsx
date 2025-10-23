@@ -104,30 +104,34 @@ export default function ContestPage() {
           duration={90} // 90 minutes
         />
 
-        {/* Contest Content Grid */}
+        {/* Contest Content - Full Width Problem Statement */}
         <div className="max-w-[1920px] mx-auto px-6 py-8 mt-24">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Column - Problem Statement */}
+          <div className="flex flex-col">
+            {/* Full Width Problem Statement - Much Bigger */}
             <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: "easeOut" }}
-              className="lg:col-span-6"
+              className="w-full mb-12"
             >
               <ProblemStatement />
             </motion.div>
 
-            {/* Right Column - Submission Boxes */}
+            {/* Submission Boxes - Below Problem Statement */}
             <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-              className="lg:col-span-6 space-y-6"
+              className="w-full"
             >
-              <CodeSubmissionBox onSubmit={handleNewSubmission} />
-              <GitHubSubmissionBox onSubmit={handleNewSubmission} />
-              <DeploymentSubmissionBox onSubmit={handleNewSubmission} />
-              <SubmissionHistory submissions={submissions} />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <CodeSubmissionBox onSubmit={handleNewSubmission} />
+                <GitHubSubmissionBox onSubmit={handleNewSubmission} />
+                <DeploymentSubmissionBox onSubmit={handleNewSubmission} />
+              </div>
+              <div className="mt-6">
+                <SubmissionHistory submissions={submissions} />
+              </div>
             </motion.div>
           </div>
         </div>
