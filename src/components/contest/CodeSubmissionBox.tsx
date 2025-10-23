@@ -30,7 +30,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
       const submitResponse = await fetch("/api/submissions/code/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           codeText: codeText
         }),
       });
@@ -175,7 +175,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
                 }}
               />
             )
-          }</motion.div>
+            }</motion.div>
         </MagneticButton>
 
         <motion.button

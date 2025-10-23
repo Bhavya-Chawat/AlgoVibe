@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ContestHeader from "@/components/layout/ContestHeader";
 import ProblemStatement from "@/components/contest/ProblemStatement";
 import CodeSubmissionBox from "@/components/contest/CodeSubmissionBox";
 import GitHubSubmissionBox from "@/components/contest/GitHubSubmissionBox";
@@ -64,6 +65,8 @@ export default function ContestPage() {
 
   return (
     <div className="min-h-screen bg-hack-black relative overflow-hidden">
+      <ContestHeader />
+      
       {/* Background Grid Overlay */}
       <div
         className="fixed inset-0 pointer-events-none z-0"
