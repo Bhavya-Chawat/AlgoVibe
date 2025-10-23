@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 
-interface MagneticButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface MagneticButtonProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   strength?: number;
 }
@@ -11,7 +11,7 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
   className = '',
   ...props 
 }) => {
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const buttonRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -54,15 +54,18 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
   }, [strength]);
 
   return (
-    <button
+    <div
       ref={buttonRef}
       className={`relative transition-transform duration-200 ease-out ${className}`}
       style={{
-        transform: `translate(${position.x}px, ${position.y}px)`
+        transform: `translate(${position.x}px, ${position.y}px)`,
+        cursor: 'pointer'
       }}
+      role="button"
+      tabIndex={0}
       {...props}
     >
       {children}
-    </button>
+    </div>
   );
 };

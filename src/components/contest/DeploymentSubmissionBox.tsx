@@ -124,18 +124,26 @@ export default function DeploymentSubmissionBox({ onSubmit }: DeploymentSubmissi
       {/* Action Buttons */}
       <div className="flex gap-4 mb-6">
         <MagneticButton className="flex-1">
-          <motion.button
+          <motion.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleSubmit}
-            disabled={isChecking || !deployUrl.trim()}
-            className="w-full px-6 py-4 bg-gradient-to-r from-neon-blue to-electric-cyan text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(0,217,255,0.4)] hover:shadow-[0_0_30px_rgba(0,217,255,0.6)]"
+            className="w-full px-6 py-4 bg-gradient-to-r from-neon-blue to-electric-cyan text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(0,217,255,0.4)] hover:shadow-[0_0_30px_rgba(0,217,255,0.6)] cursor-pointer"
+            {...(!deployUrl.trim() ? {} : { tabIndex: 0 })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (deployUrl.trim()) {
+                  handleSubmit();
+                }
+              }
+            }}
           >
             <div className="flex items-center justify-center gap-2">
               <Globe className="w-5 h-5" />
               <span>Submit Deployment</span>
             </div>
-          </motion.button>
+          </motion.div>
         </MagneticButton>
 
         <motion.button

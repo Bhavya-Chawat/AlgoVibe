@@ -133,12 +133,20 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
       {/* Action Buttons */}
       <div className="flex gap-4 mb-6">
         <MagneticButton className="flex-1">
-          <motion.button
+          <motion.div
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleSubmit}
-            disabled={isChecking || !codeLink.trim()}
-            className="w-full relative overflow-hidden px-6 py-4 bg-gradient-to-r from-cyber-blue-400 to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(28,171,242,0.4)] hover:shadow-[0_0_30px_rgba(28,171,242,0.6)]"
+            className="w-full relative overflow-hidden px-6 py-4 bg-gradient-to-r from-cyber-blue-400 to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(28,171,242,0.4)] hover:shadow-[0_0_30px_rgba(28,171,242,0.6)] cursor-pointer"
+            {...(isChecking || !codeLink.trim() ? {} : { tabIndex: 0 })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (!isChecking && codeLink.trim()) {
+                  handleSubmit();
+                }
+              }
+            }}
           >
             <div className="flex items-center justify-center gap-2">
               {isChecking ? (
@@ -165,8 +173,8 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
                   ease: "linear",
                 }}
               />
-            )}
-          </motion.button>
+            )
+          }</motion.div>
         </MagneticButton>
 
         <motion.button

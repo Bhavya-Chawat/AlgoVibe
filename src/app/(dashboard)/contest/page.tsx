@@ -112,7 +112,7 @@ export default function ContestPage() {
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, ease: "easeOut" }}
-              className="lg:col-span-4"
+              className="lg:col-span-6"
             >
               <ProblemStatement />
             </motion.div>
@@ -122,7 +122,7 @@ export default function ContestPage() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-              className="lg:col-span-8 space-y-6"
+              className="lg:col-span-6 space-y-6"
             >
               <CodeSubmissionBox onSubmit={handleNewSubmission} />
               <GitHubSubmissionBox onSubmit={handleNewSubmission} />

@@ -170,18 +170,26 @@ export default function GitHubSubmissionBox({ onSubmit }: GitHubSubmissionBoxPro
       {/* Action Buttons */}
       <div className="flex gap-4 mb-6">
         <MagneticButton className="flex-1">
-          <motion.button
+          <motion.div
             whileHover={{ scale: isSubmissionDisabled ? 1 : 1.02 }}
             whileTap={{ scale: isSubmissionDisabled ? 1 : 0.98 }}
             onClick={handleSubmit}
-            disabled={isSubmissionDisabled}
-            className="w-full px-6 py-4 bg-gradient-to-r from-electric-cyan to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(0,255,247,0.4)] hover:shadow-[0_0_30px_rgba(0,255,247,0.6)]"
+            className="w-full px-6 py-4 bg-gradient-to-r from-electric-cyan to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(0,255,247,0.4)] hover:shadow-[0_0_30px_rgba(0,255,247,0.6)] cursor-pointer"
+            {...(isSubmissionDisabled ? {} : { tabIndex: 0 })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (!isSubmissionDisabled) {
+                  handleSubmit();
+                }
+              }
+            }}
           >
             <div className="flex items-center justify-center gap-2">
               <Github className="w-5 h-5" />
               <span>{timeRemaining <= 0 ? "Time's Up!" : "Submit Repository"}</span>
             </div>
-          </motion.button>
+          </motion.div>
         </MagneticButton>
 
         <motion.button
