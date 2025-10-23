@@ -5,6 +5,7 @@ import { Code2, Trophy, Clock, AlertCircle, Check } from "lucide-react";
 import { ElectricBorder } from "@/components/effects/react-effects-lib/src/components/effects/ElectricBorder";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/modern-ui/src/components/ui/Badge";
+import CompactTimer from "@/components/contest/CompactTimer";
 
 export default function ProblemStatement() {
   const [problem, setProblem] = useState({
@@ -93,6 +94,11 @@ export default function ProblemStatement() {
           boxShadow: "0 0 60px rgba(28, 171, 242, 0.5)",
         }}
       >
+        {/* Compact Timer at the top */}
+        <div className="mb-8">
+          <CompactTimer status="live" duration={120} />
+        </div>
+
         {/* Header with glowing title */}
         <div className="mb-10 pb-10 border-b border-cyber-blue-400/30">
           <div className="flex items-start justify-between gap-8 mb-8">
@@ -107,12 +113,12 @@ export default function ProblemStatement() {
             <Badge className={`px-6 py-3 text-2xl font-bold border-2 ${getDifficultyColor(problem.difficulty)}`}>
               {problem.difficulty}
             </Badge>
-            
+
             <div className="flex items-center gap-4 text-lg text-gray-300">
               <Trophy className="w-8 h-8 text-warning-orange" />
               <span className="font-bold text-warning-orange text-2xl">{problem.points} Points</span>
             </div>
-            
+
             <div className="flex items-center gap-4 text-lg text-gray-400">
               <Clock className="w-8 h-8" />
               <span className="text-2xl">90 minutes</span>

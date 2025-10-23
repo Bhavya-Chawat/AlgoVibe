@@ -99,7 +99,7 @@ export default function ContestPage() {
       {/* Main Content */}
       <div className="relative z-10">
         {/* Sticky Contest Timer */}
-        <ContestTimer 
+        <ContestTimer
           status={contestStatus}
           duration={90} // 90 minutes
         />
