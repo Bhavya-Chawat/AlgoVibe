@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Link, Zap, Loader2, XCircle, AlertTriangle } from "lucide-react";
+import { Code, Zap, Loader2, XCircle, AlertTriangle } from "lucide-react";
 import { MagneticButton } from "@/components/effects/react-effects-lib/src/components/effects/MagneticButton";
 import { ConcentricRings } from "@/components/effects/react-effects-lib/src/components/effects/ConcentricRings";
-import { Input } from "@/components/ui/modern-ui/src/components/ui/Input";
 import { motion, AnimatePresence } from "framer-motion";
 import ApiResults from "./ApiResults";
 import SubmissionCard from "./SubmissionCard";
@@ -14,24 +13,26 @@ interface CodeSubmissionBoxProps {
 }
 
 export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) {
-  const [codeLink, setCodeLink] = useState("");
+  const [codeText, setCodeText] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(45 * 60); // 45 minutes in seconds
 
   const handleSubmit = async () => {
-    if (!codeLink.trim()) return;
+    if (!codeText.trim()) return;
 
     setIsChecking(true);
     setResult(null);
 
     try {
-      // Submit code link
+      // Submit code text
       const submitResponse = await fetch("/api/submissions/code/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codeLink }),
+        body: JSON.stringify({ 
+          codeText: codeText
+        }),
       });
 
       const submitData = await submitResponse.json();
@@ -42,7 +43,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           submissionId: submitData.id,
-          codeLink,
+          codeText: codeText
         }),
       });
 
@@ -56,7 +57,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
 
       onSubmit({
         type: "code",
-        link: codeLink,
+        link: "Code Text Submission",
         status: evaluateData.status,
         timestamp: new Date(),
       });
@@ -72,7 +73,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
   };
 
   const handleClear = () => {
-    setCodeLink("");
+    setCodeText("");
     setResult(null);
   };
 
@@ -102,18 +103,18 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
         </span>
       </div>
 
-      {/* Input Field */}
+      {/* Code Text Input */}
       <div className="mb-6">
         <label className="block text-sm font-semibold text-cyber-blue-400 mb-3">
-          Code Link (Codeforces/LeetCode/etc)
+          Paste Your Code Solution
         </label>
         <div className="relative group">
-          <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-cyber-blue-400 transition-colors z-10" />
-          <Input
-            value={codeLink}
-            onChange={(e) => setCodeLink(e.target.value)}
-            placeholder="https://codeforces.com/..."
-            className="w-full bg-hack-navy/50 border-cyber-blue-400/30 pl-12 pr-4 py-4 rounded-xl text-gray-200 placeholder-gray-500 focus:border-cyber-blue-400 focus:ring-2 focus:ring-cyber-blue-400/20 transition-all duration-300"
+          <Code className="absolute left-4 top-4 w-5 h-5 text-gray-400 z-10" />
+          <textarea
+            value={codeText}
+            onChange={(e) => setCodeText(e.target.value)}
+            placeholder="Paste your code solution here..."
+            className="w-full h-64 bg-hack-navy/50 border-cyber-blue-400/30 pl-12 pr-4 py-4 rounded-xl text-gray-200 placeholder-gray-500 focus:border-cyber-blue-400 focus:ring-2 focus:ring-cyber-blue-400/20 transition-all duration-300 font-mono text-sm resize-y"
             disabled={isChecking}
           />
           <motion.div
@@ -138,11 +139,11 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
             whileTap={{ scale: 0.98 }}
             onClick={handleSubmit}
             className="w-full relative overflow-hidden px-6 py-4 bg-gradient-to-r from-cyber-blue-400 to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(28,171,242,0.4)] hover:shadow-[0_0_30px_rgba(28,171,242,0.6)] cursor-pointer"
-            {...(isChecking || !codeLink.trim() ? {} : { tabIndex: 0 })}
+            {...(isChecking || !codeText.trim() ? {} : { tabIndex: 0 })}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                if (!isChecking && codeLink.trim()) {
+                if (!isChecking && codeText.trim()) {
                   handleSubmit();
                 }
               }
