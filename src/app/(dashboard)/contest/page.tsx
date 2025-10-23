@@ -130,10 +130,12 @@ export default function ContestPage() {
               transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
               className="w-full"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <CodeSubmissionBox onSubmit={handleNewSubmission} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <GitHubSubmissionBox onSubmit={handleNewSubmission} />
                 <DeploymentSubmissionBox onSubmit={handleNewSubmission} />
+              </div>
+              <div className="mb-6">
+                <CodeSubmissionBox onSubmit={handleNewSubmission} />
               </div>
               <div className="mt-6">
                 <SubmissionHistory submissions={submissions} />
