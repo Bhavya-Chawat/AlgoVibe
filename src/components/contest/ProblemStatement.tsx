@@ -84,7 +84,8 @@ export default function ProblemStatement() {
   }
 
   return (
-    <ElectricBorder>
+    // Updated ElectricBorder with slower animation settings
+    <ElectricBorder speed={0.5} animationDuration="6s">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
