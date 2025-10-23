@@ -80,8 +80,8 @@ export default function ContestPage() {
         }}
       ></div>
 
-      {/* Main Content */}
-      <div className="relative z-10">
+      {/* Main Content - Added pt-20 to offset fixed header */}
+      <div className="relative z-10 pt-20">
         {/* Contest Content - Full Width Problem Statement */}
         <div className="max-w-[1920px] mx-auto px-6 py-8">
           <div className="flex flex-col">
