@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Code2, Trophy, Clock, AlertCircle, Check } from "lucide-react";
-import { GlitchText } from "@/components/effects/react-effects-lib/src/components/effects/GlitchText";
 import { ElectricBorder } from "@/components/effects/react-effects-lib/src/components/effects/ElectricBorder";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/modern-ui/src/components/ui/Badge";
@@ -17,6 +16,29 @@ export default function ProblemStatement() {
     sampleTestCases: [],
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [glitchText, setGlitchText] = useState("Algorithm Challenge");
+
+  useEffect(() => {
+    // Implement glitch effect similar to login page
+    const glitchInterval = setInterval(() => {
+      const chars = "!@#$%^&*(){}[]<>?/~`";
+      const original = "Algorithm Challenge";
+      const glitched = original
+        .split("")
+        .map((char) => {
+          if (Math.random() > 0.90 && char !== " ") {
+            return chars[Math.floor(Math.random() * chars.length)];
+          }
+          return char;
+        })
+        .join("");
+
+      setGlitchText(glitched);
+      setTimeout(() => setGlitchText(original), 30);
+    }, 1500);
+
+    return () => clearInterval(glitchInterval);
+  }, []);
 
   useEffect(() => {
     fetchProblem();
@@ -27,6 +49,8 @@ export default function ProblemStatement() {
       const response = await fetch("/api/contest/problem");
       const data = await response.json();
       setProblem(data);
+      // Update glitch text with actual problem title
+      setGlitchText(data.title);
     } catch (error) {
       console.error("Failed to fetch problem:", error);
     } finally {
@@ -73,7 +97,7 @@ export default function ProblemStatement() {
         <div className="mb-10 pb-10 border-b border-cyber-blue-400/30">
           <div className="flex items-start justify-between gap-8 mb-8">
             <h1 className="text-5xl font-bold text-gradient flex-1">
-              <GlitchText text={problem.title} />
+              {glitchText}
             </h1>
             <Code2 className="w-12 h-12 text-cyber-blue-400 flex-shrink-0" />
           </div>
