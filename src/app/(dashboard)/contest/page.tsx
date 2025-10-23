@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ContestTimer from "@/components/contest/ContestTimer";
 import ProblemStatement from "@/components/contest/ProblemStatement";
 import CodeSubmissionBox from "@/components/contest/CodeSubmissionBox";
 import GitHubSubmissionBox from "@/components/contest/GitHubSubmissionBox";
 import DeploymentSubmissionBox from "@/components/contest/DeploymentSubmissionBox";
 import SubmissionHistory from "@/components/contest/SubmissionHistory";
-import { GridOverlay } from "@/components/background/GridOverlay";
 import { motion } from "framer-motion";
 
 // Add types for submissions and contest status
@@ -22,32 +20,9 @@ interface Submission {
 
 export default function ContestPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [contestStatus, setContestStatus] = useState<'upcoming' | 'live' | 'ended'>('live');
-
-  useEffect(() => {
-    fetchContestData();
-  }, []);
-
-  const fetchContestData = async () => {
-    try {
-      const response = await fetch("/api/contest/status");
-      if (!response.ok) throw new Error('Failed to fetch contest status');
-      const data = await response.json();
-      setContestStatus(data.status);
-    } catch (error) {
-      console.error("Failed to fetch contest data:", error);
-      // Set a fallback status if fetch fails
-      setContestStatus('live');
-    }
-  };
 
   // Update the submission handler to include validation
   const handleNewSubmission = (submission: Omit<Submission, 'id' | 'timestamp'>) => {
-    if (contestStatus !== 'live') {
-      console.warn('Contest is not live. Submissions are not accepted.');
-      return;
-    }
-
     const newSubmission: Submission = {
       ...submission,
       id: crypto.randomUUID(),
@@ -104,14 +79,8 @@ export default function ContestPage() {
 
       {/* Main Content */}
       <div className="relative z-10">
-        {/* Sticky Contest Timer */}
-        <ContestTimer
-          status={contestStatus}
-          duration={90} // 90 minutes
-        />
-
         {/* Contest Content - Full Width Problem Statement */}
-        <div className="max-w-[1920px] mx-auto px-6 py-8 mt-24">
+        <div className="max-w-[1920px] mx-auto px-6 py-8">
           <div className="flex flex-col">
             {/* Full Width Problem Statement - Much Bigger */}
             <motion.div
