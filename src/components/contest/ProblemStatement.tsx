@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { Code2, Trophy, Clock, AlertCircle, Check } from "lucide-react";
-import { GlitchText } from "@/components/effects/react-effects-lib/src/components/effects/GlitchText";
 import { ElectricBorder } from "@/components/effects/react-effects-lib/src/components/effects/ElectricBorder";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/modern-ui/src/components/ui/Badge";
+import CompactTimer from "@/components/contest/CompactTimer";
 
 export default function ProblemStatement() {
   const [problem, setProblem] = useState({
@@ -17,6 +17,29 @@ export default function ProblemStatement() {
     sampleTestCases: [],
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [glitchText, setGlitchText] = useState("Algorithm Challenge");
+
+  useEffect(() => {
+    // Implement glitch effect similar to login page
+    const glitchInterval = setInterval(() => {
+      const chars = "!@#$%^&*(){}[]<>?/~`";
+      const original = "Algorithm Challenge";
+      const glitched = original
+        .split("")
+        .map((char) => {
+          if (Math.random() > 0.90 && char !== " ") {
+            return chars[Math.floor(Math.random() * chars.length)];
+          }
+          return char;
+        })
+        .join("");
+
+      setGlitchText(glitched);
+      setTimeout(() => setGlitchText(original), 30);
+    }, 1500);
+
+    return () => clearInterval(glitchInterval);
+  }, []);
 
   useEffect(() => {
     fetchProblem();
@@ -27,6 +50,8 @@ export default function ProblemStatement() {
       const response = await fetch("/api/contest/problem");
       const data = await response.json();
       setProblem(data);
+      // Update glitch text with actual problem title
+      setGlitchText(data.title);
     } catch (error) {
       console.error("Failed to fetch problem:", error);
     } finally {
@@ -59,71 +84,73 @@ export default function ProblemStatement() {
   }
 
   return (
-    <ElectricBorder>
+    // Updated ElectricBorder with slower animation settings
+    <ElectricBorder speed={0.5} animationDuration="6s">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="glass-panel-strong p-8 rounded-2xl border border-cyber-blue-400/30 sticky top-32 max-h-[calc(100vh-160px)] overflow-y-auto custom-scrollbar"
+        className="glass-panel-strong p-12 rounded-3xl border-2 border-cyber-blue-400/40"
         style={{
-          boxShadow: "0 0 40px rgba(28, 171, 242, 0.3)",
+          boxShadow: "0 0 60px rgba(28, 171, 242, 0.5)",
         }}
       >
+        {/* Compact Timer at the top */}
+        <div className="mb-8">
+          <CompactTimer status="live" duration={120} />
+        </div>
+
         {/* Header with glowing title */}
-        <div className="mb-6 pb-6 border-b border-cyber-blue-400/20">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <h1 className="text-3xl font-bold text-gradient flex-1">
-              <GlitchText text={problem.title} />
+        <div className="mb-10 pb-10 border-b border-cyber-blue-400/30">
+          <div className="flex items-start justify-between gap-8 mb-8">
+            <h1 className="text-5xl font-bold text-gradient flex-1">
+              {glitchText}
             </h1>
-            <Code2 className="w-8 h-8 text-cyber-blue-400 flex-shrink-0" />
+            <Code2 className="w-12 h-12 text-cyber-blue-400 flex-shrink-0" />
           </div>
 
           {/* Meta Info */}
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge className={`px-3 py-1 text-sm font-semibold border ${getDifficultyColor(problem.difficulty)}`}>
-              {problem.difficulty}
-            </Badge>
-            
-            <div className="flex items-center gap-2 text-sm text-gray-300">
-              <Trophy className="w-4 h-4 text-warning-orange" />
-              <span className="font-bold text-warning-orange">{problem.points} Points</span>
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-4 text-lg text-gray-300">
+              <Trophy className="w-8 h-8 text-warning-orange" />
+              <span className="font-bold text-warning-orange text-2xl">{problem.points} Points</span>
             </div>
-            
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Clock className="w-4 h-4" />
-              <span>90 minutes</span>
+
+            <div className="flex items-center gap-4 text-lg text-gray-400">
+              <Clock className="w-8 h-8" />
+              <span className="text-2xl">90 minutes</span>
             </div>
           </div>
         </div>
 
         {/* Description */}
-        <div className="mb-6">
-          <h3 className="text-xl font-semibold text-cyber-blue-400 mb-3 flex items-center gap-2">
-            <div className="w-1 h-6 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
+        <div className="mb-10">
+          <h3 className="text-3xl font-bold text-cyber-blue-400 mb-6 flex items-center gap-4">
+            <div className="w-3 h-12 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
             Problem Description
           </h3>
-          <p className="text-gray-300 leading-relaxed">
+          <p className="text-gray-300 text-xl leading-relaxed">
             {problem.description || "Build an innovative solution that demonstrates algorithmic thinking and problem-solving skills. Your submission should include clean code, proper documentation, and a live deployment showcasing your work."}
           </p>
         </div>
 
         {/* Requirements */}
-        <div className="mb-6 glass-panel p-4 rounded-xl border border-cyber-blue-400/10">
-          <h3 className="text-lg font-semibold text-cyber-blue-400 mb-3 flex items-center gap-2">
-            <AlertCircle className="w-5 h-5" />
+        <div className="mb-10 glass-panel p-8 rounded-2xl border-2 border-cyber-blue-400/20">
+          <h3 className="text-2xl font-bold text-cyber-blue-400 mb-6 flex items-center gap-4">
+            <AlertCircle className="w-8 h-8" />
             Submission Requirements
           </h3>
-          <ul className="space-y-2 text-gray-300 text-sm">
-            <li className="flex items-start gap-2">
-              <Check className="w-4 h-4 text-matrix-green mt-1" />
+          <ul className="space-y-4 text-gray-300 text-xl">
+            <li className="flex items-start gap-4">
+              <Check className="w-8 h-8 text-matrix-green mt-1" />
               <span>Code submission with valid solution link</span>
             </li>
-            <li className="flex items-start gap-2">
-              <Check className="w-4 h-4 text-matrix-green mt-1" />
+            <li className="flex items-start gap-4">
+              <Check className="w-8 h-8 text-matrix-green mt-1" />
               <span>GitHub repository with clean, documented code</span>
             </li>
-            <li className="flex items-start gap-2">
-              <Check className="w-4 h-4 text-matrix-green mt-1" />
+            <li className="flex items-start gap-4">
+              <Check className="w-8 h-8 text-matrix-green mt-1" />
               <span>Live deployment URL (Vercel, Netlify, etc.)</span>
             </li>
           </ul>
@@ -131,24 +158,24 @@ export default function ProblemStatement() {
 
         {/* Sample Test Cases */}
         {problem.sampleTestCases && problem.sampleTestCases.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-cyber-blue-400 mb-3 flex items-center gap-2">
-              <div className="w-1 h-6 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
+          <div className="mb-10">
+            <h3 className="text-2xl font-bold text-cyber-blue-400 mb-6 flex items-center gap-4">
+              <div className="w-3 h-12 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
               Sample Test Cases
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-6">
               {problem.sampleTestCases.map((testCase: any, index: number) => (
-                <div key={index} className="glass-panel p-4 rounded-lg border border-cyber-blue-400/10">
-                  <div className="grid grid-cols-2 gap-4">
+                <div key={index} className="glass-panel p-8 rounded-2xl border-2 border-cyber-blue-400/20">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                      <p className="text-xs text-gray-400 mb-2">Input:</p>
-                      <code className="text-sm text-matrix-green font-mono">
+                      <p className="text-lg text-gray-400 mb-4">Input:</p>
+                      <code className="text-xl text-matrix-green font-mono bg-hack-navy/50 p-6 rounded-xl block">
                         {testCase.input}
                       </code>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400 mb-2">Output:</p>
-                      <code className="text-sm text-neon-blue font-mono">
+                      <p className="text-lg text-gray-400 mb-4">Output:</p>
+                      <code className="text-xl text-neon-blue font-mono bg-hack-navy/50 p-6 rounded-xl block">
                         {testCase.output}
                       </code>
                     </div>
@@ -162,14 +189,14 @@ export default function ProblemStatement() {
         {/* Constraints */}
         {problem.constraints && problem.constraints.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold text-cyber-blue-400 mb-3 flex items-center gap-2">
-              <div className="w-1 h-6 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
+            <h3 className="text-2xl font-bold text-cyber-blue-400 mb-6 flex items-center gap-4">
+              <div className="w-3 h-12 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
               Constraints
             </h3>
-            <ul className="space-y-2 text-gray-400 text-sm font-mono">
+            <ul className="space-y-4 text-gray-400 text-xl font-mono">
               {problem.constraints.map((constraint: string, index: number) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-cyber-blue-400">•</span>
+                <li key={index} className="flex items-start gap-4">
+                  <span className="text-cyber-blue-400 text-2xl">•</span>
                   <span>{constraint}</span>
                 </li>
               ))}
@@ -187,9 +214,9 @@ export default function ProblemStatement() {
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          className="absolute inset-0 rounded-2xl pointer-events-none"
+          className="absolute inset-0 rounded-3xl pointer-events-none"
           style={{
-            background: "radial-gradient(circle at center, rgba(28, 171, 242, 0.1), transparent 70%)",
+            background: "radial-gradient(circle at center, rgba(28, 171, 242, 0.2), transparent 70%)",
           }}
         />
       </motion.div>
