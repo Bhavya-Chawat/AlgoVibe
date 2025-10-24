@@ -4,14 +4,12 @@ interface ElectricBorderProps {
   children: React.ReactNode;
   className?: string;
   speed?: number;
-  animationDuration?: string; // New prop for customizing animation duration
 }
 
 export const ElectricBorder: React.FC<ElectricBorderProps> = ({ 
   children, 
   className = '',
-  speed = 2,
-  animationDuration = '2s' // Default value
+  speed = 2
 }) => {
   const borderRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +43,7 @@ export const ElectricBorder: React.FC<ElectricBorderProps> = ({
     >
       <div className="absolute inset-0 rounded-lg overflow-hidden">
         <div 
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{
             background: `linear-gradient(90deg, 
               transparent 0%, 
@@ -54,12 +52,12 @@ export const ElectricBorder: React.FC<ElectricBorderProps> = ({
               rgba(28, 171, 242, 0.4) 75%, 
               transparent 100%)`,
             backgroundSize: '200% 100%',
-            animation: `electric-flow ${animationDuration} linear infinite`
+            animation: 'electric-flow 2s linear infinite'
           }}
         />
       </div>
       
-      <div className="relative z-10 border-2 border-cyber-blue-400/30 rounded-lg group-hover:border-cyber-blue-400/60 transition-colors duration-700">
+      <div className="relative z-10 border-2 border-cyber-blue-400/30 rounded-lg group-hover:border-cyber-blue-400/60 transition-colors duration-300">
         {children}
       </div>
 
