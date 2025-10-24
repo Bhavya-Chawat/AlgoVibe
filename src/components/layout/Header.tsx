@@ -61,6 +61,12 @@ export default function Header() {
             {/* CTA Buttons */}
             <div className="flex items-center space-x-4">
               <Link
+                href="/login"
+                className="px-6 py-2.5 border border-cyber-blue-400 text-cyber-blue-400 hover:bg-cyber-blue-400/10 font-semibold rounded-lg transition-all duration-300 hover:scale-105"
+              >
+                Login
+              </Link>
+              <Link
                 href="/register"
                 className="px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyber-blue-400/50"
               >
@@ -97,6 +103,13 @@ export default function Header() {
                 </Link>
               ))}
               <div className="pt-4 border-t border-white/10 space-y-3">
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full px-6 py-2.5 border border-cyber-blue-400 text-cyber-blue-400 hover:bg-cyber-blue-400/10 font-semibold rounded-lg text-center transition-all duration-300"
+                >
+                  Login
+                </Link>
                 <Link
                   href="/register"
                   onClick={() => setIsMobileMenuOpen(false)}
