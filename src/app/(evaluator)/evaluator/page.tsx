@@ -27,7 +27,7 @@ export default function EvaluatorProblemPage() {
           </div>
         </div>
 
-        {/* Quick Info Banner */ }
+        {/* Quick Info Banner */}
         <div className="glass-panel p-4 rounded-xl border border-neon-blue/20 bg-neon-blue/5">
           <div className="flex items-start gap-3">
             <Zap className="w-5 h-5 text-neon-blue flex-shrink-0 mt-0.5" />
@@ -43,13 +43,13 @@ export default function EvaluatorProblemPage() {
         </div>
       </motion.div>
 
-      {/* Problem Editor Component */ }
+      {/* Problem Editor Component */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <ProblemEditor />
+        <ProblemEditor showSidebarPanels={false} />
       </motion.div>
     </div>
   );
