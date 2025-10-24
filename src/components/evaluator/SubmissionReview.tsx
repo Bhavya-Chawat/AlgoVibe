@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Download, Play, MessageSquare, ExternalLink } from "lucide-react";
+import { Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Play, MessageSquare, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface Submission {
@@ -20,9 +20,6 @@ interface SubmissionReviewProps {
 }
 
 export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "code" | "github" | "deployment">("all");
-  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "submitted" | "accepted" | "rejected" | "live" | "correct" | "wrong">("all");
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
@@ -89,14 +86,6 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
       setSubmissions([]);
     }
   }, [selectedTeam]);
-
-  // Filter submissions based on search query and filters
-  const filteredSubmissions = submissions.filter(submission => {
-    const matchesSearch = submission.team.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === "all" || submission.type === filterType;
-    const matchesStatus = filterStatus === "all" || submission.status === filterStatus;
-    return matchesSearch && matchesType && matchesStatus;
-  });
 
   const getIcon = (type: Submission["type"]) => {
     switch (type) {
@@ -181,62 +170,9 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
 
   return (
     <div className="space-y-6">
-      {/* Header and Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search submissions..."
-            className="w-full pl-10 pr-4 py-2 bg-hack-black border border-cyber-blue-400/20 rounded-xl text-white focus:border-cyber-blue-400/60 focus:outline-none transition-all"
-          />
-        </div>
-        
-        <div className="flex gap-4">
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value as typeof filterType)}
-            className="px-4 py-2 bg-hack-black border border-cyber-blue-400/20 rounded-xl text-white focus:border-cyber-blue-400/60 focus:outline-none transition-all"
-          >
-            <option value="all">All Types</option>
-            <option value="code">Code</option>
-            <option value="github">GitHub</option>
-            <option value="deployment">Deployment</option>
-          </select>
-
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
-            className="px-4 py-2 bg-hack-black border border-cyber-blue-400/20 rounded-xl text-white focus:border-cyber-blue-400/60 focus:outline-none transition-all"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="submitted">Submitted</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Rejected</option>
-            <option value="live">Live</option>
-            <option value="correct">Correct</option>
-            <option value="wrong">Wrong</option>
-          </select>
-
-          <button
-            onClick={() => {
-              setSearchQuery("");
-              setFilterType("all");
-              setFilterStatus("all");
-            }}
-            className="px-4 py-2 bg-hack-black border border-cyber-blue-400/20 rounded-xl text-white hover:bg-cyber-blue-400/10 transition-all"
-          >
-            Reset Filters
-          </button>
-        </div>
-      </div>
-
-      {/* Submissions List */}
+      {/* Submissions List - Removed search and filters */}
       <div className="space-y-4">
-        {filteredSubmissions.map((submission) => {
+        {submissions.map((submission) => {
           const statusConfig = getStatusConfig(submission.status);
           
           return (
