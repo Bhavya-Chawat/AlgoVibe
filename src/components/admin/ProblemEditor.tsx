@@ -11,7 +11,11 @@ interface Team {
   members: number;
 }
 
-export default function ProblemEditor() {
+interface ProblemEditorProps {
+  showSidebarPanels?: boolean;
+}
+
+export default function ProblemEditor({ showSidebarPanels = true }: ProblemEditorProps) {
   // Mock teams data - replace with actual API call
   const teams: Team[] = [
     { id: "1", name: "CodeNinjas", leader: "John Doe", members: 3 },
@@ -122,9 +126,9 @@ export default function ProblemEditor() {
         </motion.div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid gap-6 ${showSidebarPanels ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
         {/* Main Editor */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className={`${showSidebarPanels ? 'lg:col-span-2' : ''} space-y-6`}>
           {/* Team Selection */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -254,102 +258,104 @@ Sample Output:
         </div>
 
         {/* Sidebar - Info Panel */}
-        <div className="space-y-6">
-          {/* Current Status */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="glass-panel-strong p-6 rounded-2xl border border-cyber-blue-400/20"
-          >
-            <h3 className="text-lg font-bold text-gray-200 mb-4">Current Status</h3>
+        {showSidebarPanels && (
+          <div className="space-y-6">
+            {/* Current Status */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="glass-panel-strong p-6 rounded-2xl border border-cyber-blue-400/20"
+            >
+              <h3 className="text-lg font-bold text-gray-200 mb-4">Current Status</h3>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Selected Team</span>
-                <span className="text-cyber-blue-400 font-semibold text-sm">
-                  {selectedTeamData ? selectedTeamData.name : "None"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Title Status</span>
-                <span className={`text-sm font-semibold ${title ? "text-matrix-green" : "text-gray-500"}`}>
-                  {title ? "Ready" : "Pending"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Description</span>
-                <span className={`text-sm font-semibold ${description ? "text-matrix-green" : "text-gray-500"}`}>
-                  {description ? "Ready" : "Pending"}
-                </span>
-              </div>
-
-              <div className="pt-3 border-t border-cyber-blue-400/20">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Ready to Save</span>
-                  <div className="flex items-center gap-2">
-                    {selectedTeam && title && description ? (
-                      <CheckCircle className="w-5 h-5 text-matrix-green" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5 text-warning-orange" />
-                    )}
+                  <span className="text-sm text-gray-400">Selected Team</span>
+                  <span className="text-cyber-blue-400 font-semibold text-sm">
+                    {selectedTeamData ? selectedTeamData.name : "None"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Title Status</span>
+                  <span className={`text-sm font-semibold ${title ? "text-matrix-green" : "text-gray-500"}`}>
+                    {title ? "Ready" : "Pending"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Description</span>
+                  <span className={`text-sm font-semibold ${description ? "text-matrix-green" : "text-gray-500"}`}>
+                    {description ? "Ready" : "Pending"}
+                  </span>
+                </div>
+
+                <div className="pt-3 border-t border-cyber-blue-400/20">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">Ready to Save</span>
+                    <div className="flex items-center gap-2">
+                      {selectedTeam && title && description ? (
+                        <CheckCircle className="w-5 h-5 text-matrix-green" />
+                      ) : (
+                        <AlertCircle className="w-5 h-5 text-warning-orange" />
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
 
-          {/* Instructions */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="glass-panel p-5 rounded-2xl border border-warning-orange/30 bg-warning-orange/5"
-          >
-            <div className="flex gap-3">
-              <AlertCircle className="w-5 h-5 text-warning-orange flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-gray-300 space-y-2">
-                <p className="font-semibold text-warning-orange">Instructions</p>
-                <ul className="space-y-1 list-disc list-inside text-xs">
-                  <li>Select a team from the dropdown</li>
-                  <li>Enter a clear problem title</li>
-                  <li>Write detailed problem description</li>
-                  <li>Include input/output format</li>
-                  <li>Add constraints and examples</li>
-                  <li>Click Save to assign problem</li>
-                </ul>
+            {/* Instructions */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+              className="glass-panel p-5 rounded-2xl border border-warning-orange/30 bg-warning-orange/5"
+            >
+              <div className="flex gap-3">
+                <AlertCircle className="w-5 h-5 text-warning-orange flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-gray-300 space-y-2">
+                  <p className="font-semibold text-warning-orange">Instructions</p>
+                  <ul className="space-y-1 list-disc list-inside text-xs">
+                    <li>Select a team from the dropdown</li>
+                    <li>Enter a clear problem title</li>
+                    <li>Write detailed problem description</li>
+                    <li>Include input/output format</li>
+                    <li>Add constraints and examples</li>
+                    <li>Click Save to assign problem</li>
+                  </ul>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
 
-          {/* Quick Stats */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="glass-panel-strong p-6 rounded-2xl border border-cyber-blue-400/20"
-          >
-            <h3 className="text-lg font-bold text-gray-200 mb-4">Team Stats</h3>
+            {/* Quick Stats */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="glass-panel-strong p-6 rounded-2xl border border-cyber-blue-400/20"
+            >
+              <h3 className="text-lg font-bold text-gray-200 mb-4">Team Stats</h3>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Total Teams</span>
-                <span className="text-cyber-blue-400 font-bold">{teams.length}</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Total Teams</span>
+                  <span className="text-cyber-blue-400 font-bold">{teams.length}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Problems Assigned</span>
+                  <span className="text-matrix-green font-bold">3</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Pending</span>
+                  <span className="text-warning-orange font-bold">{teams.length - 3}</span>
+                </div>
               </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Problems Assigned</span>
-                <span className="text-matrix-green font-bold">3</span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">Pending</span>
-                <span className="text-warning-orange font-bold">{teams.length - 3}</span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </div>
   );
