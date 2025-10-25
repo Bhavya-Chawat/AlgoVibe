@@ -256,8 +256,6 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
           </div>
         ) : (
           filteredSubmissions.map((submission) => {
-            const statusConfig = getStatusConfig(submission.status);
-            
             return (
               <motion.div
                 key={submission.id}
@@ -268,9 +266,6 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 bg-cyber-blue-400/10 rounded-lg">
-                      {getIcon(submission.type)}
-                    </div>
                     <div>
                       <h3 className="font-semibold text-white">{submission.team}</h3>
                       <p className="text-sm text-gray-400">{getTypeLabel(submission.type)} • {submission.submittedAt}</p>
@@ -278,13 +273,6 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
                   </div>
 
                   <div className="flex items-center gap-6">
-                    <div className={`px-3 py-1 rounded-full border text-sm font-semibold ${statusConfig.color}`}>
-                      <div className="flex items-center gap-1.5">
-                        {statusConfig.icon}
-                        {statusConfig.label}
-                      </div>
-                    </div>
-                    
                     {submission.score !== undefined && (
                       <div className="text-cyber-blue-400 font-semibold">
                         {submission.score}/100
@@ -425,13 +413,6 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
                     <div className="flex items-center gap-2">
                       {getIcon(selectedSubmission.type)}
                       <span className="capitalize">{selectedSubmission.type}</span>
-                    </div>
-                    
-                    <div className={`px-3 py-1 rounded-full border text-sm font-semibold ${getStatusConfig(selectedSubmission.status).color}`}>
-                      <div className="flex items-center gap-1.5">
-                        {getStatusConfig(selectedSubmission.status).icon}
-                        {getStatusConfig(selectedSubmission.status).label}
-                      </div>
                     </div>
                     
                     {selectedSubmission.score !== undefined && (
