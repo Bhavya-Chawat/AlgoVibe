@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { usePathname } from "next/navigation"
 import { LogOut, ClipboardCheck } from "lucide-react"
 import { logout } from "@/app/actions/auth"
 import { motion } from "framer-motion"
@@ -10,11 +11,12 @@ interface EvaluatorLayoutClientProps {
   user: {
     email?: string
     role: string
-  }
+  } | null  // ← Allow null for login page
 }
 
 export default function EvaluatorLayoutClient({ children, user }: EvaluatorLayoutClientProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const pathname = usePathname()
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -24,6 +26,12 @@ export default function EvaluatorLayoutClient({ children, user }: EvaluatorLayou
       console.error("Logout failed:", error)
       setIsLoggingOut(false)
     }
+  }
+
+  // If login page or no user, render without header
+  const isLoginPage = pathname === "/evaluator/login"
+  if (isLoginPage || !user) {
+    return <>{children}</>
   }
 
   return (

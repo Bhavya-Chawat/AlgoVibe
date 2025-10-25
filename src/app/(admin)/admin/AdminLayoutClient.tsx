@@ -21,7 +21,7 @@ interface AdminLayoutClientProps {
   user: {
     email?: string
     role: string
-  }
+  } | null  // ← Allow null for login page
 }
 
 export default function AdminLayoutClient({ children, user }: AdminLayoutClientProps) {
@@ -29,6 +29,9 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+
+  // If on login page, don't show sidebar
+  const isLoginPage = pathname === "/admin/login"
 
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -48,6 +51,11 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
       console.error("Logout failed:", error)
       setIsLoggingOut(false)
     }
+  }
+
+  // If login page, render without sidebar
+  if (isLoginPage || !user) {
+    return <>{children}</>
   }
 
   return (

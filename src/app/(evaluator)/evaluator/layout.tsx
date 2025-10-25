@@ -9,9 +9,12 @@ export default async function EvaluatorLayout({
 }) {
   const user = await getUserWithRole()
 
-  if (!user || (user.role !== 'evaluator' && user.role !== 'admin')) {
+  // Allow access to login page without authentication
+  // If user exists but is not evaluator/admin, redirect to unauthorized
+  if (user && user.role !== 'evaluator' && user.role !== 'admin') {
     redirect('/unauthorized')
   }
 
+  // If user is evaluator/admin or no user (login page), render the layout
   return <EvaluatorLayoutClient user={user}>{children}</EvaluatorLayoutClient>
 }
