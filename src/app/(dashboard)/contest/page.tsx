@@ -1,51 +1,67 @@
-import { redirect } from 'next/navigation'
-import { getUserWithRole } from '@/app/actions/auth'
-import ContestPageClient from './ContestPageClient'
-import { createAdminClient } from '@/lib/supabase/server'
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import ContestPageClient from "./ContestPageClient";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export default async function ContestPage() {
-  const user = await getUserWithRole()
+  // Get current authenticated user & role
+  const user = await getCurrentUser();
 
-  // Verify contestant access
-  if (!user || user.role !== 'contestant') {
-    redirect('/unauthorized')
+  if (
+    !user ||
+    (user.role !== "admin" && user.role !== "evaluator" && user.role !== "contestant")
+  ) {
+    redirect("/unauthorized");
   }
 
-  // Get user's team info
-  const supabase = createAdminClient()
-  
-  const { data: member, error: memberError } = await supabase
-    .from('members')
-    .select('team_id')
-    .eq('email', user.email!)
-    .single()
-
-  if (memberError || !member) {
-    redirect('/unauthorized')
+  // Only allow contestants to access contest page
+  if (user.role !== "contestant") {
+    redirect("/unauthorized");
   }
 
-  // Get team's problem - Split into two queries for cleaner types
-  const { data: teamProblem } = await supabase
-    .from('team_problems')
-    .select('problem_id')
-    .eq('team_id', member.team_id)
-    .single()
-
-  let problem = null
-
-  if (teamProblem?.problem_id) {
-    const { data: problemData } = await supabase
-      .from('problems')
-      .select('problem_id, title, description')
-      .eq('problem_id', teamProblem.problem_id)
-      .single()
-
-    problem = problemData
+  // Parse teamId from email: "team-{teamId}@algovibe.com"
+  const email = user.email;
+  if (!email) {
+    redirect("/unauthorized");
   }
 
-  // Get team's submissions
-  const { data: submissions } = await supabase
-    .from('submissions')
+  const teamIdMatch = email.match(/^team-(\d+)@algovibe\.com$/);
+  if (!teamIdMatch) {
+    redirect("/unauthorized");
+  }
+
+  const teamId = parseInt(teamIdMatch[1], 10);
+  if (isNaN(teamId)) {
+    redirect("/unauthorized");
+  }
+
+  const supabase = createAdminClient();
+
+  // Check if contest is active
+  const { data: contest, error: contestError } = await supabase
+    .from("contest")
+    .select("is_active")
+    .single();
+
+  if (contestError || !contest?.is_active) {
+    redirect("/pre-contest");
+  }
+
+  // Fetch assigned problem for the team, problem might be an array, so handle accordingly
+  const { data: teamProblem, error: teamProblemError } = await supabase
+    .from("team_problems")
+    .select("problem:problems(problem_id, title, description)")
+    .eq("team_id", teamId)
+    .maybeSingle();
+
+  // Normalize problem to be a single object or null
+  const problem = Array.isArray(teamProblem?.problem)
+    ? teamProblem.problem[0] ?? null
+    : teamProblem?.problem ?? null;
+
+  // Fetch submissions for this team with problem details
+  const { data: submissionsData, error: submissionsError } = await supabase
+    .from("submissions")
     .select(`
       submission_id,
       code,
@@ -54,16 +70,19 @@ export default async function ContestPage() {
       status,
       score,
       feedback,
-      submitted_at
+      submitted_at,
+      problem:problems(problem_id, title)
     `)
-    .eq('team_id', member.team_id)
-    .order('submitted_at', { ascending: false })
+    .eq("team_id", teamId)
+    .order("submitted_at", { ascending: false });
+
+  const submissions = submissionsError || !submissionsData ? [] : submissionsData;
 
   return (
-    <ContestPageClient 
+    <ContestPageClient
       problem={problem}
-      initialSubmissions={submissions || []}
-      teamId={member.team_id}
+      initialSubmissions={submissions}
+      teamId={teamId}
     />
-  )
+  );
 }

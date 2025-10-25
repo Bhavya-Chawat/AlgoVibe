@@ -18,28 +18,6 @@ interface ProblemStatementProps {
 export default function ProblemStatement({ problem }: ProblemStatementProps) {
   const [glitchText, setGlitchText] = useState(problem.title);
 
-  useEffect(() => {
-    // Glitch effect for problem title
-    const glitchInterval = setInterval(() => {
-      const chars = "!@#$%^&*(){}[]<>?/~`";
-      const original = problem.title;
-      const glitched = original
-        .split("")
-        .map((char) => {
-          if (Math.random() > 0.9 && char !== " ") {
-            return chars[Math.floor(Math.random() * chars.length)];
-          }
-          return char;
-        })
-        .join("");
-
-      setGlitchText(glitched);
-      setTimeout(() => setGlitchText(original), 30);
-    }, 1500);
-
-    return () => clearInterval(glitchInterval);
-  }, [problem.title]);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -52,14 +30,18 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
     >
       {/* Compact Timer at the top */}
       <div className="mb-8">
-        <CompactTimer status="live" duration={120} />
+        <CompactTimer
+          status="live"
+          startTimeISO={new Date(Date.now() - 2 * 60 * 1000).toISOString()}
+          endTimeISO={new Date(Date.now() + 88 * 60 * 1000).toISOString()}
+        />{" "}
       </div>
 
       {/* Header with glowing title */}
       <div className="mb-10 pb-10 border-b border-cyber-blue-400/30">
         <div className="flex items-start justify-between gap-8 mb-8">
           <h1 className="text-5xl font-bold text-gradient flex-1">
-            {glitchText}
+            {problem.title}
           </h1>
           <Code2 className="w-12 h-12 text-cyber-blue-400 flex-shrink-0" />
         </div>
