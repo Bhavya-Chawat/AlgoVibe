@@ -421,8 +421,8 @@ console.log(maxSubarraySum([1])); // Output: 1`
                   type="number"
                   min="0"
                   max="100"
-                  value={marks.score}
-                  onChange={(e) => setMarks({ ...marks, score: parseInt(e.target.value) || 0 })}
+                  value={marks.score === 0 ? "" : marks.score}
+                  onChange={(e) => setMarks({ ...marks, score: e.target.value === "" ? 0 : parseInt(e.target.value) || 0 })}
                   className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 bg-transparent"
                   placeholder="Enter score"
                 />
