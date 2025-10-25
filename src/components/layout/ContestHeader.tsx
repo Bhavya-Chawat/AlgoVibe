@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X, Zap } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ContestHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,6 +17,12 @@ export default function ContestHeader() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    // Redirect to home page after logout
+    window.location.href = "/";
+  };
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -57,14 +65,14 @@ export default function ContestHeader() {
               </Link>
             ))}
 
-            {/* CTA Buttons */}
+            {/* Logout Button - Always shown */}
             <div className="flex items-center space-x-4">
-              <Link
-                href="/register"
-                className="px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyber-blue-400/50"
+              <button
+                onClick={handleLogout}
+                className="px-6 py-2.5 bg-alert-red hover:bg-red-600 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-alert-red/50"
               >
-                Register Now
-              </Link>
+                Logout
+              </button>
             </div>
           </div>
 
@@ -96,13 +104,16 @@ export default function ContestHeader() {
                 </Link>
               ))}
               <div className="pt-4 border-t border-white/10 space-y-3">
-                <Link
-                  href="/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg text-center transition-all duration-300"
+                {/* Logout Button - Always shown */}
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="block w-full px-6 py-2.5 bg-alert-red hover:bg-red-600 text-white font-semibold rounded-lg text-center transition-all duration-300"
                 >
-                  Register Now
-                </Link>
+                  Logout
+                </button>
               </div>
             </div>
           </div>
