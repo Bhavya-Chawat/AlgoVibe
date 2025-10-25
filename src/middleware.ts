@@ -33,22 +33,85 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect pre-contest route
-  if (!user && request.nextUrl.pathname.startsWith("/pre-contest")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+  const { pathname } = request.nextUrl;
+
+  // Public routes
+  const publicRoutes = [
+    "/",
+    "/login",
+    "/admin/login",
+    "/evaluator/login",
+    "/register",
+  ];
+  if (publicRoutes.includes(pathname)) {
+    return supabaseResponse;
   }
 
-  // Redirect logged-in users away from login/register to pre-contest
+  // Require authentication for protected routes
+  if (!user) {
+    if (pathname.startsWith("/admin")) {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+    if (pathname.startsWith("/evaluator")) {
+      return NextResponse.redirect(new URL("/evaluator/login", request.url));
+    }
+    if (
+      pathname.startsWith("/contest") ||
+      pathname.startsWith("/pre-contest")
+    ) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    return supabaseResponse;
+  }
+
+  // Get user role
+  const { data: userRole } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("email", user.email!)
+    .single();
+
+  const role = userRole?.role || "contestant";
+
+  // Role-based route protection
+  if (pathname.startsWith("/admin") && role !== "admin") {
+    return NextResponse.redirect(new URL("/unauthorized", request.url));
+  }
+
+  if (
+    pathname.startsWith("/evaluator") &&
+    role !== "evaluator" &&
+    role !== "admin"
+  ) {
+    return NextResponse.redirect(new URL("/unauthorized", request.url));
+  }
+
+  if (pathname.startsWith("/contest") && role !== "contestant") {
+    return NextResponse.redirect(new URL("/unauthorized", request.url));
+  }
+
+  // Redirect logged-in users away from login pages
+  if (user && (pathname === "/login" || pathname === "/register")) {
+    if (role === "admin") {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    if (role === "evaluator") {
+      return NextResponse.redirect(new URL("/evaluator", request.url));
+    }
+    return NextResponse.redirect(new URL("/pre-contest", request.url));
+  }
+
   if (
     user &&
-    (request.nextUrl.pathname === "/login" ||
-      request.nextUrl.pathname === "/register")
+    (pathname === "/admin/login" || pathname === "/evaluator/login")
   ) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/pre-contest"; // ✅ Changed to /pre-contest
-    return NextResponse.redirect(url);
+    if (role === "admin") {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    if (role === "evaluator") {
+      return NextResponse.redirect(new URL("/evaluator", request.url));
+    }
+    return NextResponse.redirect(new URL("/pre-contest", request.url));
   }
 
   return supabaseResponse;
