@@ -10,9 +10,12 @@ import SubmissionCard from "./SubmissionCard";
 
 interface CodeSubmissionBoxProps {
   onSubmit: (submission: any) => void;
+  disabled?: boolean;
 }
 
-export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) {
+export default function CodeSubmissionBox({
+  onSubmit,
+}: CodeSubmissionBoxProps) {
   const [codeText, setCodeText] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -31,7 +34,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          codeText: codeText
+          codeText: codeText,
         }),
       });
 
@@ -43,7 +46,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           submissionId: submitData.id,
-          codeText: codeText
+          codeText: codeText,
         }),
       });
 
@@ -141,7 +144,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
             className="w-full relative overflow-hidden px-6 py-4 bg-gradient-to-r from-cyber-blue-400 to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(28,171,242,0.4)] hover:shadow-[0_0_30px_rgba(28,171,242,0.6)] cursor-pointer"
             {...(isChecking || !codeText.trim() ? {} : { tabIndex: 0 })}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 if (!isChecking && codeText.trim()) {
                   handleSubmit();
@@ -174,8 +177,8 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
                   ease: "linear",
                 }}
               />
-            )
-            }</motion.div>
+            )}
+          </motion.div>
         </MagneticButton>
 
         <motion.button
@@ -212,11 +215,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
             exit={{ opacity: 0 }}
             className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center"
           >
-            <ConcentricRings
-              color="#00FF41"
-              count={5}
-              duration={1000}
-            />
+            <ConcentricRings color="#00FF41" count={5} duration={1000} />
           </motion.div>
         )}
       </AnimatePresence>

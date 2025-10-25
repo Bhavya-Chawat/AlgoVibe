@@ -3,30 +3,30 @@
 import { useState, useEffect } from "react";
 import { Code2, Trophy, Clock, AlertCircle, Check } from "lucide-react";
 import { motion } from "framer-motion";
-import { Badge } from "@/components/ui/modern-ui/src/components/ui/Badge";
 import CompactTimer from "@/components/contest/CompactTimer";
 
-export default function ProblemStatement() {
-  const [problem, setProblem] = useState({
-    title: "Algorithm Challenge",
-    difficulty: "Medium",
-    points: 100,
-    description: "",
-    constraints: [],
-    sampleTestCases: [],
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [glitchText, setGlitchText] = useState("Algorithm Challenge");
+interface Problem {
+  problem_id: number;
+  title: string;
+  description: string;
+}
+
+interface ProblemStatementProps {
+  problem: Problem;
+}
+
+export default function ProblemStatement({ problem }: ProblemStatementProps) {
+  const [glitchText, setGlitchText] = useState(problem.title);
 
   useEffect(() => {
-    // Implement glitch effect similar to login page
+    // Glitch effect for problem title
     const glitchInterval = setInterval(() => {
       const chars = "!@#$%^&*(){}[]<>?/~`";
-      const original = "Algorithm Challenge";
+      const original = problem.title;
       const glitched = original
         .split("")
         .map((char) => {
-          if (Math.random() > 0.90 && char !== " ") {
+          if (Math.random() > 0.9 && char !== " ") {
             return chars[Math.floor(Math.random() * chars.length)];
           }
           return char;
@@ -38,57 +38,14 @@ export default function ProblemStatement() {
     }, 1500);
 
     return () => clearInterval(glitchInterval);
-  }, []);
-
-  useEffect(() => {
-    fetchProblem();
-  }, []);
-
-  const fetchProblem = async () => {
-    try {
-      const response = await fetch("/api/contest/problem");
-      const data = await response.json();
-      setProblem(data);
-      // Update glitch text with actual problem title
-      setGlitchText(data.title);
-    } catch (error) {
-      console.error("Failed to fetch problem:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case "easy":
-        return "bg-matrix-green/20 text-matrix-green border-matrix-green/50";
-      case "medium":
-        return "bg-warning-orange/20 text-warning-orange border-warning-orange/50";
-      case "hard":
-        return "bg-alert-red/20 text-alert-red border-alert-red/50";
-      default:
-        return "bg-cyber-blue-400/20 text-cyber-blue-400 border-cyber-blue-400/50";
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="glass-panel-strong p-8 rounded-2xl border border-cyber-blue-400/30 animate-pulse">
-        <div className="h-8 bg-cyber-blue-400/20 rounded mb-4" />
-        <div className="h-4 bg-cyber-blue-400/20 rounded mb-2" />
-        <div className="h-4 bg-cyber-blue-400/20 rounded mb-2" />
-        <div className="h-4 bg-cyber-blue-400/20 rounded w-2/3" />
-      </div>
-    );
-  }
+  }, [problem.title]);
 
   return (
-    // Removed ElectricBorder and replaced with a regular div to eliminate hover animations
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="glass-panel-strong p-12 rounded-3xl border-2 border-cyber-blue-400/40"
+      className="glass-panel-strong p-12 rounded-3xl border-2 border-cyber-blue-400/40 relative overflow-hidden"
       style={{
         boxShadow: "0 0 60px rgba(28, 171, 242, 0.5)",
       }}
@@ -111,7 +68,9 @@ export default function ProblemStatement() {
         <div className="flex flex-wrap items-center gap-6">
           <div className="flex items-center gap-4 text-lg text-gray-300">
             <Trophy className="w-8 h-8 text-warning-orange" />
-            <span className="font-bold text-warning-orange text-2xl">{problem.points} Points</span>
+            <span className="font-bold text-warning-orange text-2xl">
+              100 Points
+            </span>
           </div>
 
           <div className="flex items-center gap-4 text-lg text-gray-400">
@@ -127,9 +86,9 @@ export default function ProblemStatement() {
           <div className="w-3 h-12 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
           Problem Description
         </h3>
-        <p className="text-gray-300 text-xl leading-relaxed">
-          {problem.description || "Build an innovative solution that demonstrates algorithmic thinking and problem-solving skills. Your submission should include clean code, proper documentation, and a live deployment showcasing your work."}
-        </p>
+        <div className="text-gray-300 text-xl leading-relaxed whitespace-pre-wrap">
+          {problem.description}
+        </div>
       </div>
 
       {/* Requirements */}
@@ -140,69 +99,87 @@ export default function ProblemStatement() {
         </h3>
         <ul className="space-y-4 text-gray-300 text-xl">
           <li className="flex items-start gap-4">
-            <Check className="w-8 h-8 text-matrix-green mt-1" />
-            <span>Code submission</span>
+            <Check className="w-8 h-8 text-matrix-green mt-1 flex-shrink-0" />
+            <span>Code submission with your solution</span>
           </li>
           <li className="flex items-start gap-4">
-            <Check className="w-8 h-8 text-matrix-green mt-1" />
+            <Check className="w-8 h-8 text-matrix-green mt-1 flex-shrink-0" />
             <span>GitHub repository with clean, documented code</span>
           </li>
           <li className="flex items-start gap-4">
-            <Check className="w-8 h-8 text-matrix-green mt-1" />
-            <span>Live deployment URL (Vercel, Netlify, etc.)</span>
+            <Check className="w-8 h-8 text-matrix-green mt-1 flex-shrink-0" />
+            <span>
+              Live deployment URL (Vercel, Netlify, GitHub Pages, etc.)
+            </span>
           </li>
         </ul>
       </div>
 
-      {/* Sample Test Cases */}
-      {problem.sampleTestCases && problem.sampleTestCases.length > 0 && (
-        <div className="mb-10">
-          <h3 className="text-2xl font-bold text-cyber-blue-400 mb-6 flex items-center gap-4">
-            <div className="w-3 h-12 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
-            Sample Test Cases
-          </h3>
-          <div className="space-y-6">
-            {problem.sampleTestCases.map((testCase: any, index: number) => (
-              <div key={index} className="glass-panel p-8 rounded-2xl border-2 border-cyber-blue-400/20">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div>
-                    <p className="text-lg text-gray-400 mb-4">Input:</p>
-                    <code className="text-xl text-matrix-green font-mono bg-hack-navy/50 p-6 rounded-xl block">
-                      {testCase.input}
-                    </code>
-                  </div>
-                  <div>
-                    <p className="text-lg text-gray-400 mb-4">Output:</p>
-                    <code className="text-xl text-neon-blue font-mono bg-hack-navy/50 p-6 rounded-xl block">
-                      {testCase.output}
-                    </code>
-                  </div>
-                </div>
-              </div>
-            ))}
+      {/* Evaluation Criteria */}
+      <div className="mb-10 glass-panel p-8 rounded-2xl border-2 border-warning-orange/20">
+        <h3 className="text-2xl font-bold text-warning-orange mb-6 flex items-center gap-4">
+          <Trophy className="w-8 h-8" />
+          Evaluation Criteria
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300 text-lg">Code Quality</span>
+              <span className="text-cyber-blue-400 font-mono">30%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300 text-lg">Functionality</span>
+              <span className="text-cyber-blue-400 font-mono">30%</span>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300 text-lg">Documentation</span>
+              <span className="text-cyber-blue-400 font-mono">20%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300 text-lg">Deployment</span>
+              <span className="text-cyber-blue-400 font-mono">20%</span>
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Constraints */}
-      {problem.constraints && problem.constraints.length > 0 && (
-        <div>
-          <h3 className="text-2xl font-bold text-cyber-blue-400 mb-6 flex items-center gap-4">
-            <div className="w-3 h-12 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
-            Constraints
-          </h3>
-          <ul className="space-y-4 text-gray-400 text-xl font-mono">
-            {problem.constraints.map((constraint: string, index: number) => (
-              <li key={index} className="flex items-start gap-4">
-                <span className="text-cyber-blue-400 text-2xl">•</span>
-                <span>{constraint}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* Important Notes */}
+      <div className="glass-panel p-8 rounded-2xl border-2 border-alert-red/20 bg-alert-red/5">
+        <h3 className="text-2xl font-bold text-alert-red mb-6 flex items-center gap-4">
+          <AlertCircle className="w-8 h-8" />
+          Important Notes
+        </h3>
+        <ul className="space-y-4 text-gray-300 text-lg">
+          <li className="flex items-start gap-4">
+            <span className="text-alert-red text-2xl flex-shrink-0">•</span>
+            <span>
+              You can submit multiple times. Only your latest submission will be
+              evaluated.
+            </span>
+          </li>
+          <li className="flex items-start gap-4">
+            <span className="text-alert-red text-2xl flex-shrink-0">•</span>
+            <span>
+              Ensure your deployment is publicly accessible for evaluation.
+            </span>
+          </li>
+          <li className="flex items-start gap-4">
+            <span className="text-alert-red text-2xl flex-shrink-0">•</span>
+            <span>
+              Include a README.md with setup instructions in your GitHub
+              repository.
+            </span>
+          </li>
+          <li className="flex items-start gap-4">
+            <span className="text-alert-red text-2xl flex-shrink-0">•</span>
+            <span>All submissions must be made before the timer expires.</span>
+          </li>
+        </ul>
+      </div>
 
-      {/* Glow pulse effect */}
+      {/* Animated glow pulse effect */}
       <motion.div
         animate={{
           opacity: [0.3, 0.6, 0.3],
@@ -212,11 +189,16 @@ export default function ProblemStatement() {
           repeat: Infinity,
           ease: "easeInOut",
         }}
-        className="absolute inset-0 rounded-3xl pointer-events-none"
+        className="absolute inset-0 rounded-3xl pointer-events-none -z-10"
         style={{
-          background: "radial-gradient(circle at center, rgba(28, 171, 242, 0.2), transparent 70%)",
+          background:
+            "radial-gradient(circle at center, rgba(28, 171, 242, 0.2), transparent 70%)",
         }}
       />
+
+      {/* Corner accent */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyber-blue-400/20 to-transparent rounded-bl-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-neon-blue/20 to-transparent rounded-tr-full pointer-events-none" />
     </motion.div>
   );
 }

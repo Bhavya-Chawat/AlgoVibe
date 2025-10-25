@@ -16,9 +16,16 @@ import SubmissionCard from "./SubmissionCard";
 
 interface GitHubSubmissionBoxProps {
   onSubmit: (submission: any) => void;
+  disabled?: boolean;
 }
 
-export default function GitHubSubmissionBox({ onSubmit }: GitHubSubmissionBoxProps) {
+interface GitHubSubmissionBoxProps {
+  onSubmit: (submission: any) => void;
+}
+
+export default function GitHubSubmissionBox({
+  onSubmit,
+}: GitHubSubmissionBoxProps) {
   const [repoUrl, setRepoUrl] = useState("");
 
   const handleSubmit = async () => {
@@ -82,7 +89,7 @@ export default function GitHubSubmissionBox({ onSubmit }: GitHubSubmissionBoxPro
             className="w-full px-6 py-4 bg-gradient-to-r from-electric-cyan to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(0,255,247,0.4)] hover:shadow-[0_0_30px_rgba(0,255,247,0.6)] cursor-pointer"
             {...(!repoUrl.trim() ? {} : { tabIndex: 0 })}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 if (repoUrl.trim()) {
                   handleSubmit();
