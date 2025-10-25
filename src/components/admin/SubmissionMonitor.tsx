@@ -16,8 +16,6 @@ interface Submission {
 
 export default function SubmissionMonitor() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "code" | "github" | "deployment">("all");
-  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "accepted" | "rejected" | "evaluating">("all");
 
   const submissions: Submission[] = [
     {
@@ -85,12 +83,10 @@ export default function SubmissionMonitor() {
     }
   ];
 
-  // Filter submissions based on search query and filters
+  // Filter submissions based on search query only
   const filteredSubmissions = submissions.filter(submission => {
     const matchesSearch = submission.team.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === "all" || submission.type === filterType;
-    const matchesStatus = filterStatus === "all" || submission.status === filterStatus;
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch;
   });
 
   const getStatusIcon = (status: Submission["status"]) => {
@@ -130,42 +126,6 @@ export default function SubmissionMonitor() {
             placeholder="Search by team name..."
             className="w-full pl-10 pr-4 py-2 bg-hack-black border border-cyber-blue-400/20 rounded-xl text-white focus:border-cyber-blue-400/60 focus:outline-none transition-all"
           />
-        </div>
-        
-        <div className="flex gap-4">
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value as typeof filterType)}
-            className="px-4 py-2 bg-hack-black border border-cyber-blue-400/20 rounded-xl text-white focus:border-cyber-blue-400/60 focus:outline-none transition-all"
-          >
-            <option value="all">All Types</option>
-            <option value="code">Code</option>
-            <option value="github">GitHub</option>
-            <option value="deployment">Deployment</option>
-          </select>
-
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
-            className="px-4 py-2 bg-hack-black border border-cyber-blue-400/20 rounded-xl text-white focus:border-cyber-blue-400/60 focus:outline-none transition-all"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="evaluating">Evaluating</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Rejected</option>
-          </select>
-
-          <button
-            onClick={() => {
-              setSearchQuery("");
-              setFilterType("all");
-              setFilterStatus("all");
-            }}
-            className="px-4 py-2 bg-hack-black border border-cyber-blue-400/20 rounded-xl text-white hover:bg-cyber-blue-400/10 transition-all"
-          >
-            Reset Filters
-          </button>
         </div>
       </div>
 

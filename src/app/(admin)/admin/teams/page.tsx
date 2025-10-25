@@ -73,8 +73,6 @@ export default function AdminTeamsPage() {
         {[
           { label: "Total Teams", value: teams.length || 48, color: "cyber-blue-400" },
           { label: "Active", value: teams.filter((t: any) => t.status === "active").length || 42, color: "matrix-green" },
-          { label: "Pending", value: teams.filter((t: any) => t.status === "pending").length || 4, color: "warning-orange" },
-          { label: "Inactive", value: teams.filter((t: any) => t.status === "inactive").length || 2, color: "alert-red" },
         ].map((stat, index) => (
           <motion.div
             key={stat.label}

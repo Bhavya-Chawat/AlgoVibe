@@ -44,22 +44,6 @@ export default function LiveStats({ status }: LiveStatsProps) {
       trend: "up",
       icon: Code,
       color: "#00ff41"
-    },
-    {
-      title: "Avg Completion",
-      value: "67%",
-      change: "+5%",
-      trend: "up",
-      icon: Target,
-      color: "#00d9ff"
-    },
-    {
-      title: "Success Rate",
-      value: "58%",
-      change: "-2%",
-      trend: "down",
-      icon: Award,
-      color: "#ff6b35"
     }
   ];
 
@@ -109,8 +93,8 @@ export default function LiveStats({ status }: LiveStatsProps) {
         </div>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Grid - Only 2 cards now */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -124,14 +108,6 @@ export default function LiveStats({ status }: LiveStatsProps) {
               <div className="flex items-start justify-between mb-4">
                 <div className="p-3 rounded-xl" style={{ backgroundColor: `${stat.color}20` }}>
                   <Icon className="w-6 h-6" style={{ color: stat.color }} />
-                </div>
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${
-                  stat.trend === "up" ? "bg-[#00ff41]/10 text-[#00ff41]" : 
-                  stat.trend === "down" ? "bg-[#ff0055]/10 text-[#ff0055]" : 
-                  "bg-gray-500/10 text-gray-400"
-                }`}>
-                  <TrendingUp className={`w-3 h-3 ${stat.trend === "down" ? "rotate-180" : ""}`} />
-                  {stat.change}
                 </div>
               </div>
               
@@ -237,45 +213,6 @@ export default function LiveStats({ status }: LiveStatsProps) {
           </button>
         </motion.div>
       </div>
-
-      {/* System Health */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
-      >
-        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-[#1cabf2]" />
-          System Performance
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { label: "API Response Time", value: "45ms", status: "good", color: "#00ff41" },
-            { label: "Database Load", value: "32%", status: "good", color: "#1cabf2" },
-            { label: "Active Connections", value: "156", status: "normal", color: "#00d9ff" }
-          ].map((metric, index) => (
-            <div key={index} className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">{metric.label}</span>
-                <span className="text-sm font-bold" style={{ color: metric.color }}>
-                  {metric.value}
-                </span>
-              </div>
-              <div className="h-2 bg-[#0a0a1f] rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: metric.status === "good" ? "25%" : "50%" }}
-                  transition={{ duration: 1, delay: index * 0.2 }}
-                  className="h-full rounded-full"
-                  style={{ backgroundColor: metric.color }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
     </div>
   );
 }
