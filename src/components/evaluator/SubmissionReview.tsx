@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Play, MessageSquare, ExternalLink } from "lucide-react";
+import { Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Play, MessageSquare, ExternalLink, Award } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface Submission {
@@ -22,6 +22,8 @@ interface SubmissionReviewProps {
 export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps) {
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [showMarksModal, setShowMarksModal] = useState(false);
+  const [marks, setMarks] = useState({ score: 0, review: "" });
 
   // Mock teams data - replace with actual API call
   const teams = [
@@ -163,6 +165,22 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
     setSelectedSubmission(null);
   };
 
+  const handleAssignMarks = () => {
+    setShowMarksModal(true);
+  };
+
+  const handleCloseMarksModal = () => {
+    setShowMarksModal(false);
+    setMarks({ score: 0, review: "" });
+  };
+
+  const handleSaveMarks = () => {
+    // In a real app, this would save to the database
+    console.log("Saving marks:", marks);
+    setShowMarksModal(false);
+    setMarks({ score: 0, review: "" });
+  };
+
   // If no team is selected, don't show anything
   if (!selectedTeam) {
     return null;
@@ -217,6 +235,92 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
           );
         })}
       </div>
+
+      {/* Assign Marks Button */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={handleAssignMarks}
+          className="px-6 py-3 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyber-blue-400/50 flex items-center gap-2"
+        >
+          <Award className="w-5 h-5" />
+          Assign Marks
+        </button>
+      </div>
+
+      {/* Assign Marks Modal */}
+      {showMarksModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={handleCloseMarksModal}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="glass-panel-strong max-w-md w-full rounded-2xl border border-cyber-blue-400/30 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gradient">Assign Marks</h2>
+              <button
+                onClick={handleCloseMarksModal}
+                className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all"
+              >
+                <XCircle className="w-6 h-6 text-gray-400" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Score Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  Score (out of 100)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={marks.score}
+                  onChange={(e) => setMarks({ ...marks, score: parseInt(e.target.value) || 0 })}
+                  className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 bg-transparent"
+                  placeholder="Enter score"
+                />
+              </div>
+
+              {/* Review Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  Review Comments
+                </label>
+                <textarea
+                  value={marks.review}
+                  onChange={(e) => setMarks({ ...marks, review: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 bg-transparent resize-none"
+                  placeholder="Enter your review comments here..."
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <button
+                  onClick={handleCloseMarksModal}
+                  className="flex-1 px-4 py-3 glass-panel border border-gray-400/30 rounded-xl text-gray-300 font-semibold hover:border-gray-400 transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveMarks}
+                  className="flex-1 px-4 py-3 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-xl transition-all duration-300"
+                >
+                  Save Marks
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
 
       {/* Submission Review Modal */}
       {selectedSubmission && (
