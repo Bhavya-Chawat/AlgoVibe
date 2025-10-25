@@ -148,59 +148,6 @@ export default function AdminContestPage() {
         </p>
       </div>
 
-      {/* Status Overview Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Current Status Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="glass-panel-strong p-6 rounded-xl border border-white/10"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-300">Contest Status</h3>
-            <Clock className="w-5 h-5 text-cyber-blue-400" />
-          </div>
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${statusConfig.bgColor} border ${statusConfig.borderColor}`}>
-            <div className={`w-2 h-2 rounded-full ${statusConfig.bgColor.replace('/10', '')} animate-pulse`} />
-            <span className={`font-bold ${statusConfig.color}`}>{statusConfig.label}</span>
-          </div>
-        </motion.div>
-
-        {/* Time Remaining Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="glass-panel-strong p-6 rounded-xl border border-white/10"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-300">Time Remaining</h3>
-            <Clock className="w-5 h-5 text-cyber-blue-400" />
-          </div>
-          <div className="text-4xl font-bold text-gradient">
-            {formatTime(timeRemaining)}
-          </div>
-        </motion.div>
-
-        {/* Duration Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="glass-panel-strong p-6 rounded-xl border border-white/10"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-300">Total Duration</h3>
-            <Clock className="w-5 h-5 text-cyber-blue-400" />
-          </div>
-          <div className="text-4xl font-bold text-gradient">
-            90:00
-          </div>
-          <p className="text-sm text-gray-400 mt-2">minutes</p>
-        </motion.div>
-      </div>
-
       {/* Contest Controls Component */}
       <ContestControls
         status={contestStatus}

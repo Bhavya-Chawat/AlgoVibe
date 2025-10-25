@@ -24,15 +24,12 @@ import {
 } from "lucide-react";
 
 export default function AdminAnalyticsPage() {
-  const [selectedTimeRange, setSelectedTimeRange] = useState("24h");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Mock data - replace with real API calls
   const stats = {
     totalSubmissions: 342,
     activeTeams: 28,
-    completionRate: 64,
-    avgSubmissionTime: "14m 32s",
     codeSubmissions: 156,
     githubSubmissions: 98,
     deploymentSubmissions: 88,
@@ -89,18 +86,6 @@ export default function AdminAnalyticsPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Time Range Selector */}
-            <select
-              value={selectedTimeRange}
-              onChange={(e) => setSelectedTimeRange(e.target.value)}
-              className="px-4 py-2 glass-panel border border-cyber-blue-400/30 rounded-lg text-gray-200 bg-transparent focus:outline-none focus:border-cyber-blue-400 transition-all duration-300"
-            >
-              <option value="1h" className="bg-hack-navy">Last Hour</option>
-              <option value="24h" className="bg-hack-navy">Last 24 Hours</option>
-              <option value="7d" className="bg-hack-navy">Last 7 Days</option>
-              <option value="all" className="bg-hack-navy">All Time</option>
-            </select>
-
             {/* Refresh Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -125,8 +110,8 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
 
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Main Stats Grid - Only 2 Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* Total Submissions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -138,9 +123,6 @@ export default function AdminAnalyticsPage() {
             <div className="p-3 bg-cyber-blue-400/10 rounded-lg">
               <Code className="w-6 h-6 text-cyber-blue-400" />
             </div>
-            <span className="text-xs px-2 py-1 bg-matrix-green/10 text-matrix-green rounded-full">
-              +12%
-            </span>
           </div>
           <h3 className="text-3xl font-bold text-gradient mb-1">
             {stats.totalSubmissions}
@@ -159,56 +141,11 @@ export default function AdminAnalyticsPage() {
             <div className="p-3 bg-neon-blue/10 rounded-lg">
               <Users className="w-6 h-6 text-neon-blue" />
             </div>
-            <span className="text-xs px-2 py-1 bg-neon-blue/10 text-neon-blue rounded-full">
-              Live
-            </span>
           </div>
           <h3 className="text-3xl font-bold text-gradient mb-1">
             {stats.activeTeams}
           </h3>
           <p className="text-sm text-gray-400">Active Teams</p>
-        </motion.div>
-
-        {/* Completion Rate */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="glass-panel-strong p-6 rounded-xl border border-cyber-blue-400/20 hover:border-cyber-blue-400/40 transition-all duration-300"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-matrix-green/10 rounded-lg">
-              <Trophy className="w-6 h-6 text-matrix-green" />
-            </div>
-            <span className="text-xs px-2 py-1 bg-matrix-green/10 text-matrix-green rounded-full">
-              +8%
-            </span>
-          </div>
-          <h3 className="text-3xl font-bold text-gradient mb-1">
-            {stats.completionRate}%
-          </h3>
-          <p className="text-sm text-gray-400">Completion Rate</p>
-        </motion.div>
-
-        {/* Avg Submission Time */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="glass-panel-strong p-6 rounded-xl border border-cyber-blue-400/20 hover:border-cyber-blue-400/40 transition-all duration-300"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-warning-orange/10 rounded-lg">
-              <Clock className="w-6 h-6 text-warning-orange" />
-            </div>
-            <span className="text-xs px-2 py-1 bg-warning-orange/10 text-warning-orange rounded-full">
-              -2m
-            </span>
-          </div>
-          <h3 className="text-3xl font-bold text-gradient mb-1">
-            {stats.avgSubmissionTime}
-          </h3>
-          <p className="text-sm text-gray-400">Avg Response Time</p>
         </motion.div>
       </div>
 

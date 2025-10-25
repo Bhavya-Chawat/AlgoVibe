@@ -17,7 +17,6 @@ interface Team {
 
 export default function TeamManagementTable() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "approved" | "pending" | "rejected">("all");
 
   const teams: Team[] = [
     {
@@ -66,8 +65,7 @@ export default function TeamManagementTable() {
     const matchesSearch = team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          team.leader.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          team.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterStatus === "all" || team.status === filterStatus;
-    return matchesSearch && matchesFilter;
+    return matchesSearch;
   });
 
   const statusStyles = {
@@ -78,8 +76,8 @@ export default function TeamManagementTable() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Header with Stats - Only Total and Approved */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -110,26 +108,9 @@ export default function TeamManagementTable() {
             <CheckCircle className="w-12 h-12 text-[#00ff41]/40" />
           </div>
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-[#ff6b35]/20 to-[#ff6b35]/5 border border-[#ff6b35]/30 rounded-2xl p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-gray-400 mb-1">Pending</div>
-              <div className="text-4xl font-bold text-[#ff6b35]">
-                {teams.filter(t => t.status === "pending").length}
-              </div>
-            </div>
-            <XCircle className="w-12 h-12 text-[#ff6b35]/40" />
-          </div>
-        </motion.div>
       </div>
 
-      {/* Search and Filter Bar */}
+      {/* Search Bar - No Filter */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -149,35 +130,19 @@ export default function TeamManagementTable() {
             />
           </div>
 
-          {/* Filter */}
-          <div className="flex gap-2">
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as any)}
-                className="pl-12 pr-8 py-3 bg-[#0a0a1f] border border-[#1cabf2]/20 rounded-xl text-white focus:border-[#1cabf2]/60 focus:outline-none transition-all duration-300 appearance-none cursor-pointer"
-              >
-                <option value="all">All Status</option>
-                <option value="approved">Approved</option>
-                <option value="pending">Pending</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-[#1cabf2]/20 border border-[#1cabf2]/40 rounded-xl text-[#1cabf2] font-semibold hover:bg-[#1cabf2]/30 transition-all duration-300 flex items-center gap-2"
-            >
-              <Download className="w-5 h-5" />
-              Export
-            </motion.button>
-          </div>
+          {/* Export Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-3 bg-[#1cabf2]/20 border border-[#1cabf2]/40 rounded-xl text-[#1cabf2] font-semibold hover:bg-[#1cabf2]/30 transition-all duration-300 flex items-center gap-2"
+          >
+            <Download className="w-5 h-5" />
+            Export
+          </motion.button>
         </div>
       </motion.div>
 
-      {/* Teams Table */}
+      {/* Teams Table - No Actions Column */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -194,7 +159,6 @@ export default function TeamManagementTable() {
                 <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Members</th>
                 <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Status</th>
                 <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Submissions</th>
-                <th className="text-center py-4 px-6 text-sm font-semibold text-gray-400">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -230,31 +194,6 @@ export default function TeamManagementTable() {
                   </td>
                   <td className="py-4 px-6 text-center text-gray-300 font-semibold">
                     {team.submissions}
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center justify-center gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="p-2 bg-[#1cabf2]/20 border border-[#1cabf2]/40 rounded-lg text-[#1cabf2] hover:bg-[#1cabf2]/30 transition-all duration-300"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="p-2 bg-[#00d9ff]/20 border border-[#00d9ff]/40 rounded-lg text-[#00d9ff] hover:bg-[#00d9ff]/30 transition-all duration-300"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="p-2 bg-[#ff0055]/20 border border-[#ff0055]/40 rounded-lg text-[#ff0055] hover:bg-[#ff0055]/30 transition-all duration-300"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </motion.button>
-                    </div>
                   </td>
                 </motion.tr>
               ))}

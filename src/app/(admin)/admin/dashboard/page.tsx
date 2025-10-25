@@ -36,7 +36,7 @@ export default function AdminDashboard() {
       icon: Users,
       color: "cyber-blue-400",
       bgGradient: "from-cyber-blue-400/20 to-neon-blue/20",
-      change: "+12%",
+      
     },
     {
       title: "Active Submissions",
@@ -44,7 +44,7 @@ export default function AdminDashboard() {
       icon: Code,
       color: "electric-cyan",
       bgGradient: "from-electric-cyan/20 to-neon-blue/20",
-      change: "+8%",
+      
     },
     {
       title: "Contest Status",
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
       icon: Clock,
       color: "warning-orange",
       bgGradient: "from-warning-orange/20 to-alert-red/20",
-      change: "30.5%",
+      
     },
   ];
 
