@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Play, MessageSquare, ExternalLink, Award } from "lucide-react";
+import { Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Play, MessageSquare, ExternalLink, Award, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/modern-ui/src/components/ui/Badge";
 
 interface Submission {
   id: string;
@@ -24,6 +25,7 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [showMarksModal, setShowMarksModal] = useState(false);
   const [marks, setMarks] = useState({ score: 0, review: "" });
+  const [activeTab, setActiveTab] = useState<'all' | 'code' | 'github' | 'deployment'>('all');
 
   // Mock teams data - replace with actual API call
   const teams = [
@@ -88,6 +90,11 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
       setSubmissions([]);
     }
   }, [selectedTeam]);
+
+  // Filter submissions based on active tab
+  const filteredSubmissions = activeTab === 'all' 
+    ? submissions 
+    : submissions.filter(sub => sub.type === activeTab);
 
   const getIcon = (type: Submission["type"]) => {
     switch (type) {
@@ -181,6 +188,10 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
     setMarks({ score: 0, review: "" });
   };
 
+  const getTimeAgo = (timestamp: string) => {
+    return timestamp;
+  };
+
   // If no team is selected, don't show anything
   if (!selectedTeam) {
     return null;
@@ -188,52 +199,107 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
 
   return (
     <div className="space-y-6">
+      {/* Tabs for Submission History */}
+      <div className="flex space-x-1 bg-hack-navy/50 p-1 rounded-xl border border-cyber-blue-400/20">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all ${
+            activeTab === 'all'
+              ? 'bg-cyber-blue-400 text-white shadow-lg'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <span>All Submissions</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('code')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all ${
+            activeTab === 'code'
+              ? 'bg-cyber-blue-400 text-white shadow-lg'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <Code className="w-5 h-5" />
+          <span>Code</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('github')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all ${
+            activeTab === 'github'
+              ? 'bg-cyber-blue-400 text-white shadow-lg'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <Github className="w-5 h-5" />
+          <span>GitHub</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('deployment')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all ${
+            activeTab === 'deployment'
+              ? 'bg-cyber-blue-400 text-white shadow-lg'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <Globe className="w-5 h-5" />
+          <span>Deployment</span>
+        </button>
+      </div>
+
       {/* Submissions List - Removed search and filters */}
       <div className="space-y-4">
-        {submissions.map((submission) => {
-          const statusConfig = getStatusConfig(submission.status);
-          
-          return (
-            <motion.div
-              key={submission.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-4 bg-hack-black/50 border border-cyber-blue-400/20 rounded-xl hover:border-cyber-blue-400/40 transition-all cursor-pointer"
-              onClick={() => handleViewSubmission(submission)}
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-cyber-blue-400/10 rounded-lg">
-                    {getIcon(submission.type)}
+        {filteredSubmissions.length === 0 ? (
+          <div className="text-center py-12 glass-panel rounded-xl border border-cyber-blue-400/10">
+            <AlertCircle className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+            <p className="text-gray-400">No submissions yet</p>
+            <p className="text-gray-500 text-sm mt-1">Submissions will appear here</p>
+          </div>
+        ) : (
+          filteredSubmissions.map((submission) => {
+            const statusConfig = getStatusConfig(submission.status);
+            
+            return (
+              <motion.div
+                key={submission.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-hack-black/50 border border-cyber-blue-400/20 rounded-xl hover:border-cyber-blue-400/40 transition-all cursor-pointer"
+                onClick={() => handleViewSubmission(submission)}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-cyber-blue-400/10 rounded-lg">
+                      {getIcon(submission.type)}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">{submission.team}</h3>
+                      <p className="text-sm text-gray-400">{getTypeLabel(submission.type)} • {submission.submittedAt}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-white">{submission.team}</h3>
-                    <p className="text-sm text-gray-400">{getTypeLabel(submission.type)} • {submission.submittedAt}</p>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-6">
-                  <div className={`px-3 py-1 rounded-full border text-sm font-semibold ${statusConfig.color}`}>
-                    <div className="flex items-center gap-1.5">
-                      {statusConfig.icon}
-                      {statusConfig.label}
+                  <div className="flex items-center gap-6">
+                    <div className={`px-3 py-1 rounded-full border text-sm font-semibold ${statusConfig.color}`}>
+                      <div className="flex items-center gap-1.5">
+                        {statusConfig.icon}
+                        {statusConfig.label}
+                      </div>
                     </div>
+                    
+                    {submission.score !== undefined && (
+                      <div className="text-cyber-blue-400 font-semibold">
+                        {submission.score}/100
+                      </div>
+                    )}
+                    
+                    <button className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all">
+                      <Eye className="w-5 h-5" />
+                    </button>
                   </div>
-                  
-                  {submission.score !== undefined && (
-                    <div className="text-cyber-blue-400 font-semibold">
-                      {submission.score}/100
-                    </div>
-                  )}
-                  
-                  <button className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all">
-                    <Eye className="w-5 h-5" />
-                  </button>
                 </div>
-              </div>
-            </motion.div>
-          );
-        })}
+              </motion.div>
+            );
+          })
+        )}
       </div>
 
       {/* Assign Marks Button */}
