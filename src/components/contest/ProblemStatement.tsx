@@ -141,7 +141,7 @@ export default function ProblemStatement() {
         <ul className="space-y-4 text-gray-300 text-xl">
           <li className="flex items-start gap-4">
             <Check className="w-8 h-8 text-matrix-green mt-1" />
-            <span>Code submission with valid solution link</span>
+            <span>Code submission</span>
           </li>
           <li className="flex items-start gap-4">
             <Check className="w-8 h-8 text-matrix-green mt-1" />

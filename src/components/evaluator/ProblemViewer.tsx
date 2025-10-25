@@ -122,10 +122,6 @@ export default function ProblemViewer({ selectedTeam }: ProblemViewerProps) {
                 <span className="font-bold text-warning-orange">{problem.points} Points</span>
               </div>
 
-              <div className={`px-3 py-1 rounded-full border text-sm font-semibold ${getDifficultyColor(problem.difficulty)}`}>
-                {problem.difficulty}
-              </div>
-
               <div className="flex items-center gap-3 text-gray-400">
                 <Clock className="w-5 h-5" />
                 <span>{problem.timeLimit}</span>
@@ -135,46 +131,37 @@ export default function ProblemViewer({ selectedTeam }: ProblemViewerProps) {
 
           {/* Description */}
           <div className="mb-8">
-            <h3 className="text-xl font-bold text-cyber-blue-400 mb-4">Problem Description</h3>
+            <h3 className="text-xl font-bold text-white mb-4">Problem Description</h3>
             <p className="text-gray-300 leading-relaxed">
               {problem.description}
             </p>
           </div>
 
-          {/* Constraints */}
+          {/* Constraints as plain text */}
           {problem.constraints.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-cyber-blue-400 mb-4">Constraints</h3>
-              <ul className="space-y-2 text-gray-300">
+              <h3 className="text-xl font-bold text-white mb-4">Constraints</h3>
+              <div className="text-gray-300">
                 {problem.constraints.map((constraint, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span className="text-cyber-blue-400">•</span>
-                    <span className="font-mono">{constraint}</span>
-                  </li>
+                  <span key={index}>
+                    {index > 0 && ", "}
+                    {constraint}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
 
-          {/* Sample Test Cases */}
+          {/* Sample Test Cases as plain text */}
           {problem.sampleTestCases.length > 0 && (
             <div>
-              <h3 className="text-xl font-bold text-cyber-blue-400 mb-4">Sample Test Cases</h3>
-              <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white mb-4">Sample Test Cases</h3>
+              <div className="space-y-4 text-gray-300">
                 {problem.sampleTestCases.map((testCase, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="glass-panel p-4 rounded-xl border border-cyber-blue-400/20">
-                      <p className="text-sm text-gray-400 mb-2">Input:</p>
-                      <code className="text-matrix-green font-mono whitespace-pre-wrap">
-                        {testCase.input}
-                      </code>
-                    </div>
-                    <div className="glass-panel p-4 rounded-xl border border-cyber-blue-400/20">
-                      <p className="text-sm text-gray-400 mb-2">Output:</p>
-                      <code className="text-neon-blue font-mono whitespace-pre-wrap">
-                        {testCase.output}
-                      </code>
-                    </div>
+                  <div key={index} className="whitespace-pre-wrap">
+                    <p className="font-semibold">Test Case {index + 1}:</p>
+                    <p><span className="font-medium">Input:</span> {testCase.input}</p>
+                    <p><span className="font-medium">Output:</span> {testCase.output}</p>
                   </div>
                 ))}
               </div>
