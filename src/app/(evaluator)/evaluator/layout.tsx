@@ -1,8 +1,18 @@
 "use client";
 
 import { ReactNode } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { LogOut } from "lucide-react";
 
 export default function EvaluatorLayout({ children }: { children: ReactNode }) {
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    // Redirect to home page after logout
+    window.location.href = "/";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-hack-black via-hack-navy to-hack-black">
       {/* Main Content */}
@@ -15,6 +25,13 @@ export default function EvaluatorLayout({ children }: { children: ReactNode }) {
             </div>
             
             <div className="flex items-center gap-4">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 bg-alert-red hover:bg-red-600 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
               <div className="text-right">
                 <p className="text-sm font-semibold text-gray-200">Evaluator</p>
                 <p className="text-xs text-gray-400">evaluator@algovibe.com</p>

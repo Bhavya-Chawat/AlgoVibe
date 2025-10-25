@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Play, MessageSquare, ExternalLink } from "lucide-react";
+import { Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Play, MessageSquare, ExternalLink, Award, AlertCircle, Copy } from "lucide-react";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/modern-ui/src/components/ui/Badge";
 
 interface Submission {
   id: string;
@@ -13,6 +14,7 @@ interface Submission {
   submittedAt: string;
   link: string;
   message?: string;
+  code?: string; // Add code property for code submissions
 }
 
 interface SubmissionReviewProps {
@@ -20,8 +22,11 @@ interface SubmissionReviewProps {
 }
 
 export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps) {
-  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [showMarksModal, setShowMarksModal] = useState(false);
+  const [marks, setMarks] = useState({ score: 0, review: "" });
+  const [activeTab, setActiveTab] = useState<'all' | 'code' | 'github' | 'deployment'>('all');
+  const [codeModal, setCodeModal] = useState<{ isOpen: boolean; code: string; team: string }>({ isOpen: false, code: "", team: "" });
 
   // Mock teams data - replace with actual API call
   const teams = [
@@ -47,7 +52,22 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
           score: 100,
           submittedAt: "2 min ago",
           link: "#",
-          message: "Excellent solution with optimal time complexity. Clean code and good documentation."
+          message: "Excellent solution with optimal time complexity. Clean code and good documentation.",
+          code: `function maxSubarraySum(arr) {
+  let maxSoFar = arr[0];
+  let maxEndingHere = arr[0];
+  
+  for (let i = 1; i < arr.length; i++) {
+    maxEndingHere = Math.max(arr[i], maxEndingHere + arr[i]);
+    maxSoFar = Math.max(maxSoFar, maxEndingHere);
+  }
+  
+  return maxSoFar;
+}
+
+// Test cases
+console.log(maxSubarraySum([-2, 1, -3, 4, -1])); // Output: 4
+console.log(maxSubarraySum([1])); // Output: 1`
         },
         {
           id: "2",
@@ -77,7 +97,19 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
           score: 40,
           submittedAt: "15 min ago",
           link: "#",
-          message: "Solution fails on edge cases. Time complexity needs optimization."
+          message: "Solution fails on edge cases. Time complexity needs optimization.",
+          code: `function maxSubarraySum(arr) {
+  // Incorrect implementation
+  let max = 0;
+  for (let i = 0; i < arr.length; i++) {
+    let sum = 0;
+    for (let j = i; j < arr.length; j++) {
+      sum += arr[j];
+      if (sum > max) max = sum;
+    }
+  }
+  return max;
+}`
         });
       }
       
@@ -86,6 +118,11 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
       setSubmissions([]);
     }
   }, [selectedTeam]);
+
+  // Filter submissions based on active tab
+  const filteredSubmissions = activeTab === 'all' 
+    ? submissions 
+    : submissions.filter(sub => sub.type === activeTab);
 
   const getIcon = (type: Submission["type"]) => {
     switch (type) {
@@ -155,12 +192,48 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
     }
   };
 
-  const handleViewSubmission = (submission: Submission) => {
-    setSelectedSubmission(submission);
+  const handleSubmissionClick = (submission: Submission) => {
+    if (submission.type === "github" || submission.type === "deployment") {
+      // Open GitHub or deployment link in new tab
+      if (submission.link) {
+        window.open(submission.link, "_blank");
+      }
+    } else if (submission.type === "code") {
+      // Show code in modal
+      setCodeModal({
+        isOpen: true,
+        code: submission.code || "// No code submitted",
+        team: submission.team
+      });
+    }
   };
 
-  const handleCloseReview = () => {
-    setSelectedSubmission(null);
+  const handleCloseCodeModal = () => {
+    setCodeModal({ isOpen: false, code: "", team: "" });
+  };
+
+  const handleAssignMarks = () => {
+    setShowMarksModal(true);
+  };
+
+  const handleCloseMarksModal = () => {
+    setShowMarksModal(false);
+    setMarks({ score: 0, review: "" });
+  };
+
+  const handleSaveMarks = () => {
+    // In a real app, this would save to the database
+    console.log("Saving marks:", marks);
+    setShowMarksModal(false);
+    setMarks({ score: 0, review: "" });
+  };
+
+  const getTimeAgo = (timestamp: string) => {
+    return timestamp;
+  };
+
+  const copyCodeToClipboard = () => {
+    navigator.clipboard.writeText(codeModal.code);
   };
 
   // If no team is selected, don't show anything
@@ -170,61 +243,104 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
 
   return (
     <div className="space-y-6">
-      {/* Submissions List - Removed search and filters */}
-      <div className="space-y-4">
-        {submissions.map((submission) => {
-          const statusConfig = getStatusConfig(submission.status);
-          
-          return (
-            <motion.div
-              key={submission.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-4 bg-hack-black/50 border border-cyber-blue-400/20 rounded-xl hover:border-cyber-blue-400/40 transition-all cursor-pointer"
-              onClick={() => handleViewSubmission(submission)}
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-cyber-blue-400/10 rounded-lg">
-                    {getIcon(submission.type)}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">{submission.team}</h3>
-                    <p className="text-sm text-gray-400">{getTypeLabel(submission.type)} • {submission.submittedAt}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-6">
-                  <div className={`px-3 py-1 rounded-full border text-sm font-semibold ${statusConfig.color}`}>
-                    <div className="flex items-center gap-1.5">
-                      {statusConfig.icon}
-                      {statusConfig.label}
-                    </div>
-                  </div>
-                  
-                  {submission.score !== undefined && (
-                    <div className="text-cyber-blue-400 font-semibold">
-                      {submission.score}/100
-                    </div>
-                  )}
-                  
-                  <button className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all">
-                    <Eye className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+      {/* Tabs for Submission History */}
+      <div className="flex space-x-1 bg-hack-navy/50 p-1 rounded-xl border border-cyber-blue-400/20">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all ${
+            activeTab === 'all'
+              ? 'bg-cyber-blue-400 text-white shadow-lg'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <span>All Submissions</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('code')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all ${
+            activeTab === 'code'
+              ? 'bg-cyber-blue-400 text-white shadow-lg'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <Code className="w-5 h-5" />
+          <span>Code</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('github')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all ${
+            activeTab === 'github'
+              ? 'bg-cyber-blue-400 text-white shadow-lg'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <Github className="w-5 h-5" />
+          <span>GitHub</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('deployment')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all ${
+            activeTab === 'deployment'
+              ? 'bg-cyber-blue-400 text-white shadow-lg'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          <Globe className="w-5 h-5" />
+          <span>Deployment</span>
+        </button>
       </div>
 
-      {/* Submission Review Modal */}
-      {selectedSubmission && (
+      {/* Submissions List - Removed search and filters */}
+      <div className="space-y-4">
+        {filteredSubmissions.length === 0 ? (
+          <div className="text-center py-12 glass-panel rounded-xl border border-cyber-blue-400/10">
+            <AlertCircle className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+            <p className="text-gray-400">No submissions yet</p>
+            <p className="text-gray-500 text-sm mt-1">Submissions will appear here</p>
+          </div>
+        ) : (
+          filteredSubmissions.map((submission) => {
+            return (
+              <motion.div
+                key={submission.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-hack-black/50 border border-cyber-blue-400/20 rounded-xl hover:border-cyber-blue-400/40 transition-all cursor-pointer"
+                onClick={() => handleSubmissionClick(submission)}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <h3 className="font-semibold text-white">{submission.team}</h3>
+                      <p className="text-sm text-gray-400">{getTypeLabel(submission.type)} • {submission.submittedAt}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    {submission.score !== undefined && (
+                      <div className="text-cyber-blue-400 font-semibold">
+                        {submission.score}/100
+                      </div>
+                    )}
+                    
+                    <button className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all">
+                      <Eye className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Code Display Modal */}
+      {codeModal.isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={handleCloseReview}
+          onClick={handleCloseCodeModal}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -233,9 +349,62 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gradient">Submission Review</h2>
+              <h2 className="text-2xl font-bold text-gradient">Code Submission - {codeModal.team}</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={copyCodeToClipboard}
+                  className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all"
+                  title="Copy to clipboard"
+                >
+                  <Copy className="w-5 h-5 text-gray-400" />
+                </button>
+                <button
+                  onClick={handleCloseCodeModal}
+                  className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all"
+                >
+                  <XCircle className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-hack-navy/50 rounded-xl p-4 border border-cyber-blue-400/20">
+              <pre className="text-gray-300 overflow-x-auto">
+                <code>{codeModal.code}</code>
+              </pre>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Assign Marks Button */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={handleAssignMarks}
+          className="px-6 py-3 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyber-blue-400/50 flex items-center gap-2"
+        >
+          <Award className="w-5 h-5" />
+          Assign Marks
+        </button>
+      </div>
+
+      {/* Assign Marks Modal */}
+      {showMarksModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={handleCloseMarksModal}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="glass-panel-strong max-w-md w-full rounded-2xl border border-cyber-blue-400/30 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gradient">Assign Marks</h2>
               <button
-                onClick={handleCloseReview}
+                onClick={handleCloseMarksModal}
                 className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all"
               >
                 <XCircle className="w-6 h-6 text-gray-400" />
@@ -243,112 +412,50 @@ export default function SubmissionReview({ selectedTeam }: SubmissionReviewProps
             </div>
 
             <div className="space-y-6">
-              {/* Submission Info */}
-              <div className="glass-panel p-4 rounded-xl border border-cyber-blue-400/20">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">{selectedSubmission.team}</h3>
-                    <p className="text-gray-400">{getTypeLabel(selectedSubmission.type)} • Submitted {selectedSubmission.submittedAt}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      {getIcon(selectedSubmission.type)}
-                      <span className="capitalize">{selectedSubmission.type}</span>
-                    </div>
-                    
-                    <div className={`px-3 py-1 rounded-full border text-sm font-semibold ${getStatusConfig(selectedSubmission.status).color}`}>
-                      <div className="flex items-center gap-1.5">
-                        {getStatusConfig(selectedSubmission.status).icon}
-                        {getStatusConfig(selectedSubmission.status).label}
-                      </div>
-                    </div>
-                    
-                    {selectedSubmission.score !== undefined && (
-                      <div className="text-cyber-blue-400 font-bold text-xl">
-                        {selectedSubmission.score}/100
-                      </div>
-                    )}
-                  </div>
-                </div>
+              {/* Score Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  Score (out of 100)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={marks.score === 0 ? "" : marks.score}
+                  onChange={(e) => setMarks({ ...marks, score: e.target.value === "" ? 0 : parseInt(e.target.value) || 0 })}
+                  className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 bg-transparent"
+                  placeholder="Enter score"
+                />
+              </div>
+
+              {/* Review Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  Review Comments
+                </label>
+                <textarea
+                  value={marks.review}
+                  onChange={(e) => setMarks({ ...marks, review: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 bg-transparent resize-none"
+                  placeholder="Enter your review comments here..."
+                />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-4">
-                {selectedSubmission.link && selectedSubmission.link !== "#" && (
-                  <a
-                    href={selectedSubmission.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-6 py-3 glass-panel border border-cyber-blue-400/30 rounded-xl text-cyber-blue-400 font-semibold hover:border-cyber-blue-400 transition-all duration-300 flex items-center gap-2"
-                  >
-                    <ExternalLink className="w-5 h-5" />
-                    View Submission
-                  </a>
-                )}
-                
-                <button className="px-6 py-3 glass-panel border border-matrix-green/30 rounded-xl text-matrix-green font-semibold hover:border-matrix-green transition-all duration-300 flex items-center gap-2">
-                  <Play className="w-5 h-5" />
-                  Run Tests
+              <div className="flex gap-4">
+                <button
+                  onClick={handleCloseMarksModal}
+                  className="flex-1 px-4 py-3 glass-panel border border-gray-400/30 rounded-xl text-gray-300 font-semibold hover:border-gray-400 transition-all duration-300"
+                >
+                  Cancel
                 </button>
-                
-                <button className="px-6 py-3 glass-panel border border-warning-orange/30 rounded-xl text-warning-orange font-semibold hover:border-warning-orange transition-all duration-300 flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" />
-                  Add Feedback
+                <button
+                  onClick={handleSaveMarks}
+                  className="flex-1 px-4 py-3 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-xl transition-all duration-300"
+                >
+                  Save Marks
                 </button>
-              </div>
-
-              {/* Comments Section */}
-              <div>
-                <h3 className="text-xl font-bold text-cyber-blue-400 mb-4 flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" />
-                  Evaluator Comments
-                </h3>
-                
-                {selectedSubmission.message ? (
-                  <div className="glass-panel p-4 rounded-xl border border-cyber-blue-400/20">
-                    <p className="text-gray-300">{selectedSubmission.message}</p>
-                  </div>
-                ) : (
-                  <div className="glass-panel p-8 rounded-xl border border-cyber-blue-400/20 text-center">
-                    <MessageSquare className="w-12 h-12 text-cyber-blue-400 mx-auto mb-4" />
-                    <h4 className="text-lg font-semibold text-gray-200 mb-2">No Comments Yet</h4>
-                    <p className="text-gray-400 mb-4">Add your evaluation feedback for this submission.</p>
-                    <button className="px-4 py-2 bg-cyber-blue-400/10 border border-cyber-blue-400/30 rounded-lg text-cyber-blue-400 hover:bg-cyber-blue-400/20 transition-all">
-                      Add Comment
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Scoring Section */}
-              <div>
-                <h3 className="text-xl font-bold text-cyber-blue-400 mb-4">Scoring Criteria</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="glass-panel p-4 rounded-xl border border-cyber-blue-400/20">
-                    <h4 className="font-semibold text-white mb-2">Creativity (60%)</h4>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Score</span>
-                      <span className="text-cyber-blue-400 font-bold">60/60</span>
-                    </div>
-                  </div>
-                  
-                  <div className="glass-panel p-4 rounded-xl border border-cyber-blue-400/20">
-                    <h4 className="font-semibold text-white mb-2">Clarity (20%)</h4>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Score</span>
-                      <span className="text-cyber-blue-400 font-bold">20/20</span>
-                    </div>
-                  </div>
-                  
-                  <div className="glass-panel p-4 rounded-xl border border-cyber-blue-400/20">
-                    <h4 className="font-semibold text-white mb-2">Correctness (20%)</h4>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400">Score</span>
-                      <span className="text-cyber-blue-400 font-bold">20/20</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </motion.div>
