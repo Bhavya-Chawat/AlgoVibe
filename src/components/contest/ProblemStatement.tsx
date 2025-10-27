@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Code2, Trophy, Clock, AlertCircle, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import CompactTimer from "@/components/contest/CompactTimer";
 import React from "react";
+import { getContestStatus } from "@/app/actions/contest";
 
 interface Problem {
   problem_id: number;
@@ -16,7 +17,43 @@ interface ProblemStatementProps {
   problem: Problem;
 }
 
-// Components to render JSON blocks
+// Timer wrapper to fetch real contest times and feed to CompactTimer
+function ContestTimerWrapper() {
+  const [contest, setContest] = useState<{
+    start_time: string;
+    end_time: string;
+    is_active: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    async function fetchContest() {
+      const res = await getContestStatus();
+      if (res.success && res.contest) {
+        setContest(res.contest);
+      }
+    }
+    fetchContest();
+  }, []);
+
+  if (!contest) return null;
+
+  // Calculate timer status
+  const now = new Date();
+  const start = new Date(contest.start_time);
+  const end = new Date(contest.end_time);
+
+  let status: "upcoming" | "live" | "ended" = "upcoming";
+  if (now >= start && now <= end) status = "live";
+  else if (now > end) status = "ended";
+
+  return (
+    <div className="mb-8">
+      <CompactTimer status={status} startTimeISO={contest.start_time} endTimeISO={contest.end_time} />
+    </div>
+  );
+}
+
+// Components to render JSON blocks (Heading, Paragraph, List, CodeBlock) - unchanged
 const Heading = ({
   level,
   children,
@@ -78,9 +115,7 @@ const CodeBlock = ({ text }: { text: string }) => (
 );
 
 export default function ProblemStatement({ problem }: ProblemStatementProps) {
-  const [glitchText, setGlitchText] = useState(problem.title);
-
-  // Parse description to JSON if it's a string from Supabase
+  // Parse description to JSON if it is string from Supabase
   let parsedDescription;
   try {
     parsedDescription =
@@ -99,16 +134,13 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
         </p>
       );
 
-    // Map through content blocks and render accordingly
-
     return content.map((block, idx) => {
       switch (block.type) {
         case "heading":
           return (
             <Heading key={idx} level={block.level}>
               {block.text}
-              <div className="my-6 border-b border-gray-700" />{" "}
-              {/* separator */}
+              <div className="my-6 border-b border-gray-700" /> {/* separator */}
             </Heading>
           );
         case "paragraph":
@@ -145,21 +177,13 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
         boxShadow: "0 0 60px rgba(28, 171, 242, 0.5)",
       }}
     >
-      {/* Compact Timer at the top */}
-      <div className="mb-8">
-        <CompactTimer
-          status="live"
-          startTimeISO={new Date(Date.now() - 2 * 60 * 1000).toISOString()}
-          endTimeISO={new Date(Date.now() + 88 * 60 * 1000).toISOString()}
-        />{" "}
-      </div>
+      {/* Use contest timer with real data */}
+      <ContestTimerWrapper />
 
       {/* Header with glowing title */}
       <div className="mb-10 pb-10 border-b border-cyber-blue-400/30">
         <div className="flex items-start justify-between gap-8 mb-8">
-          <h1 className="text-5xl font-bold text-gradient flex-1">
-            {problem.title}
-          </h1>
+          <h1 className="text-5xl font-bold text-gradient flex-1">{problem.title}</h1>
           <Code2 className="w-12 h-12 text-cyber-blue-400 flex-shrink-0" />
         </div>
 
@@ -167,9 +191,7 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
         <div className="flex flex-wrap items-center gap-6">
           <div className="flex items-center gap-4 text-lg text-gray-300">
             <Trophy className="w-8 h-8 text-warning-orange" />
-            <span className="font-bold text-warning-orange text-2xl">
-              100 Points
-            </span>
+            <span className="font-bold text-warning-orange text-2xl">100 Points</span>
           </div>
 
           <div className="flex items-center gap-4 text-lg text-gray-400">
@@ -185,9 +207,7 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
           <div className="w-3 h-12 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
           Problem Description
         </h3>
-        <div className="text-gray-300 text-xl leading-relaxed">
-          {renderContent(parsedDescription)}
-        </div>
+        <div className="text-gray-300 text-xl leading-relaxed">{renderContent(parsedDescription)}</div>
       </div>
 
       {/* Requirements */}
@@ -207,9 +227,7 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
           </li>
           <li className="flex items-start gap-4">
             <Check className="w-8 h-8 text-matrix-green mt-1 flex-shrink-0" />
-            <span>
-              Live deployment URL (Vercel, Netlify, GitHub Pages, etc.)
-            </span>
+            <span>Live deployment URL (Vercel, Netlify, GitHub Pages, etc.)</span>
           </li>
         </ul>
       </div>
@@ -253,23 +271,15 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
         <ul className="space-y-4 text-gray-300 text-lg">
           <li className="flex items-start gap-4">
             <span className="text-alert-red text-2xl flex-shrink-0">•</span>
-            <span>
-              You can submit multiple times. Only your latest submission will be
-              evaluated.
-            </span>
+            <span>You can submit multiple times. Only your latest submission will be evaluated.</span>
           </li>
           <li className="flex items-start gap-4">
             <span className="text-alert-red text-2xl flex-shrink-0">•</span>
-            <span>
-              Ensure your deployment is publicly accessible for evaluation.
-            </span>
+            <span>Ensure your deployment is publicly accessible for evaluation.</span>
           </li>
           <li className="flex items-start gap-4">
             <span className="text-alert-red text-2xl flex-shrink-0">•</span>
-            <span>
-              Include a README.md with setup instructions in your GitHub
-              repository.
-            </span>
+            <span>Include a README.md with setup instructions in your GitHub repository.</span>
           </li>
           <li className="flex items-start gap-4">
             <span className="text-alert-red text-2xl flex-shrink-0">•</span>
