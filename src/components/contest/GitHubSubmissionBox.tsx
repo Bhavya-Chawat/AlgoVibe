@@ -39,6 +39,7 @@ export default function GitHubSubmissionBox({
         return;
       }
 
+      // Notify parent about new/updated submission data
       onSubmit({
         type: "github",
         submission: repoUrl.trim(),
@@ -62,7 +63,6 @@ export default function GitHubSubmissionBox({
       icon={<Github className="w-6 h-6 text-electric-cyan" />}
       color="electric-cyan"
     >
-      {/* Input Field */}
       <div className="mb-6">
         <label className="block text-sm font-semibold text-electric-cyan mb-3">
           Repository URL
@@ -79,7 +79,6 @@ export default function GitHubSubmissionBox({
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex gap-4 mb-6">
         <MagneticButton
           className="flex-1"
@@ -115,11 +114,12 @@ export default function GitHubSubmissionBox({
         </MagneticButton>
       </div>
 
-      {/* Success / Error Message */}
       {successMessage && (
         <p
           className={`text-center font-semibold mb-4 ${
-            successMessage.startsWith("Submission failed") ? "text-red-500" : "text-green-400"
+            successMessage.startsWith("Submission failed")
+              ? "text-red-500"
+              : "text-green-400"
           }`}
         >
           {successMessage}

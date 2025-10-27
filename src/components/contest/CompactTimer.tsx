@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 
 interface CompactTimerProps {
   status: "upcoming" | "live" | "ended";
-  startTimeISO?: string | null; // optional test override start time
-  endTimeISO?: string | null; // optional test override end time
+  startTimeISO?: string | null; // optional override start time
+  endTimeISO?: string | null;   // optional override end time
 }
 
 export default function CompactTimer({
@@ -20,9 +20,8 @@ export default function CompactTimer({
     seconds: 0,
   });
 
-  // Use provided test times or fallback to hardcoded times (Oct 30, 3 PM to 4:30 PM IST in UTC)
-  const effectiveStartTimeISO = startTimeISO ?? "2025-10-30T09:30:00Z";
-  const effectiveEndTimeISO = endTimeISO ?? "2025-10-30T11:00:00Z";
+  const effectiveStartTimeISO = startTimeISO ?? "";
+  const effectiveEndTimeISO = endTimeISO ?? "";
 
   useEffect(() => {
     if (!effectiveStartTimeISO || !effectiveEndTimeISO) {

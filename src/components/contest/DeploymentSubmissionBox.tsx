@@ -62,7 +62,6 @@ export default function DeploymentSubmissionBox({
       icon={<Globe className="w-6 h-6 text-electric-cyan" />}
       color="electric-cyan"
     >
-      {/* Input Field */}
       <div className="mb-6">
         <label className="block text-sm font-semibold text-electric-cyan mb-3">
           Live URL (Vercel, Netlify, etc.)
@@ -79,7 +78,6 @@ export default function DeploymentSubmissionBox({
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex gap-4 mb-6">
         <MagneticButton
           className="flex-1"
@@ -94,7 +92,9 @@ export default function DeploymentSubmissionBox({
             }}
             onClick={handleSubmit}
             className={`w-full px-6 py-4 bg-gradient-to-r from-electric-cyan to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(0,255,247,0.4)] hover:shadow-[0_0_30px_rgba(0,255,247,0.6)] cursor-pointer`}
-            {...(deployUrl.trim() && !isSubmitting && !disabled ? { tabIndex: 0 } : {})}
+            {...(deployUrl.trim() && !isSubmitting && !disabled
+              ? { tabIndex: 0 }
+              : {})}
             onKeyDown={(e) => {
               if (
                 (e.key === "Enter" || e.key === " ") &&
@@ -109,17 +109,20 @@ export default function DeploymentSubmissionBox({
           >
             <div className="flex items-center justify-center gap-2">
               <Globe className="w-5 h-5" />
-              <span>{isSubmitting ? "Submitting..." : "Submit Deployment"}</span>
+              <span>
+                {isSubmitting ? "Submitting..." : "Submit Deployment"}
+              </span>
             </div>
           </motion.div>
         </MagneticButton>
       </div>
 
-      {/* Success / Error Message */}
       {successMessage && (
         <p
           className={`text-center font-semibold mb-4 ${
-            successMessage.startsWith("Submission failed") ? "text-red-500" : "text-green-400"
+            successMessage.startsWith("Submission failed")
+              ? "text-red-500"
+              : "text-green-400"
           }`}
         >
           {successMessage}
