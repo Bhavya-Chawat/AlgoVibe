@@ -22,7 +22,7 @@ interface SubmissionHistoryProps {
     type: "code" | "github" | "deployment";
     link: string;
     status: "pending" | "submitted" | "accepted" | "rejected";
-    timestamp: Date;
+    timestamp: Date | string;
     score?: number;
     message?: string;
     submission?: string; // for code content
@@ -97,9 +97,10 @@ export default function SubmissionHistory({ submissions }: SubmissionHistoryProp
     }
   };
 
-  const getTimeAgo = (timestamp: Date) => {
+  const getTimeAgo = (timestamp: Date | string) => {
     const now = new Date();
-    const diff = now.getTime() - new Date(timestamp).getTime();
+    const inputDate = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+    const diff = now.getTime() - inputDate.getTime();
     const minutes = Math.floor(diff / 60000);
 
     if (minutes < 1) return "Just now";
