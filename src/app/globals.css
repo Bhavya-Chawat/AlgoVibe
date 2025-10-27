@@ -166,6 +166,34 @@
       left: 100%;
     }
   }
+  
+  /* Glitch effect for headings */
+  @keyframes glitch-1 {
+    0%, 100% { transform: translate(0); }
+    10% { transform: translate(-3px, -1px) skew(-5deg); }
+    20% { transform: translate(2px, 1px) skew(3deg); }
+    30% { transform: translate(-1px, -2px) skew(2deg); }
+    40% { transform: translate(1px, 2px) skew(-1deg); }
+    50% { transform: translate(-2px, 1px) skew(4deg); }
+    60% { transform: translate(3px, -1px) skew(-3deg); }
+    70% { transform: translate(-1px, 2px) skew(2deg); }
+    80% { transform: translate(2px, -2px) skew(-4deg); }
+    90% { transform: translate(-3px, 1px) skew(3deg); }
+  }
+  
+  @keyframes glitch-2 {
+    0%, 100% { transform: translate(0); }
+    5% { transform: translate(1px, -1px) skew(2deg); }
+    15% { transform: translate(-2px, 2px) skew(-3deg); }
+    25% { transform: translate(3px, 1px) skew(1deg); }
+    35% { transform: translate(-1px, -2px) skew(4deg); }
+    45% { transform: translate(2px, 2px) skew(-2deg); }
+    55% { transform: translate(-3px, -1px) skew(3deg); }
+    65% { transform: translate(1px, 1px) skew(-4deg); }
+    75% { transform: translate(-2px, -2px) skew(2deg); }
+    85% { transform: translate(3px, 1px) skew(-1deg); }
+    95% { transform: translate(-1px, 2px) skew(3deg); }
+  }
 }
 
 @layer utilities {
@@ -183,6 +211,7 @@
   height: 100%;
   display: block;
 }
+
 @keyframes shake {
   0%,
   100% {
@@ -200,15 +229,6 @@
   60%,
   80% {
     transform: translateX(4px);
-  }
-}
-
-@keyframes scan {
-  0% {
-    transform: translateY(-100%);
-  }
-  100% {
-    transform: translateY(100%);
   }
 }
 
