@@ -8,7 +8,7 @@ import GitHubSubmissionBox from "@/components/contest/GitHubSubmissionBox";
 import DeploymentSubmissionBox from "@/components/contest/DeploymentSubmissionBox";
 import SubmissionHistory from "@/components/contest/SubmissionHistory";
 import { motion } from "framer-motion";
-import { submitSubmission } from "@/app/actions/contest";
+import { submitSubmission, getTeamContestData } from "@/app/actions/contest";
 
 interface Problem {
   problem_id: number;
@@ -40,6 +40,20 @@ export default function ContestPageClient({
   const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fetch refresh function to get latest submissions from backend
+  const fetchLatestSubmissions = async () => {
+    try {
+      const data = await getTeamContestData(teamId);
+      if (data.error) {
+        console.error("Failed to fetch submissions:", data.error);
+      } else if (data.submissions) {
+        setSubmissions(data.submissions);
+      }
+    } catch (err) {
+      console.error("Error fetching latest submissions:", err);
+    }
+  };
+
   const handleNewSubmission = async (submissionData: {
     submission?: string;
     submission_type?: "code" | "github" | "deployment";
@@ -53,7 +67,8 @@ export default function ContestPageClient({
       });
 
       if (result.success && result.submission) {
-        setSubmissions((prev) => [result.submission, ...prev]);
+        // Do NOT just prepend, re-fetch updated submissions for clean state
+        await fetchLatestSubmissions();
       } else {
         alert(result.error || "Submission failed");
       }
@@ -126,7 +141,9 @@ export default function ContestPageClient({
               {/* Code Submission Box */}
               <div className="mb-6">
                 <CodeSubmissionBox
-                  onSubmit={(code) => handleNewSubmission({ submission: code, submission_type: "code" })}
+                  onSubmit={(code) =>
+                    handleNewSubmission({ submission: code, submission_type: "code" })
+                  }
                   disabled={isSubmitting}
                 />
               </div>
@@ -153,7 +170,10 @@ export default function ContestPageClient({
                   submissions={submissions.map((sub) => ({
                     id: String(sub.submission_id),
                     type: sub.submission_type,
-                    link: sub.submission_type === "github" || sub.submission_type === "deployment" ? sub.submission || "" : "",
+                    link:
+                      sub.submission_type === "github" || sub.submission_type === "deployment"
+                        ? sub.submission || ""
+                        : "",
                     status: sub.status.toLowerCase() as
                       | "pending"
                       | "submitted"
