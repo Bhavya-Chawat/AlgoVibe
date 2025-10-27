@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { aiEvaluateCode } from "./aiCodeEvaluator"; 
+import { aiEvaluateCode } from "./aiCodeEvaluator";
 
 export async function getContestStatus() {
   const adminClient = createAdminClient();
@@ -135,18 +135,27 @@ export async function submitSubmission(submissionData: {
 
   const submissionType = submissionData.submission_type || "code";
 
-  // Sanitize submission input
+  // Sanitize submission input: only for github/deployment, not for code submit
   let rawSubmission: string;
-  if (typeof submissionData.submission === "string") {
-    rawSubmission = submissionData.submission;
-  } else if (
-    typeof submissionData.submission === "object" &&
-    submissionData.submission !== null &&
-    typeof submissionData.submission.submission === "string"
-  ) {
-    rawSubmission = submissionData.submission.submission;
+  if (submissionType === "code") {
+    // Accept code submission as is
+    if (typeof submissionData.submission === "string") {
+      rawSubmission = submissionData.submission;
+    } else if (
+      typeof submissionData.submission === "object" &&
+      submissionData.submission !== null &&
+      typeof submissionData.submission.submission === "string"
+    ) {
+      rawSubmission = submissionData.submission.submission;
+    } else {
+      return { success: false, error: "Invalid submission format", contest };
+    }
   } else {
-    return { success: false, error: "Invalid submission format", contest };
+    // For github or deployment, expect only a string (e.g., URL)
+    if (typeof submissionData.submission !== "string") {
+      return { success: false, error: "Invalid submission format", contest };
+    }
+    rawSubmission = submissionData.submission;
   }
 
   const { data: teamProblem, error: problemError } = await adminClient
@@ -184,8 +193,14 @@ export async function submitSubmission(submissionData: {
     // Call AI evaluator imported from separate file
     const aiResult = await aiEvaluateCode(problem.description, rawSubmission);
 
-    status = aiResult.verdict === "correct" ? "ACCEPTED" : "REJECTED";
-    feedback = aiResult.feedback || "";
+    // Type guard the result (fixing the TS error)
+    if (typeof aiResult === "object" && "verdict" in aiResult) {
+      status = aiResult.verdict === "correct" ? "ACCEPTED" : "REJECTED";
+      feedback = aiResult.feedback || "";
+    } else {
+      status = "PENDING";
+      feedback = "Evaluation pending or failed.";
+    }
   } else {
     status = "ACCEPTED";
     feedback = "Submission received.";
