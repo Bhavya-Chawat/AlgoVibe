@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Play, Pause, StopCircle, RotateCcw, Clock, Users, FileCode } from "lucide-react";
 import ContestControls from "@/components/admin/ContestControls";
 import LiveStats from "@/components/admin/LiveStats";
+import { getContestStatus, startContest, pauseContest, stopContest, resetContest } from "../actions";
 
 // Add type for contest status
 type ContestStatus = "pre" | "live" | "paused" | "ended";
@@ -14,6 +15,7 @@ export default function AdminContestPage() {
   const [timeRemaining, setTimeRemaining] = useState(90 * 60); // 90 minutes
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
+  const [durationMinutes, setDurationMinutes] = useState(90);
 
   useEffect(() => {
     fetchContestStatus();
@@ -38,12 +40,29 @@ export default function AdminContestPage() {
 
   const fetchContestStatus = async () => {
     try {
-      const response = await fetch("/api/admin/contest/status");
-      const data = await response.json();
-      setContestStatus(data.status || "pre");
-      setTimeRemaining(data.timeRemaining || 90 * 60);
-      setStartTime(data.startTime ? new Date(data.startTime) : null);
-      setEndTime(data.endTime ? new Date(data.endTime) : null);
+      const result = await getContestStatus();
+      if (result.success) {
+        const contest = result.data;
+        setContestStatus(contest.is_active ? "live" : "pre");
+        setDurationMinutes(contest.duration_minutes || 90);
+        
+        if (contest.start_time) {
+          setStartTime(new Date(contest.start_time));
+        }
+        
+        if (contest.end_time) {
+          setEndTime(new Date(contest.end_time));
+          // Calculate remaining time
+          const now = new Date();
+          const end = new Date(contest.end_time);
+          if (end > now) {
+            const remaining = Math.floor((end.getTime() - now.getTime()) / 1000);
+            setTimeRemaining(remaining);
+          }
+        }
+      } else {
+        console.error("Failed to fetch contest status:", result.error);
+      }
     } catch (error) {
       console.error("Failed to fetch contest status:", error);
     }
@@ -51,10 +70,14 @@ export default function AdminContestPage() {
 
   const handleStartContest = async () => {
     try {
-      await fetch("/api/admin/contest/start", { method: "POST" });
-      setContestStatus("live");
-      setStartTime(new Date());
-      setEndTime(new Date(Date.now() + 90 * 60 * 1000));
+      const result = await startContest(durationMinutes);
+      if (result.success) {
+        setContestStatus("live");
+        setStartTime(new Date());
+        setEndTime(new Date(Date.now() + durationMinutes * 60 * 1000));
+      } else {
+        console.error("Failed to start contest:", result.error);
+      }
     } catch (error) {
       console.error("Failed to start contest:", error);
     }
@@ -62,8 +85,12 @@ export default function AdminContestPage() {
 
   const handlePauseContest = async () => {
     try {
-      await fetch("/api/admin/contest/pause", { method: "POST" });
-      setContestStatus("paused");
+      const result = await pauseContest();
+      if (result.success) {
+        setContestStatus("paused");
+      } else {
+        console.error("Failed to pause contest:", result.error);
+      }
     } catch (error) {
       console.error("Failed to pause contest:", error);
     }
@@ -71,8 +98,12 @@ export default function AdminContestPage() {
 
   const handleStopContest = async () => {
     try {
-      await fetch("/api/admin/contest/stop", { method: "POST" });
-      setContestStatus("ended");
+      const result = await stopContest();
+      if (result.success) {
+        setContestStatus("ended");
+      } else {
+        console.error("Failed to stop contest:", result.error);
+      }
     } catch (error) {
       console.error("Failed to stop contest:", error);
     }
@@ -84,11 +115,15 @@ export default function AdminContestPage() {
     }
     
     try {
-      await fetch("/api/admin/contest/reset", { method: "POST" });
-      setContestStatus("pre");
-      setTimeRemaining(90 * 60);
-      setStartTime(null);
-      setEndTime(null);
+      const result = await resetContest();
+      if (result.success) {
+        setContestStatus("pre");
+        setTimeRemaining(durationMinutes * 60);
+        setStartTime(null);
+        setEndTime(null);
+      } else {
+        console.error("Failed to reset contest:", result.error);
+      }
     } catch (error) {
       console.error("Failed to reset contest:", error);
     }

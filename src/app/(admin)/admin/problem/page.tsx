@@ -1,10 +1,46 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import ProblemEditor from "@/components/admin/ProblemEditor";
 import { FileText, Zap } from "lucide-react";
+import { getTeams, getProblems, createProblem, updateProblem, assignProblemToTeam } from "../actions";
 
 export default function AdminProblemPage() {
+  const [teams, setTeams] = useState<any[]>([]);
+  const [problems, setProblems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTeamsAndProblems();
+  }, []);
+
+  const fetchTeamsAndProblems = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch teams
+      const teamsResult = await getTeams();
+      if (teamsResult.success && teamsResult.data) {
+        setTeams(teamsResult.data);
+      } else {
+        console.error("Failed to fetch teams:", teamsResult.error);
+      }
+      
+      // Fetch problems
+      const problemsResult = await getProblems();
+      if (problemsResult.success && problemsResult.data) {
+        setProblems(problemsResult.data);
+      } else {
+        console.error("Failed to fetch problems:", problemsResult.error);
+      }
+    } catch (error) {
+      console.error("Failed to fetch teams and problems:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -49,7 +85,14 @@ export default function AdminProblemPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <ProblemEditor />
+        <ProblemEditor 
+          teams={teams} 
+          problems={problems} 
+          isLoading={isLoading}
+          onCreateProblem={createProblem}
+          onUpdateProblem={updateProblem}
+          onAssignProblem={assignProblemToTeam}
+        />
       </motion.div>
     </div>
   );

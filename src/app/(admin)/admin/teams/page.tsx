@@ -5,11 +5,12 @@ import { Search, Download, Filter, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/modern-ui/src/components/ui/Input";
 import TeamManagementTable from "@/components/admin/TeamManagementTable";
+import { getTeams } from "../actions";
 
 export default function AdminTeamsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [teams, setTeams] = useState([]);
+  const [teams, setTeams] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -18,9 +19,13 @@ export default function AdminTeamsPage() {
 
   const fetchTeams = async () => {
     try {
-      const response = await fetch("/api/admin/teams");
-      const data = await response.json();
-      setTeams(data);
+      setIsLoading(true);
+      const result = await getTeams();
+      if (result.success && result.data) {
+        setTeams(result.data);
+      } else {
+        console.error("Failed to fetch teams:", result.error);
+      }
     } catch (error) {
       console.error("Failed to fetch teams:", error);
     } finally {
@@ -33,7 +38,7 @@ export default function AdminTeamsPage() {
     const csv = [
       ["Team Name", "Leader", "Email", "Members", "Status"].join(","),
       ...teams.map((team: any) => 
-        [team.name, team.leader, team.email, team.members.length, team.status].join(",")
+        [team.team_name, team.members[0]?.name || "N/A", team.members[0]?.email || "N/A", team.members.length, team.status].join(",")
       )
     ].join("\n");
     
@@ -43,6 +48,11 @@ export default function AdminTeamsPage() {
     a.href = url;
     a.download = "teams-export.csv";
     a.click();
+  };
+
+  const handleAddNewTeam = () => {
+    // Redirect to the registration page or open a modal
+    window.location.href = "/register";
   };
 
   return (
@@ -61,6 +71,7 @@ export default function AdminTeamsPage() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          onClick={handleAddNewTeam}
           className="px-6 py-3 bg-gradient-to-r from-cyber-blue-400 to-neon-blue text-hack-black font-bold rounded-xl shadow-[0_0_20px_rgba(28,171,242,0.4)] hover:shadow-[0_0_30px_rgba(28,171,242,0.6)] transition-all duration-300 flex items-center gap-2"
         >
           <UserPlus className="w-5 h-5" />
@@ -71,8 +82,8 @@ export default function AdminTeamsPage() {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Teams", value: teams.length || 48, color: "cyber-blue-400" },
-          { label: "Active", value: teams.filter((t: any) => t.status === "active").length || 42, color: "matrix-green" },
+          { label: "Total Teams", value: teams.length || 0, color: "cyber-blue-400" },
+          { label: "Active", value: teams.filter((t: any) => t.status === "active").length || 0, color: "matrix-green" },
         ].map((stat, index) => (
           <motion.div
             key={stat.label}

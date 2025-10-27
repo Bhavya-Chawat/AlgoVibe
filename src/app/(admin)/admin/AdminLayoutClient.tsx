@@ -11,7 +11,8 @@ import {
   Menu, 
   X,
   LogOut,
-  Shield
+  Shield,
+  Code
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { logout } from "@/app/actions/auth"
@@ -38,6 +39,7 @@ export default function AdminLayoutClient({ children, user }: AdminLayoutClientP
     { name: "Teams", href: "/admin/teams", icon: Users },
     { name: "Contest Controls", href: "/admin/contest", icon: Trophy },
     { name: "Problem Editor", href: "/admin/problem", icon: FileText },
+    { name: "Submissions", href: "/admin/submissions", icon: Code },
     { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   ]
 
