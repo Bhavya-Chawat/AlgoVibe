@@ -48,12 +48,17 @@ function ContestTimerWrapper() {
 
   return (
     <div className="mb-8">
-      <CompactTimer status={status} startTimeISO={contest.start_time} endTimeISO={contest.end_time} />
+      <CompactTimer
+        status={status}
+        startTimeISO={contest.start_time}
+        endTimeISO={contest.end_time}
+      />
     </div>
   );
 }
 
-// Components to render JSON blocks (Heading, Paragraph, List, CodeBlock) - unchanged
+// Components to render JSON blocks (Heading, Paragraph, List, CodeBlock) with updated display logic
+
 const Heading = ({
   level,
   children,
@@ -61,20 +66,168 @@ const Heading = ({
   level: number;
   children: React.ReactNode;
 }) => {
+  // Special styling for specific headings
+  const getHeadingStyle = () => {
+    if (typeof children === "string") {
+      if (children.includes("Constraints")) {
+        return "text-alert-red";
+      } else if (children.includes("Output Format")) {
+        return "text-matrix-green";
+      } else if (children.includes("Requirements")) {
+        return "text-neon-blue";
+      } else if (
+        children.includes("Grand Vision") ||
+        children.includes("Technical Challenge")
+      ) {
+        return "text-warning-orange";
+      }
+    }
+    return "text-cyber-blue-400";
+  };
+
+  const headingStyle = getHeadingStyle();
+  const isMainTitle =
+    level === 2 &&
+    typeof children === "string" &&
+    children.includes("Lanterns");
+
   switch (level) {
     case 1:
-      return <h1 className="text-5xl font-bold mb-6">{children}</h1>;
+      return (
+        <h1
+          className={`text-5xl font-bold mb-6 ${headingStyle} ${
+            isMainTitle ? "text-gradient" : ""
+          }`}
+        >
+          {isMainTitle ? <GlitchText text={children as string} /> : children}
+        </h1>
+      );
     case 2:
-      return <h2 className="text-4xl font-bold mb-5">{children}</h2>;
+      return (
+        <h2
+          className={`text-4xl font-bold mb-5 ${headingStyle} ${
+            isMainTitle ? "text-gradient" : ""
+          }`}
+        >
+          {isMainTitle ? <GlitchText text={children as string} /> : children}
+        </h2>
+      );
     case 3:
-      return <h3 className="text-3xl font-bold mb-4">{children}</h3>;
+      return (
+        <h3 className={`text-3xl font-bold mb-4 ${headingStyle}`}>
+          {children}
+        </h3>
+      );
     default:
-      return <h4 className="text-2xl font-bold mb-3">{children}</h4>;
+      return (
+        <h4 className={`text-2xl font-bold mb-3 ${headingStyle}`}>
+          {children}
+        </h4>
+      );
   }
 };
 
+// Glitch text component for the main title
+const GlitchText = ({ text }: { text: string }) => (
+  <div className="relative inline-block">
+    <span className="relative z-10">{text}</span>
+    <span
+      className="absolute top-0 left-0 text-alert-red opacity-70 animate-pulse"
+      style={{
+        transform: "translate(-2px, -1px) skew(-5deg)",
+        animation: "glitch-1 2s infinite",
+      }}
+    >
+      {text}
+    </span>
+    <span
+      className="absolute top-0 left-0 text-neon-blue opacity-70 animate-pulse"
+      style={{
+        transform: "translate(2px, 1px) skew(5deg)",
+        animation: "glitch-2 3s infinite",
+      }}
+    >
+      {text}
+    </span>
+    <style jsx>{`
+      @keyframes glitch-1 {
+        0%,
+        100% {
+          transform: translate(0);
+        }
+        10% {
+          transform: translate(-3px, -1px) skew(-5deg);
+        }
+        20% {
+          transform: translate(2px, 1px) skew(3deg);
+        }
+        30% {
+          transform: translate(-1px, -2px) skew(2deg);
+        }
+        40% {
+          transform: translate(1px, 2px) skew(-1deg);
+        }
+        50% {
+          transform: translate(-2px, 1px) skew(4deg);
+        }
+        60% {
+          transform: translate(3px, -1px) skew(-3deg);
+        }
+        70% {
+          transform: translate(-1px, 2px) skew(2deg);
+        }
+        80% {
+          transform: translate(2px, -2px) skew(-4deg);
+        }
+        90% {
+          transform: translate(-3px, 1px) skew(3deg);
+        }
+      }
+
+      @keyframes glitch-2 {
+        0%,
+        100% {
+          transform: translate(0);
+        }
+        5% {
+          transform: translate(1px, -1px) skew(2deg);
+        }
+        15% {
+          transform: translate(-2px, 2px) skew(-3deg);
+        }
+        25% {
+          transform: translate(3px, 1px) skew(1deg);
+        }
+        35% {
+          transform: translate(-1px, -2px) skew(4deg);
+        }
+        45% {
+          transform: translate(2px, 2px) skew(-2deg);
+        }
+        55% {
+          transform: translate(-3px, -1px) skew(3deg);
+        }
+        65% {
+          transform: translate(1px, 1px) skew(-4deg);
+        }
+        75% {
+          transform: translate(-2px, -2px) skew(2deg);
+        }
+        85% {
+          transform: translate(3px, 1px) skew(-1deg);
+        }
+        95% {
+          transform: translate(-1px, 2px) skew(3deg);
+        }
+      }
+    `}</style>
+  </div>
+);
+
 const Paragraph = ({ text }: { text: string }) => (
-  <p className="mb-4 text-gray-300 text-xl leading-relaxed">{text}</p>
+  <p className="mb-4 text-gray-300 text-xl leading-relaxed hover:text-gray-200 transition-colors duration-200">
+    {text}
+  </p>
 );
 
 const List = ({
@@ -93,15 +246,25 @@ const List = ({
       </h3>
     )}
     {ordered ? (
-      <ol className="list-decimal list-inside space-y-2 text-gray-300 text-xl">
+      <ol className="list-decimal list-inside space-y-2 text-gray-300 text-xl ml-4">
         {items.map((item, i) => (
-          <li key={i}>{item}</li>
+          <li
+            key={i}
+            className="pl-2 border-l-2 border-cyber-blue-400/30 hover:border-cyber-blue-400/70 transition-colors duration-200 py-1"
+          >
+            {item}
+          </li>
         ))}
       </ol>
     ) : (
-      <ul className="list-disc list-inside space-y-2 text-gray-300 text-xl">
+      <ul className="list-disc list-inside space-y-2 text-gray-300 text-xl ml-4">
         {items.map((item, i) => (
-          <li key={i}>{item}</li>
+          <li
+            key={i}
+            className="pl-2 border-l-2 border-neon-blue/30 hover:border-neon-blue/70 transition-colors duration-200 py-1"
+          >
+            {item}
+          </li>
         ))}
       </ul>
     )}
@@ -114,8 +277,136 @@ const CodeBlock = ({ text }: { text: string }) => (
   </pre>
 );
 
+// Enhanced Card component for input/output examples
+const ExampleCard = ({
+  title,
+  content,
+  type,
+}: {
+  title: string;
+  content: string;
+  type: "input" | "output";
+}) => {
+  // Split content into lines for better formatting
+  const lines = content.split("\n");
+
+  return (
+    <div className="my-6">
+      <div
+        className={`glass-panel p-6 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] transform-gpu
+        ${
+          type === "input"
+            ? "border-cyber-blue-400/40 hover:border-cyber-blue-400/70 hover:shadow-cyber-blue-400/30"
+            : "border-matrix-green/40 hover:border-matrix-green/70 hover:shadow-matrix-green/30"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h4
+            className={`text-xl font-bold ${
+              type === "input" ? "text-cyber-blue-400" : "text-matrix-green"
+            }`}
+          >
+            {title}
+          </h4>
+          <div
+            className={`px-3 py-1 rounded-full text-sm font-semibold ${
+              type === "input"
+                ? "bg-cyber-blue-400/20 text-cyber-blue-400"
+                : "bg-matrix-green/20 text-matrix-green"
+            }`}
+          >
+            {type.toUpperCase()}
+          </div>
+        </div>
+        <div className="bg-black/30 p-4 rounded-lg">
+          <pre className="whitespace-pre-wrap text-gray-300 text-lg font-mono">
+            {lines.map((line, index) => (
+              <div key={index} className="flex">
+                <span className="text-gray-600 w-8 flex-shrink-0 select-none">
+                  {index + 1}.
+                </span>
+                <span>{line}</span>
+              </div>
+            ))}
+          </pre>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// New component for separating input/output examples
+const InputOutputExample = ({
+  input,
+  output,
+}: {
+  input: string;
+  output: string;
+}) => (
+  <div className="my-8 p-6 glass-panel rounded-2xl border-2 border-glass-border">
+    <h3 className="text-2xl font-bold text-cyber-blue-400 mb-6 flex items-center gap-3">
+      <div className="w-3 h-8 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
+      Example
+    </h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <ExampleCard title="Input" content={input} type="input" />
+      <ExampleCard title="Output" content={output} type="output" />
+    </div>
+  </div>
+);
+
 export default function ProblemStatement({ problem }: ProblemStatementProps) {
-  // Parse description to JSON if it is string from Supabase
+  // Parse description to JSON if it is string from Supabase or fallback to convert plain text
+  const convertPlainTextToJSON = (text: string) => {
+    const lines = text.split("\n");
+    const blocks = [];
+    let currentParagraph = "";
+
+    for (const line of lines) {
+      if (line.trim() === "") {
+        if (currentParagraph) {
+          blocks.push({ type: "paragraph", text: currentParagraph.trim() });
+          currentParagraph = "";
+        }
+        blocks.push({ type: "spacer" });
+        continue;
+      }
+
+      if (line.startsWith("#")) {
+        if (currentParagraph) {
+          blocks.push({ type: "paragraph", text: currentParagraph.trim() });
+          currentParagraph = "";
+        }
+        const level = (line.match(/^#+/) || [""])[0].length;
+        const text = line.replace(/^#+\s*/, "");
+        blocks.push({ type: "heading", level, text });
+        continue;
+      }
+
+      if (line.match(/^(\s*[-*]|\s*\d+\.)\s/)) {
+        if (currentParagraph) {
+          blocks.push({ type: "paragraph", text: currentParagraph.trim() });
+          currentParagraph = "";
+        }
+        // Treat as paragraph for now, list parsing can be improved later
+        blocks.push({ type: "paragraph", text: line });
+        continue;
+      }
+
+      if (currentParagraph) {
+        currentParagraph += " " + line;
+      } else {
+        currentParagraph = line;
+      }
+    }
+
+    if (currentParagraph) {
+      blocks.push({ type: "paragraph", text: currentParagraph.trim() });
+    }
+
+    return blocks;
+  };
+
   let parsedDescription;
   try {
     parsedDescription =
@@ -123,7 +414,7 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
         ? JSON.parse(problem.description)
         : problem.description;
   } catch {
-    parsedDescription = null;
+    parsedDescription = convertPlainTextToJSON(problem.description || "");
   }
 
   const renderContent = (content: any) => {
@@ -140,7 +431,7 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
           return (
             <Heading key={idx} level={block.level}>
               {block.text}
-              <div className="my-6 border-b border-gray-700" /> {/* separator */}
+              <div className="my-6 border-b border-gray-700" />{" "}
             </Heading>
           );
         case "paragraph":
@@ -154,14 +445,26 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
                 ordered={block.ordered}
                 heading={block.heading}
               />
-              <div className="my-6" /> {/* spacer */}
+              <div className="my-6" />
             </>
           );
         case "code":
+          if (block.isExample && block.input && block.output) {
+            return (
+              <InputOutputExample
+                key={idx}
+                input={block.input}
+                output={block.output}
+              />
+            );
+          }
           return <CodeBlock key={idx} text={block.text} />;
         case "spacer":
-          return <div key={idx} style={{ height: "2rem" }} />; // empty vertical space
+          return <div key={idx} style={{ height: "2rem" }} />;
         default:
+          if (block.text) {
+            return <Paragraph key={idx} text={block.text} />;
+          }
           return null;
       }
     });
@@ -183,7 +486,9 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
       {/* Header with glowing title */}
       <div className="mb-10 pb-10 border-b border-cyber-blue-400/30">
         <div className="flex items-start justify-between gap-8 mb-8">
-          <h1 className="text-5xl font-bold text-gradient flex-1">{problem.title}</h1>
+          <h1 className="text-5xl font-bold text-gradient flex-1">
+            {problem.title}
+          </h1>
           <Code2 className="w-12 h-12 text-cyber-blue-400 flex-shrink-0" />
         </div>
 
@@ -191,7 +496,9 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
         <div className="flex flex-wrap items-center gap-6">
           <div className="flex items-center gap-4 text-lg text-gray-300">
             <Trophy className="w-8 h-8 text-warning-orange" />
-            <span className="font-bold text-warning-orange text-2xl">100 Points</span>
+            <span className="font-bold text-warning-orange text-2xl">
+              100 Points
+            </span>
           </div>
 
           <div className="flex items-center gap-4 text-lg text-gray-400">
@@ -207,7 +514,9 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
           <div className="w-3 h-12 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
           Problem Description
         </h3>
-        <div className="text-gray-300 text-xl leading-relaxed">{renderContent(parsedDescription)}</div>
+        <div className="text-gray-300 text-xl leading-relaxed">
+          {renderContent(parsedDescription)}
+        </div>
       </div>
 
       {/* Requirements */}
@@ -227,7 +536,9 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
           </li>
           <li className="flex items-start gap-4">
             <Check className="w-8 h-8 text-matrix-green mt-1 flex-shrink-0" />
-            <span>Live deployment URL (Vercel, Netlify, GitHub Pages, etc.)</span>
+            <span>
+              Live deployment URL (Vercel, Netlify, GitHub Pages, etc.)
+            </span>
           </li>
         </ul>
       </div>
@@ -271,15 +582,23 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
         <ul className="space-y-4 text-gray-300 text-lg">
           <li className="flex items-start gap-4">
             <span className="text-alert-red text-2xl flex-shrink-0">•</span>
-            <span>You can submit multiple times. Only your latest submission will be evaluated.</span>
+            <span>
+              You can submit multiple times. Only your latest submission will be
+              evaluated.
+            </span>
           </li>
           <li className="flex items-start gap-4">
             <span className="text-alert-red text-2xl flex-shrink-0">•</span>
-            <span>Ensure your deployment is publicly accessible for evaluation.</span>
+            <span>
+              Ensure your deployment is publicly accessible for evaluation.
+            </span>
           </li>
           <li className="flex items-start gap-4">
             <span className="text-alert-red text-2xl flex-shrink-0">•</span>
-            <span>Include a README.md with setup instructions in your GitHub repository.</span>
+            <span>
+              Include a README.md with setup instructions in your GitHub
+              repository.
+            </span>
           </li>
           <li className="flex items-start gap-4">
             <span className="text-alert-red text-2xl flex-shrink-0">•</span>

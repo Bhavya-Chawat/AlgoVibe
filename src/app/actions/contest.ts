@@ -135,27 +135,58 @@ export async function submitSubmission(submissionData: {
 
   const submissionType = submissionData.submission_type || "code";
 
-  // Sanitize submission input: only for github/deployment, not for code submit
-  let rawSubmission: string;
+  // Check cooldown for code submissions
   if (submissionType === "code") {
-    // Accept code submission as is
-    if (typeof submissionData.submission === "string") {
-      rawSubmission = submissionData.submission;
-    } else if (
-      typeof submissionData.submission === "object" &&
-      submissionData.submission !== null &&
-      typeof submissionData.submission.submission === "string"
-    ) {
-      rawSubmission = submissionData.submission.submission;
-    } else {
-      return { success: false, error: "Invalid submission format", contest };
+    const { data: latestSubmission, error: fetchErr } = await adminClient
+      .from("submissions")
+      .select("submitted_at")
+      .eq("team_id", teamId)
+      .eq("submission_type", "code")
+      .order("submitted_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestSubmission) {
+      const lastSubmissionTime = new Date(latestSubmission.submitted_at);
+      const currentTime = new Date();
+      const timeDiff = currentTime.getTime() - lastSubmissionTime.getTime();
+      const minutesSinceLastSubmission = timeDiff / (1000 * 60);
+
+      // 5-minute cooldown
+      if (minutesSinceLastSubmission < 5) {
+        const minutesLeft = Math.ceil(5 - minutesSinceLastSubmission);
+        return {
+          success: false,
+          error: `Please wait ${minutesLeft} minute${
+            minutesLeft !== 1 ? "s" : ""
+          } before submitting again`,
+          contest,
+        };
+      }
     }
-  } else {
-    // For github or deployment, expect only a string (e.g., URL)
-    if (typeof submissionData.submission !== "string") {
-      return { success: false, error: "Invalid submission format", contest };
-    }
+  }
+
+  // Properly handle submission data - extract content if it's an object
+  let rawSubmission: string;
+  if (typeof submissionData.submission === "string") {
     rawSubmission = submissionData.submission;
+  } else if (
+    typeof submissionData.submission === "object" &&
+    submissionData.submission !== null &&
+    "submission" in submissionData.submission &&
+    typeof submissionData.submission.submission === "string"
+  ) {
+    // Handle object format { submission: "actual code content", ... }
+    rawSubmission = submissionData.submission.submission;
+  } else if (
+    submissionData.submission !== null &&
+    submissionData.submission !== undefined
+  ) {
+    // Handle other object types by converting to JSON string
+    rawSubmission = JSON.stringify(submissionData.submission);
+  } else {
+    // Handle null/undefined case
+    rawSubmission = "";
   }
 
   const { data: teamProblem, error: problemError } = await adminClient
@@ -224,6 +255,7 @@ export async function submitSubmission(submissionData: {
         submission: rawSubmission,
         status,
         feedback,
+        submitted_at: new Date().toISOString(), // Update the timestamp on updates
       })
       .eq("submission_id", existing.submission_id)
       .select()

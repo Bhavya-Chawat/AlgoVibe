@@ -37,7 +37,8 @@ export default function ContestPageClient({
   initialSubmissions,
   teamId,
 }: ContestPageClientProps) {
-  const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions);
+  const [submissions, setSubmissions] =
+    useState<Submission[]>(initialSubmissions);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch refresh function to get latest submissions from backend
@@ -93,7 +94,9 @@ export default function ContestPageClient({
     return (
       <div className="min-h-screen bg-hack-black flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-200 mb-4">No Problem Assigned</h2>
+          <h2 className="text-2xl font-bold text-gray-200 mb-4">
+            No Problem Assigned
+          </h2>
           <p className="text-gray-400">Please contact the administrator.</p>
         </div>
       </div>
@@ -142,7 +145,10 @@ export default function ContestPageClient({
               <div className="mb-6">
                 <CodeSubmissionBox
                   onSubmit={(code) =>
-                    handleNewSubmission({ submission: code, submission_type: "code" })
+                    handleNewSubmission({
+                      submission: code,
+                      submission_type: "code",
+                    })
                   }
                   disabled={isSubmitting}
                 />
@@ -152,13 +158,19 @@ export default function ContestPageClient({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <GitHubSubmissionBox
                   onSubmit={(githubLink) =>
-                    handleNewSubmission({ submission: githubLink, submission_type: "github" })
+                    handleNewSubmission({
+                      submission: githubLink,
+                      submission_type: "github",
+                    })
                   }
                   disabled={isSubmitting}
                 />
                 <DeploymentSubmissionBox
                   onSubmit={(deploymentLink) =>
-                    handleNewSubmission({ submission: deploymentLink, submission_type: "deployment" })
+                    handleNewSubmission({
+                      submission: deploymentLink,
+                      submission_type: "deployment",
+                    })
                   }
                   disabled={isSubmitting}
                 />
@@ -171,9 +183,11 @@ export default function ContestPageClient({
                     id: String(sub.submission_id),
                     type: sub.submission_type,
                     link:
-                      sub.submission_type === "github" || sub.submission_type === "deployment"
+                      sub.submission_type === "github" ||
+                      sub.submission_type === "deployment"
                         ? sub.submission || ""
                         : "",
+                    submission: sub.submission || "",
                     status: sub.status.toLowerCase() as
                       | "pending"
                       | "submitted"
