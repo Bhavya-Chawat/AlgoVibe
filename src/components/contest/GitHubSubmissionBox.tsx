@@ -1,59 +1,58 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Github,
-  CheckCircle,
-  XCircle,
-  ExternalLink,
-  Clock, // Changed from Timer to Clock
-  AlertCircle,
-} from "lucide-react";
+import { useState } from "react";
+import { Github } from "lucide-react";
 import { MagneticButton } from "@/components/effects/react-effects-lib/src/components/effects/MagneticButton";
 import { Input } from "@/components/ui/modern-ui/src/components/ui/Input";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import SubmissionCard from "./SubmissionCard";
+import { submitSubmission } from "@/app/actions/contest";
 
 interface GitHubSubmissionBoxProps {
   onSubmit: (submission: any) => void;
   disabled?: boolean;
 }
 
-interface GitHubSubmissionBoxProps {
-  onSubmit: (submission: any) => void;
-}
-
 export default function GitHubSubmissionBox({
   onSubmit,
+  disabled,
 }: GitHubSubmissionBoxProps) {
   const [repoUrl, setRepoUrl] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!repoUrl.trim()) return;
 
+    setIsSubmitting(true);
+    setSuccessMessage(null);
+
     try {
-      const response = await fetch("/api/submissions/github", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          repoUrl,
-          action: "submit",
-        }),
+      const result = await submitSubmission({
+        submission: repoUrl.trim(),
+        submission_type: "github",
       });
 
-      const data = await response.json();
+      if (!result.success) {
+        console.error(result.error);
+        setSuccessMessage(`Submission failed: ${result.error}`);
+        return;
+      }
 
       onSubmit({
         type: "github",
-        link: repoUrl,
+        submission: repoUrl.trim(),
         status: "submitted",
         timestamp: new Date(),
       });
 
-      // Show success message in console
-      console.log("Repository submitted successfully!");
+      setSuccessMessage("Repository submitted successfully!");
+      setRepoUrl("");
     } catch (error) {
       console.error("Submission error:", error);
+      setSuccessMessage("An unexpected error occurred during submission.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -75,35 +74,57 @@ export default function GitHubSubmissionBox({
             onChange={(e) => setRepoUrl(e.target.value)}
             placeholder="https://github.com/username/repo"
             className="w-full bg-hack-navy/50 border-electric-cyan/30 pl-12 pr-4 py-4 rounded-xl text-gray-200 placeholder-gray-500 focus:border-electric-cyan focus:ring-2 focus:ring-electric-cyan/20 transition-all duration-300"
+            disabled={isSubmitting || disabled}
           />
         </div>
       </div>
 
       {/* Action Buttons */}
       <div className="flex gap-4 mb-6">
-        <MagneticButton className="flex-1">
+        <MagneticButton
+          className="flex-1"
+          disabled={isSubmitting || !repoUrl.trim() || disabled}
+        >
           <motion.div
-            whileHover={{ scale: !repoUrl.trim() ? 1 : 1.02 }}
-            whileTap={{ scale: !repoUrl.trim() ? 1 : 0.98 }}
+            whileHover={{
+              scale: !isSubmitting && repoUrl.trim() && !disabled ? 1.02 : 1,
+            }}
+            whileTap={{
+              scale: !isSubmitting && repoUrl.trim() && !disabled ? 0.98 : 1,
+            }}
             onClick={handleSubmit}
-            className="w-full px-6 py-4 bg-gradient-to-r from-electric-cyan to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(0,255,247,0.4)] hover:shadow-[0_0_30px_rgba(0,255,247,0.6)] cursor-pointer"
-            {...(!repoUrl.trim() ? {} : { tabIndex: 0 })}
+            className={`w-full px-6 py-4 bg-gradient-to-r from-electric-cyan to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(0,255,247,0.4)] hover:shadow-[0_0_30px_rgba(0,255,247,0.6)] cursor-pointer`}
+            {...(repoUrl.trim() && !isSubmitting && !disabled ? { tabIndex: 0 } : {})}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
+              if (
+                (e.key === "Enter" || e.key === " ") &&
+                repoUrl.trim() &&
+                !isSubmitting &&
+                !disabled
+              ) {
                 e.preventDefault();
-                if (repoUrl.trim()) {
-                  handleSubmit();
-                }
+                handleSubmit();
               }
             }}
           >
             <div className="flex items-center justify-center gap-2">
               <Github className="w-5 h-5" />
-              <span>Submit Repository</span>
+              <span>{isSubmitting ? "Submitting..." : "Submit Repository"}</span>
             </div>
           </motion.div>
         </MagneticButton>
       </div>
+
+      {/* Success / Error Message */}
+      {successMessage && (
+        <p
+          className={`text-center font-semibold mb-4 ${
+            successMessage.startsWith("Submission failed") ? "text-red-500" : "text-green-400"
+          }`}
+        >
+          {successMessage}
+        </p>
+      )}
     </SubmissionCard>
   );
 }

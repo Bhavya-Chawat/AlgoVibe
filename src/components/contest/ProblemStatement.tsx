@@ -1,22 +1,139 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Code2, Trophy, Clock, AlertCircle, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import CompactTimer from "@/components/contest/CompactTimer";
+import React from "react";
 
 interface Problem {
   problem_id: number;
   title: string;
-  description: string;
+  description: any; // JSON parsed object, structured content or string (to parse)
 }
 
 interface ProblemStatementProps {
   problem: Problem;
 }
 
+// Components to render JSON blocks
+const Heading = ({
+  level,
+  children,
+}: {
+  level: number;
+  children: React.ReactNode;
+}) => {
+  switch (level) {
+    case 1:
+      return <h1 className="text-5xl font-bold mb-6">{children}</h1>;
+    case 2:
+      return <h2 className="text-4xl font-bold mb-5">{children}</h2>;
+    case 3:
+      return <h3 className="text-3xl font-bold mb-4">{children}</h3>;
+    default:
+      return <h4 className="text-2xl font-bold mb-3">{children}</h4>;
+  }
+};
+
+const Paragraph = ({ text }: { text: string }) => (
+  <p className="mb-4 text-gray-300 text-xl leading-relaxed">{text}</p>
+);
+
+const List = ({
+  items,
+  ordered,
+  heading,
+}: {
+  items: string[];
+  ordered?: boolean;
+  heading?: string;
+}) => (
+  <>
+    {heading && (
+      <h3 className="text-2xl font-bold text-cyber-blue-400 mb-3 flex items-center gap-4">
+        {heading}
+      </h3>
+    )}
+    {ordered ? (
+      <ol className="list-decimal list-inside space-y-2 text-gray-300 text-xl">
+        {items.map((item, i) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ol>
+    ) : (
+      <ul className="list-disc list-inside space-y-2 text-gray-300 text-xl">
+        {items.map((item, i) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
+    )}
+  </>
+);
+
+const CodeBlock = ({ text }: { text: string }) => (
+  <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto text-green-400 text-lg whitespace-pre-wrap mb-6">
+    {text}
+  </pre>
+);
+
 export default function ProblemStatement({ problem }: ProblemStatementProps) {
   const [glitchText, setGlitchText] = useState(problem.title);
+
+  // Parse description to JSON if it's a string from Supabase
+  let parsedDescription;
+  try {
+    parsedDescription =
+      typeof problem.description === "string"
+        ? JSON.parse(problem.description)
+        : problem.description;
+  } catch {
+    parsedDescription = null;
+  }
+
+  const renderContent = (content: any) => {
+    if (!Array.isArray(content))
+      return (
+        <p className="text-red-500">
+          Problem description is invalid or missing.
+        </p>
+      );
+
+    // Map through content blocks and render accordingly
+
+    return content.map((block, idx) => {
+      switch (block.type) {
+        case "heading":
+          return (
+            <Heading key={idx} level={block.level}>
+              {block.text}
+              <div className="my-6 border-b border-gray-700" />{" "}
+              {/* separator */}
+            </Heading>
+          );
+        case "paragraph":
+          return <Paragraph key={idx} text={block.text} />;
+        case "list":
+          return (
+            <>
+              <List
+                key={idx}
+                items={block.items}
+                ordered={block.ordered}
+                heading={block.heading}
+              />
+              <div className="my-6" /> {/* spacer */}
+            </>
+          );
+        case "code":
+          return <CodeBlock key={idx} text={block.text} />;
+        case "spacer":
+          return <div key={idx} style={{ height: "2rem" }} />; // empty vertical space
+        default:
+          return null;
+      }
+    });
+  };
 
   return (
     <motion.div
@@ -68,8 +185,8 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
           <div className="w-3 h-12 bg-gradient-to-b from-cyber-blue-400 to-neon-blue rounded-full" />
           Problem Description
         </h3>
-        <div className="text-gray-300 text-xl leading-relaxed whitespace-pre-wrap">
-          {problem.description}
+        <div className="text-gray-300 text-xl leading-relaxed">
+          {renderContent(parsedDescription)}
         </div>
       </div>
 

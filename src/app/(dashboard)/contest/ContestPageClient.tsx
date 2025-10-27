@@ -8,7 +8,7 @@ import GitHubSubmissionBox from "@/components/contest/GitHubSubmissionBox";
 import DeploymentSubmissionBox from "@/components/contest/DeploymentSubmissionBox";
 import SubmissionHistory from "@/components/contest/SubmissionHistory";
 import { motion } from "framer-motion";
-import { submitCode } from "@/app/actions/submissions";
+import { submitSubmission } from "@/app/actions/contest";
 
 interface Problem {
   problem_id: number;
@@ -18,9 +18,8 @@ interface Problem {
 
 interface Submission {
   submission_id: number;
-  code?: string;
-  github_link?: string;
-  deployment_link?: string;
+  submission: string | null;
+  submission_type: "code" | "github" | "deployment";
   status: "PENDING" | "ACCEPTED" | "REJECTED";
   score?: number;
   feedback?: string;
@@ -38,25 +37,22 @@ export default function ContestPageClient({
   initialSubmissions,
   teamId,
 }: ContestPageClientProps) {
-  const [submissions, setSubmissions] =
-    useState<Submission[]>(initialSubmissions);
+  const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNewSubmission = async (submissionData: {
-    code?: string;
-    github_link?: string;
-    deployment_link?: string;
+    submission?: string;
+    submission_type?: "code" | "github" | "deployment";
   }) => {
     setIsSubmitting(true);
 
     try {
-      const result = await submitCode({
-        ...submissionData,
-        teamId,
+      const result = await submitSubmission({
+        submission: submissionData.submission,
+        submission_type: submissionData.submission_type,
       });
 
       if (result.success && result.submission) {
-        // Add new submission to the top of the list
         setSubmissions((prev) => [result.submission, ...prev]);
       } else {
         alert(result.error || "Submission failed");
@@ -69,7 +65,7 @@ export default function ContestPageClient({
     }
   };
 
-  // Particle configuration
+  // Particle configuration for background effect
   const particles = Array.from({ length: 20 }, (_, i) => ({
     id: i,
     left: `${Math.random() * 100}%`,
@@ -82,9 +78,7 @@ export default function ContestPageClient({
     return (
       <div className="min-h-screen bg-hack-black flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-200 mb-4">
-            No Problem Assigned
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-200 mb-4">No Problem Assigned</h2>
           <p className="text-gray-400">Please contact the administrator.</p>
         </div>
       </div>
@@ -132,7 +126,7 @@ export default function ContestPageClient({
               {/* Code Submission Box */}
               <div className="mb-6">
                 <CodeSubmissionBox
-                  onSubmit={handleNewSubmission}
+                  onSubmit={(code) => handleNewSubmission({ submission: code, submission_type: "code" })}
                   disabled={isSubmitting}
                 />
               </div>
@@ -140,11 +134,15 @@ export default function ContestPageClient({
               {/* GitHub and Deployment boxes */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <GitHubSubmissionBox
-                  onSubmit={handleNewSubmission}
+                  onSubmit={(githubLink) =>
+                    handleNewSubmission({ submission: githubLink, submission_type: "github" })
+                  }
                   disabled={isSubmitting}
                 />
                 <DeploymentSubmissionBox
-                  onSubmit={handleNewSubmission}
+                  onSubmit={(deploymentLink) =>
+                    handleNewSubmission({ submission: deploymentLink, submission_type: "deployment" })
+                  }
                   disabled={isSubmitting}
                 />
               </div>
@@ -154,12 +152,8 @@ export default function ContestPageClient({
                 <SubmissionHistory
                   submissions={submissions.map((sub) => ({
                     id: String(sub.submission_id),
-                    type: sub.code
-                      ? "code"
-                      : sub.github_link
-                      ? "github"
-                      : "deployment",
-                    link: sub.github_link || sub.deployment_link || "",
+                    type: sub.submission_type,
+                    link: sub.submission_type === "github" || sub.submission_type === "deployment" ? sub.submission || "" : "",
                     status: sub.status.toLowerCase() as
                       | "pending"
                       | "submitted"

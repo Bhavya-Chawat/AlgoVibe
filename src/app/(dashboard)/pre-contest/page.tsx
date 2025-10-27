@@ -6,7 +6,7 @@ import ContestInfoSection from "@/components/dashboard/ContestInfoSection";
 import { getTeamByAuthUser } from "@/lib/data/teams";
 import { getUser } from "@/app/actions/auth";
 import GlitchTitle from "@/components/dashboard/GlitchTitle";
-import { createAdminClient } from "@/lib/supabase/server";
+import { getContestStatus } from "@/app/actions/contest";
 
 export default async function PreContestPage() {
   // Check authentication
@@ -15,16 +15,17 @@ export default async function PreContestPage() {
     redirect("/login");
   }
 
-  const supabase = createAdminClient();
+  // Call the contest server action to get the contest info
+  // Note: You might want to rename submitCode to getContestStatus if you separate concerns.
+  const contestResult = await getContestStatus(); // Call without submission data just to get contest status
 
-  // Fetch contest active status
-  const { data: contest } = await supabase
-    .from("contest")
-    .select("is_active")
-    .single();
-
-  // If contest is active, redirect to contest page
-  if (contest?.is_active) {
+  // If contest info not returned or error
+  if (!contestResult || contestResult.success === false) {
+    // If contest is active, redirect to contest page
+    if (contestResult?.contest?.is_active) {
+      redirect("/contest");
+    }
+  } else if (contestResult.contest?.is_active) {
     redirect("/contest");
   }
 
@@ -35,11 +36,16 @@ export default async function PreContestPage() {
     return (
       <div className="relative min-h-screen bg-hack-black text-center flex flex-col items-center justify-center">
         <ContestHeader />
-        <h1 className="text-3xl font-bold text-alert-red mb-4">Team Not Found</h1>
+        <h1 className="text-3xl font-bold text-alert-red mb-4">
+          Team Not Found
+        </h1>
         <p className="text-gray-400 mb-6">
           Unable to load your team data. Please contact support.
         </p>
-        <a href="/login" className="text-cyber-blue-400 hover:text-cyber-blue-300 underline">
+        <a
+          href="/login"
+          className="text-cyber-blue-400 hover:text-cyber-blue-300 underline"
+        >
           Return to Login
         </a>
       </div>
@@ -91,7 +97,10 @@ export default async function PreContestPage() {
           </div>
 
           <div className="max-w-4xl mx-auto mb-14">
-            <TeamDetailsCard teamName={teamData.team_name} teamMembers={transformedMembers} />
+            <TeamDetailsCard
+              teamName={teamData.team_name}
+              teamMembers={transformedMembers}
+            />
           </div>
 
           <div className="max-w-6xl mx-auto mb-20">
