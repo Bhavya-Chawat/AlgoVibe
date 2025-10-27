@@ -1,108 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Download } from "lucide-react";
 import { motion } from "framer-motion";
+import { getSubmissions } from "@/app/(admin)/admin/actions";
 
 interface Submission {
-  id: string;
-  team: string;
-  type: "code" | "github" | "deployment";
-  status: "pending" | "accepted" | "rejected" | "evaluating";
+  submission_id: number;
+  team: {
+    team_id: number;
+    team_name: string;
+  };
+  member: {
+    member_id: number;
+    name: string;
+  };
+  problem: {
+    problem_id: number;
+    title: string;
+  };
+  submission: string;
+  status: "PENDING" | "ACCEPTED" | "REJECTED";
   score: number;
-  submittedAt: string;
-  link: string;
+  feedback: string;
+  submitted_at: string;
+  submission_type: "code" | "github" | "deployment";
 }
 
 export default function SubmissionMonitor() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const submissions: Submission[] = [
-    {
-      id: "1",
-      team: "CodeNinjas",
-      type: "code",
-      status: "accepted",
-      score: 100,
-      submittedAt: "2 min ago",
-      link: "https://codeforces.com/..."
-    },
-    {
-      id: "2",
-      team: "ByteBuilders",
-      type: "github",
-      status: "accepted",
-      score: 85,
-      submittedAt: "5 min ago",
-      link: "https://github.com/..."
-    },
-    {
-      id: "3",
-      team: "AlgoMasters",
-      type: "code",
-      status: "evaluating",
-      score: 0,
-      submittedAt: "8 min ago",
-      link: "https://codeforces.com/..."
-    },
-    {
-      id: "4",
-      team: "DevDynamos",
-      type: "deployment",
-      status: "accepted",
-      score: 95,
-      submittedAt: "12 min ago",
-      link: "https://vercel.app/..."
-    },
-    {
-      id: "5",
-      team: "CodeCrafters",
-      type: "code",
-      status: "rejected",
-      score: 40,
-      submittedAt: "15 min ago",
-      link: "https://codeforces.com/..."
-    },
-    {
-      id: "6",
-      team: "TechTitans",
-      type: "github",
-      status: "pending",
-      score: 0,
-      submittedAt: "18 min ago",
-      link: "https://github.com/techtitans/contest-repo"
-    },
-    {
-      id: "7",
-      team: "WebWizards",
-      type: "deployment",
-      status: "pending",
-      score: 0,
-      submittedAt: "20 min ago",
-      link: "https://contest-app.vercel.app"
+  useEffect(() => {
+    fetchSubmissions();
+    // Refresh data every 30 seconds
+    const refreshInterval = setInterval(fetchSubmissions, 30000);
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  useEffect(() => {
+    // Filter submissions based on search query
+    const filtered = submissions.filter(submission => {
+      const matchesSearch = submission.team.team_name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    });
+    setFilteredSubmissions(filtered);
+  }, [searchQuery, submissions]);
+
+  const fetchSubmissions = async () => {
+    try {
+      setLoading(true);
+      const result = await getSubmissions();
+      if (result.success && result.data) {
+        setSubmissions(result.data);
+      } else {
+        console.error("Failed to fetch submissions:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to fetch submissions:", error);
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  // Filter submissions based on search query only
-  const filteredSubmissions = submissions.filter(submission => {
-    const matchesSearch = submission.team.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  };
 
   const getStatusIcon = (status: Submission["status"]) => {
     switch (status) {
-      case "accepted":
+      case "ACCEPTED":
         return <CheckCircle className="w-5 h-5 text-matrix-green" />;
-      case "rejected":
+      case "REJECTED":
         return <XCircle className="w-5 h-5 text-alert-red" />;
-      case "evaluating":
+      case "PENDING":
         return <Clock className="w-5 h-5 text-warning-orange animate-spin" />;
       default:
         return <Clock className="w-5 h-5 text-cyber-blue-400" />;
     }
   };
 
-  const getSubmissionTypeIcon = (type: Submission["type"]) => {
+  const getSubmissionTypeIcon = (type: Submission["submission_type"]) => {
     switch (type) {
       case "code":
         return <Code className="w-5 h-5" />;
@@ -112,6 +88,30 @@ export default function SubmissionMonitor() {
         return <Globe className="w-5 h-5" />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <div className="w-full pl-10 pr-4 py-2 bg-hack-black border border-cyber-blue-400/20 rounded-xl text-white focus:border-cyber-blue-400/60 focus:outline-none transition-all animate-pulse">
+              Loading...
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          {[1, 2, 3].map((index) => (
+            <div key={index} className="p-4 bg-hack-black/50 border border-cyber-blue-400/20 rounded-xl animate-pulse">
+              <div className="h-4 bg-gray-700 rounded w-1/4 mb-2"></div>
+              <div className="h-3 bg-gray-700 rounded w-1/3"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -133,7 +133,7 @@ export default function SubmissionMonitor() {
       <div className="space-y-4">
         {filteredSubmissions.map((submission) => (
           <motion.div
-            key={submission.id}
+            key={submission.submission_id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-4 bg-hack-black/50 border border-cyber-blue-400/20 rounded-xl hover:border-cyber-blue-400/40 transition-all"
@@ -141,30 +141,27 @@ export default function SubmissionMonitor() {
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="p-2 bg-cyber-blue-400/10 rounded-lg">
-                  {getSubmissionTypeIcon(submission.type)}
+                  {getSubmissionTypeIcon(submission.submission_type)}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">{submission.team}</h3>
-                  <p className="text-sm text-gray-400">{submission.submittedAt}</p>
+                  <h3 className="font-semibold text-white">{submission.team.team_name}</h3>
+                  <p className="text-sm text-gray-400">
+                    {new Date(submission.submitted_at).toLocaleString()}
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   {getStatusIcon(submission.status)}
-                  <span className="text-sm font-medium capitalize">{submission.status}</span>
+                  <span className="text-sm font-medium capitalize">{submission.status.toLowerCase()}</span>
                 </div>
                 <div className="text-cyber-blue-400 font-semibold">
                   {submission.score} pts
                 </div>
-                <a
-                  href={submission.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all"
-                >
+                <button className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all">
                   <Eye className="w-5 h-5" />
-                </a>
+                </button>
               </div>
             </div>
           </motion.div>

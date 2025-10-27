@@ -19,11 +19,15 @@ export default function ContestControls({
   onStop,
   onReset
 }: ContestControlsProps) {
-  const [contestStatus, setContestStatus] = useState<"idle" | "live" | "paused">("idle");
+  const [contestStatus, setContestStatus] = useState(status);
   const [durationMinutes, setDurationMinutes] = useState("90");
   const [startTime, setStartTime] = useState("");
   const [timeRemaining, setTimeRemaining] = useState(0); // in seconds
   const [totalDuration, setTotalDuration] = useState(0); // in seconds
+
+  useEffect(() => {
+    setContestStatus(status);
+  }, [status]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -32,7 +36,7 @@ export default function ContestControls({
       interval = setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
-            setContestStatus("idle");
+            setContestStatus("ended");
             return 0;
           }
           return prev - 1;
@@ -73,7 +77,7 @@ export default function ContestControls({
   };
 
   const handleResetContest = () => {
-    setContestStatus("idle");
+    setContestStatus("pre");
     setTimeRemaining(0);
     setTotalDuration(0);
     onReset();
@@ -107,6 +111,7 @@ export default function ContestControls({
             <span className="text-lg font-bold text-white">
               {contestStatus === "live" ? "Live" : 
                contestStatus === "paused" ? "Paused" : 
+               contestStatus === "ended" ? "Ended" :
                "Not Started"}
             </span>
           </div>
@@ -123,9 +128,9 @@ export default function ContestControls({
             <Clock className="w-5 h-5 text-[#1cabf2]" />
           </div>
           <div className={`text-3xl font-bold ${
-            contestStatus === "idle" ? "text-gray-500" : "text-[#1cabf2]"
+            contestStatus === "pre" ? "text-gray-500" : "text-[#1cabf2]"
           }`}>
-            {contestStatus === "idle" ? "--:--:--" : formatTime(timeRemaining)}
+            {contestStatus === "pre" ? "--:--:--" : formatTime(timeRemaining)}
           </div>
         </motion.div>
 
@@ -172,17 +177,19 @@ export default function ContestControls({
               <h3 className="text-2xl font-bold text-white">
                 {contestStatus === "live" ? "Contest is LIVE" : 
                  contestStatus === "paused" ? "Contest PAUSED" : 
+                 contestStatus === "ended" ? "Contest ENDED" :
                  "Contest Not Started"}
               </h3>
               <p className="text-sm text-gray-400 mt-1">
                 {contestStatus === "live" ? "All teams can submit solutions" : 
                  contestStatus === "paused" ? "Submissions temporarily disabled" : 
+                 contestStatus === "ended" ? "Contest has concluded" :
                  "Ready to begin"}
               </p>
             </div>
           </div>
           
-          {contestStatus !== "idle" && (
+          {contestStatus !== "pre" && (
             <div className="text-right">
               <div className="text-3xl font-bold text-[#1cabf2]">{getTimeElapsed()}</div>
               <div className="text-xs text-gray-400">Time Elapsed</div>
@@ -215,7 +222,7 @@ export default function ContestControls({
                 type="number"
                 value={durationMinutes}
                 onChange={(e) => setDurationMinutes(e.target.value)}
-                disabled={contestStatus !== "idle"}
+                disabled={contestStatus !== "pre"}
                 className="w-full px-4 py-3 bg-[#0a0a1f] border border-[#1cabf2]/20 rounded-xl text-white focus:border-[#1cabf2]/60 focus:outline-none transition-all duration-300 disabled:opacity-50"
                 placeholder="90"
                 min="1"
@@ -236,7 +243,7 @@ export default function ContestControls({
                   type="datetime-local"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  disabled={contestStatus !== "idle"}
+                  disabled={contestStatus !== "pre"}
                   className="w-full pl-12 pr-4 py-3 bg-[#0a0a1f] border border-[#1cabf2]/20 rounded-xl text-white focus:border-[#1cabf2]/60 focus:outline-none transition-all duration-300 disabled:opacity-50"
                 />
               </div>
@@ -266,7 +273,7 @@ export default function ContestControls({
 
           <div className="space-y-4">
             {/* Start Button */}
-            {contestStatus === "idle" && (
+            {contestStatus === "pre" && (
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -304,8 +311,21 @@ export default function ContestControls({
               </motion.button>
             )}
 
+            {/* Stop Button */}
+            {(contestStatus === "live" || contestStatus === "paused") && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onStop}
+                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#ff0055] to-[#ff0055]/80 rounded-xl font-bold text-white transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,0,85,0.4)]"
+              >
+                <Pause className="w-5 h-5" />
+                Stop Contest
+              </motion.button>
+            )}
+
             {/* Reset Button */}
-            {contestStatus !== "idle" && (
+            {contestStatus !== "pre" && (
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

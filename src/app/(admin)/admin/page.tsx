@@ -4,26 +4,37 @@ import { useState, useEffect } from "react";
 import { Users, Code, Trophy, TrendingUp, Clock, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import LiveStats from "@/components/admin/LiveStats";
-import SubmissionMonitor from"@/components/admin/SubmissionMonitor";
+import SubmissionMonitor from "@/components/admin/SubmissionMonitor";
+import { getAnalytics } from "./actions";
+import Link from "next/link";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
     totalTeams: 0,
     activeSubmissions: 0,
-    contestStatus: "live",
-    timeRemaining: "02:45:30",
+    acceptedSubmissions: 0,
+    rejectedSubmissions: 0,
+    contestStatus: "ended",
+    timeRemaining: "00:00:00",
   });
 
   useEffect(() => {
     // Fetch dashboard stats
     fetchDashboardStats();
+    
+    // Refresh stats every 30 seconds
+    const interval = setInterval(fetchDashboardStats, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await fetch("/api/admin/stats");
-      const data = await response.json();
-      setStats(data);
+      const result = await getAnalytics();
+      if (result.success && result.data) {
+        setStats(result.data);
+      } else {
+        console.error("Failed to fetch stats:", result.error);
+      }
     } catch (error) {
       console.error("Failed to fetch stats:", error);
     }
@@ -32,19 +43,17 @@ export default function AdminDashboard() {
   const statCards = [
     {
       title: "Total Teams",
-      value: stats.totalTeams || 48,
+      value: stats.totalTeams,
       icon: Users,
       color: "cyber-blue-400",
       bgGradient: "from-cyber-blue-400/20 to-neon-blue/20",
-      
     },
     {
       title: "Active Submissions",
-      value: stats.activeSubmissions || 156,
+      value: stats.activeSubmissions,
       icon: Code,
       color: "electric-cyan",
       bgGradient: "from-electric-cyan/20 to-neon-blue/20",
-      
     },
     {
       title: "Contest Status",
@@ -56,11 +65,10 @@ export default function AdminDashboard() {
     },
     {
       title: "Time Remaining",
-      value: stats.timeRemaining || "02:45:30",
+      value: stats.timeRemaining,
       icon: Clock,
       color: "warning-orange",
       bgGradient: "from-warning-orange/20 to-alert-red/20",
-      
     },
   ];
 
@@ -136,32 +144,38 @@ export default function AdminDashboard() {
               Quick Actions
             </h3>
             <div className="space-y-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full px-4 py-3 bg-gradient-to-r from-matrix-green/20 to-electric-cyan/20 border border-matrix-green/40 text-matrix-green rounded-xl hover:border-matrix-green/60 transition-all duration-300 font-semibold text-left flex items-center gap-3"
-              >
-                <CheckCircle className="w-5 h-5" />
-                Start Contest
-              </motion.button>
+              <Link href="/admin/contest">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full px-4 py-3 bg-gradient-to-r from-matrix-green/20 to-electric-cyan/20 border border-matrix-green/40 text-matrix-green rounded-xl hover:border-matrix-green/60 transition-all duration-300 font-semibold text-left flex items-center gap-3"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  Start Contest
+                </motion.button>
+              </Link>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/40 text-cyber-blue-400 rounded-xl hover:border-cyber-blue-400/60 transition-all duration-300 font-semibold text-left flex items-center gap-3"
-              >
-                <Users className="w-5 h-5" />
-                View All Teams
-              </motion.button>
+              <Link href="/admin/teams">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/40 text-cyber-blue-400 rounded-xl hover:border-cyber-blue-400/60 transition-all duration-300 font-semibold text-left flex items-center gap-3"
+                >
+                  <Users className="w-5 h-5" />
+                  View All Teams
+                </motion.button>
+              </Link>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full px-4 py-3 glass-panel border border-warning-orange/40 text-warning-orange rounded-xl hover:border-warning-orange/60 transition-all duration-300 font-semibold text-left flex items-center gap-3"
-              >
-                <TrendingUp className="w-5 h-5" />
-                View Analytics
-              </motion.button>
+              <Link href="/admin/analytics">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full px-4 py-3 glass-panel border border-warning-orange/40 text-warning-orange rounded-xl hover:border-warning-orange/60 transition-all duration-300 font-semibold text-left flex items-center gap-3"
+                >
+                  <TrendingUp className="w-5 h-5" />
+                  View Analytics
+                </motion.button>
+              </Link>
             </div>
           </motion.div>
 
@@ -181,12 +195,16 @@ export default function AdminDashboard() {
                 <span className="text-cyber-blue-400 font-semibold">90 minutes</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Start Time:</span>
-                <span className="text-gray-200 font-semibold">10:00 AM</span>
+                <span className="text-gray-400">Status:</span>
+                <span className={`font-semibold ${
+                  stats.contestStatus === "live" ? "text-matrix-green" : "text-gray-400"
+                }`}>
+                  {stats.contestStatus === "live" ? "Live" : "Not Started"}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">End Time:</span>
-                <span className="text-gray-200 font-semibold">11:30 AM</span>
+                <span className="text-gray-400">Time Remaining:</span>
+                <span className="text-warning-orange font-semibold">{stats.timeRemaining}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Total Problems:</span>

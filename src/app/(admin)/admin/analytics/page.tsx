@@ -22,20 +22,77 @@ import {
   Globe,
   Zap
 } from "lucide-react";
+import { getAnalytics, getSubmissions } from "../actions";
 
 export default function AdminAnalyticsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    totalTeams: 0,
+    activeSubmissions: 0,
+    acceptedSubmissions: 0,
+    rejectedSubmissions: 0,
+    contestStatus: "pre",
+    timeRemaining: "00:00:00"
+  });
+  const [submissions, setSubmissions] = useState<any[]>([]);
 
-  // Mock data - replace with real API calls
-  const stats = {
-    totalSubmissions: 342,
-    activeTeams: 28,
-    codeSubmissions: 156,
-    githubSubmissions: 98,
-    deploymentSubmissions: 88,
-    pendingEvaluations: 12
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      // Fetch analytics data
+      const analyticsResult = await getAnalytics();
+      if (analyticsResult.success && analyticsResult.data) {
+        setStats(analyticsResult.data);
+      } else {
+        console.error("Failed to fetch analytics:", analyticsResult.error);
+      }
+      
+      // Fetch submissions data
+      const submissionsResult = await getSubmissions();
+      if (submissionsResult.success && submissionsResult.data) {
+        setSubmissions(submissionsResult.data);
+      } else {
+        console.error("Failed to fetch submissions:", submissionsResult.error);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    }
   };
 
+  // Calculate submission types from actual data
+  const submissionStats = {
+    code: submissions.filter((s: any) => s.submission_type === "code").length,
+    github: submissions.filter((s: any) => s.submission_type === "github").length,
+    deployment: submissions.filter((s: any) => s.submission_type === "deployment").length,
+    pending: submissions.filter((s: any) => s.status === "PENDING").length
+  };
+
+  // Calculate top teams based on actual data
+  const teamScores: any = {};
+  submissions.forEach((submission: any) => {
+    const teamName = submission.team?.team_name || "Unknown Team";
+    if (!teamScores[teamName]) {
+      teamScores[teamName] = { score: 0, submissions: 0 };
+    }
+    teamScores[teamName].score += submission.score || 0;
+    teamScores[teamName].submissions += 1;
+  });
+
+  const topTeams = Object.entries(teamScores)
+    .sort((a, b) => (b[1] as any).score - (a[1] as any).score)
+    .slice(0, 5)
+    .map(([name, data], index) => ({
+      rank: index + 1,
+      name,
+      score: (data as any).score,
+      submissions: (data as any).submissions,
+      lastActive: "Recent"
+    }));
+
+  // Generate submission trend data
   const submissionTrend = [
     { time: "00:00", code: 12, github: 8, deploy: 5 },
     { time: "04:00", code: 18, github: 12, deploy: 9 },
@@ -45,25 +102,22 @@ export default function AdminAnalyticsPage() {
     { time: "20:00", code: 24, github: 10, deploy: 20 }
   ];
 
-  const topTeams = [
-    { rank: 1, name: "CodeNinjas", score: 450, submissions: 18, lastActive: "2m ago" },
-    { rank: 2, name: "AlgoMasters", score: 420, submissions: 16, lastActive: "5m ago" },
-    { rank: 3, name: "ByteBreakers", score: 400, submissions: 15, lastActive: "8m ago" },
-    { rank: 4, name: "DevDynamos", score: 380, submissions: 14, lastActive: "12m ago" },
-    { rank: 5, name: "CodeCrafters", score: 350, submissions: 13, lastActive: "15m ago" }
-  ];
-
-  const recentActivity = [
-    { team: "CodeNinjas", action: "Code Submission", status: "success", time: "2m ago" },
-    { team: "AlgoMasters", action: "Deployment", status: "success", time: "5m ago" },
-    { team: "ByteBreakers", action: "GitHub Link", status: "pending", time: "8m ago" },
-    { team: "DevDynamos", action: "Code Submission", status: "failed", time: "10m ago" },
-    { team: "CodeCrafters", action: "Deployment", status: "success", time: "12m ago" }
-  ];
+  // Generate recent activity from submissions
+  const recentActivity = submissions
+    .slice(0, 5)
+    .map((submission: any) => ({
+      team: submission.team?.team_name || "Unknown Team",
+      action: `${submission.submission_type} submission`,
+      status: submission.status === "ACCEPTED" ? "success" : 
+              submission.status === "REJECTED" ? "failed" : "pending",
+      time: "Recent"
+    }));
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
+    fetchData().finally(() => {
+      setTimeout(() => setIsRefreshing(false), 500);
+    });
   };
 
   const handleExport = () => {
@@ -125,7 +179,7 @@ export default function AdminAnalyticsPage() {
             </div>
           </div>
           <h3 className="text-3xl font-bold text-gradient mb-1">
-            {stats.totalSubmissions}
+            {stats.activeSubmissions + stats.acceptedSubmissions + stats.rejectedSubmissions}
           </h3>
           <p className="text-sm text-gray-400">Total Submissions</p>
         </motion.div>
@@ -143,7 +197,7 @@ export default function AdminAnalyticsPage() {
             </div>
           </div>
           <h3 className="text-3xl font-bold text-gradient mb-1">
-            {stats.activeTeams}
+            {stats.totalTeams}
           </h3>
           <p className="text-sm text-gray-400">Active Teams</p>
         </motion.div>
@@ -172,13 +226,13 @@ export default function AdminAnalyticsPage() {
                   <span className="text-sm text-gray-300">Code</span>
                 </div>
                 <span className="text-sm font-semibold text-cyber-blue-400">
-                  {stats.codeSubmissions}
+                  {submissionStats.code}
                 </span>
               </div>
               <div className="h-2 bg-hack-deep rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: "45%" }}
+                  animate={{ width: `${(submissionStats.code / (submissionStats.code + submissionStats.github + submissionStats.deployment) * 100) || 0}%` }}
                   transition={{ delay: 0.6, duration: 0.8 }}
                   className="h-full bg-gradient-to-r from-cyber-blue-400 to-neon-blue"
                 />
@@ -193,13 +247,13 @@ export default function AdminAnalyticsPage() {
                   <span className="text-sm text-gray-300">GitHub</span>
                 </div>
                 <span className="text-sm font-semibold text-matrix-green">
-                  {stats.githubSubmissions}
+                  {submissionStats.github}
                 </span>
               </div>
               <div className="h-2 bg-hack-deep rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: "29%" }}
+                  animate={{ width: `${(submissionStats.github / (submissionStats.code + submissionStats.github + submissionStats.deployment) * 100) || 0}%` }}
                   transition={{ delay: 0.7, duration: 0.8 }}
                   className="h-full bg-gradient-to-r from-matrix-green to-electric-cyan"
                 />
@@ -214,13 +268,13 @@ export default function AdminAnalyticsPage() {
                   <span className="text-sm text-gray-300">Deployment</span>
                 </div>
                 <span className="text-sm font-semibold text-warning-orange">
-                  {stats.deploymentSubmissions}
+                  {submissionStats.deployment}
                 </span>
               </div>
               <div className="h-2 bg-hack-deep rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: "26%" }}
+                  animate={{ width: `${(submissionStats.deployment / (submissionStats.code + submissionStats.github + submissionStats.deployment) * 100) || 0}%` }}
                   transition={{ delay: 0.8, duration: 0.8 }}
                   className="h-full bg-gradient-to-r from-warning-orange to-alert-red"
                 />
@@ -233,7 +287,7 @@ export default function AdminAnalyticsPage() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-400">Pending Evaluations</span>
               <span className="px-3 py-1 bg-warning-orange/10 text-warning-orange text-sm font-semibold rounded-full">
-                {stats.pendingEvaluations}
+                {submissionStats.pending}
               </span>
             </div>
           </div>
@@ -324,39 +378,45 @@ export default function AdminAnalyticsPage() {
           </div>
 
           <div className="space-y-3">
-            {topTeams.map((team, index) => (
-              <motion.div
-                key={team.rank}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 + index * 0.1 }}
-                className="glass-panel p-4 rounded-lg hover:border-cyber-blue-400/40 transition-all duration-300"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`
-                      w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                      ${team.rank === 1 ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-hack-black" :
-                        team.rank === 2 ? "bg-gradient-to-br from-gray-300 to-gray-500 text-hack-black" :
-                        team.rank === 3 ? "bg-gradient-to-br from-orange-400 to-orange-600 text-hack-black" :
-                        "bg-cyber-blue-400/20 text-cyber-blue-400"}
-                    `}>
-                      {team.rank}
+            {topTeams.length > 0 ? (
+              topTeams.map((team, index) => (
+                <motion.div
+                  key={team.rank}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                  className="glass-panel p-4 rounded-lg hover:border-cyber-blue-400/40 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`
+                        w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                        ${team.rank === 1 ? "bg-gradient-to-br from-yellow-400 to-yellow-600 text-hack-black" :
+                          team.rank === 2 ? "bg-gradient-to-br from-gray-300 to-gray-500 text-hack-black" :
+                          team.rank === 3 ? "bg-gradient-to-br from-orange-400 to-orange-600 text-hack-black" :
+                          "bg-cyber-blue-400/20 text-cyber-blue-400"}
+                      `}>
+                        {team.rank}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-200">{team.name}</p>
+                        <p className="text-xs text-gray-400">
+                          {team.submissions} submissions • {team.lastActive}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-gray-200">{team.name}</p>
-                      <p className="text-xs text-gray-400">
-                        {team.submissions} submissions • {team.lastActive}
-                      </p>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-gradient">{team.score}</p>
+                      <p className="text-xs text-gray-400">points</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-gradient">{team.score}</p>
-                    <p className="text-xs text-gray-400">points</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                No team data available
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -373,45 +433,51 @@ export default function AdminAnalyticsPage() {
           </div>
 
           <div className="space-y-3">
-            {recentActivity.map((activity, index) => {
-              const statusConfig = {
-                success: { icon: CheckCircle, color: "text-matrix-green", bg: "bg-matrix-green/10" },
-                pending: { icon: Clock, color: "text-warning-orange", bg: "bg-warning-orange/10" },
-                failed: { icon: XCircle, color: "text-alert-red", bg: "bg-alert-red/10" }
-              };
-              
-              const config = statusConfig[activity.status as keyof typeof statusConfig];
-              const StatusIcon = config.icon;
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => {
+                const statusConfig = {
+                  success: { icon: CheckCircle, color: "text-matrix-green", bg: "bg-matrix-green/10" },
+                  pending: { icon: Clock, color: "text-warning-orange", bg: "bg-warning-orange/10" },
+                  failed: { icon: XCircle, color: "text-alert-red", bg: "bg-alert-red/10" }
+                };
+                
+                const config = statusConfig[activity.status as keyof typeof statusConfig];
+                const StatusIcon = config.icon;
 
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.9 + index * 0.1 }}
-                  className="glass-panel p-4 rounded-lg hover:border-cyber-blue-400/40 transition-all duration-300"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 ${config.bg} rounded-lg`}>
-                        <StatusIcon className={`w-4 h-4 ${config.color}`} />
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.9 + index * 0.1 }}
+                    className="glass-panel p-4 rounded-lg hover:border-cyber-blue-400/40 transition-all duration-300"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 ${config.bg} rounded-lg`}>
+                          <StatusIcon className={`w-4 h-4 ${config.color}`} />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-200 text-sm">{activity.team}</p>
+                          <p className="text-xs text-gray-400">{activity.action}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-200 text-sm">{activity.team}</p>
-                        <p className="text-xs text-gray-400">{activity.action}</p>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-400">{activity.time}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-400">{activity.time}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                No recent activity
+              </div>
+            )}
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
             className="w-full mt-4 py-2 glass-panel border border-cyber-blue-400/30 hover:border-cyber-blue-400 rounded-lg text-cyber-blue-400 text-sm font-semibold transition-all duration-300"
           >

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { TrendingUp, Users, Code, Clock, Activity, Award, Target, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import { getAnalytics, getRecentActivity, getTopPerformers } from "@/app/(admin)/admin/actions";
 
 interface StatCard {
   title: string;
@@ -13,6 +14,21 @@ interface StatCard {
   color: string;
 }
 
+interface ActivityItem {
+  team: string;
+  action: string;
+  time: string;
+  status: "success" | "error" | "pending";
+}
+
+interface TopPerformer {
+  rank: number;
+  team: string;
+  score: number;
+  submissions: number;
+  badge: string;
+}
+
 interface LiveStatsProps {
   status: "pre" | "live" | "paused" | "ended";
 }
@@ -20,6 +36,10 @@ interface LiveStatsProps {
 export default function LiveStats({ status }: LiveStatsProps) {
   const [isLive, setIsLive] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
+  const [stats, setStats] = useState<StatCard[]>([]);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -28,46 +48,96 @@ export default function LiveStats({ status }: LiveStatsProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const stats: StatCard[] = [
-    {
-      title: "Active Teams",
-      value: "42",
-      change: "+8",
-      trend: "up",
-      icon: Users,
-      color: "#1cabf2"
-    },
-    {
-      title: "Total Submissions",
-      value: "287",
-      change: "+23",
-      trend: "up",
-      icon: Code,
-      color: "#00ff41"
+  useEffect(() => {
+    fetchData();
+    // Refresh data every 30 seconds
+    const refreshInterval = setInterval(fetchData, 30000);
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch analytics data
+      const analyticsResult = await getAnalytics();
+      if (analyticsResult.success && analyticsResult.data) {
+        const analyticsData = analyticsResult.data;
+        setStats([
+          {
+            title: "Active Teams",
+            value: analyticsData.totalTeams.toString(),
+            change: "+0",
+            trend: "up",
+            icon: Users,
+            color: "#1cabf2"
+          },
+          {
+            title: "Total Submissions",
+            value: (analyticsData.activeSubmissions + analyticsData.acceptedSubmissions + analyticsData.rejectedSubmissions).toString(),
+            change: "+0",
+            trend: "up",
+            icon: Code,
+            color: "#00ff41"
+          }
+        ]);
+      }
+      
+      // Fetch recent activity
+      const activityResult = await getRecentActivity();
+      if (activityResult.success && activityResult.data) {
+        // Ensure status values are properly typed
+        const typedActivity = activityResult.data.map((item: any) => ({
+          team: item.team,
+          action: item.action,
+          time: item.time,
+          status: item.status as "success" | "error" | "pending"
+        }));
+        setRecentActivity(typedActivity);
+      }
+      
+      // Fetch top performers
+      const performersResult = await getTopPerformers();
+      if (performersResult.success && performersResult.data) {
+        setTopPerformers(performersResult.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  const recentActivity = [
-    { team: "CodeNinjas", action: "Submitted Code Solution", time: "2 min ago", status: "success" },
-    { team: "ByteBuilders", action: "Submitted GitHub Link", time: "5 min ago", status: "success" },
-    { team: "AlgoMasters", action: "Failed Test Case", time: "8 min ago", status: "error" },
-    { team: "DevDynamos", action: "Submitted Deployment", time: "12 min ago", status: "success" },
-    { team: "CodeCrafters", action: "Submitted Code Solution", time: "15 min ago", status: "pending" }
-  ];
-
-  const topPerformers = [
-    { rank: 1, team: "CodeNinjas", score: 450, submissions: 12, badge: "🥇" },
-    { rank: 2, team: "ByteBuilders", score: 420, submissions: 10, badge: "🥈" },
-    { rank: 3, team: "DevDynamos", score: 400, submissions: 15, badge: "🥉" },
-    { rank: 4, team: "AlgoMasters", score: 380, submissions: 8, badge: "" },
-    { rank: 5, team: "CodeCrafters", score: 350, submissions: 9, badge: "" }
-  ];
+  };
 
   const statusColors = {
     success: { bg: "bg-[#00ff41]/10", text: "text-[#00ff41]", dot: "bg-[#00ff41]" },
     error: { bg: "bg-[#ff0055]/10", text: "text-[#ff0055]", dot: "bg-[#ff0055]" },
     pending: { bg: "bg-[#ff6b35]/10", text: "text-[#ff6b35]", dot: "bg-[#ff6b35]" }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-4 py-2 bg-[#00ff41]/10 border border-[#00ff41]/40 rounded-full">
+              <div className="w-2 h-2 bg-[#00ff41] rounded-full animate-pulse" />
+              <span className="text-sm font-bold text-[#00ff41]">LIVE</span>
+            </div>
+            <span className="text-sm text-gray-400">Loading data...</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2].map((index) => (
+            <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 animate-pulse">
+              <div className="h-4 bg-gray-700 rounded w-1/3 mb-4"></div>
+              <div className="h-8 bg-gray-700 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -143,11 +213,11 @@ export default function LiveStats({ status }: LiveStatsProps) {
                 transition={{ delay: index * 0.05 }}
                 className="flex items-start gap-3 p-3 bg-[#0a0a1f] border border-[#1cabf2]/10 rounded-xl hover:border-[#1cabf2]/30 transition-all duration-300"
               >
-                <div className={`w-2 h-2 rounded-full mt-2 ${statusColors[activity.status as keyof typeof statusColors].dot} animate-pulse`} />
+                <div className={`w-2 h-2 rounded-full mt-2 ${statusColors[activity.status].dot} animate-pulse`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-semibold text-white text-sm">{activity.team}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${statusColors[activity.status as keyof typeof statusColors].bg} ${statusColors[activity.status as keyof typeof statusColors].text}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${statusColors[activity.status].bg} ${statusColors[activity.status].text}`}>
                       {activity.status}
                     </span>
                   </div>

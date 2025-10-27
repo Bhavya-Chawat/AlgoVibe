@@ -1,56 +1,191 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save, Eye, Users, FileText, AlertCircle, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface Team {
-  id: string;
-  name: string;
-  leader: string;
-  members: number;
+  team_id: number;
+  team_name: string;
+  members: any[];
+}
+
+interface Problem {
+  problem_id: number;
+  title: string;
+  description: string;
 }
 
 interface ProblemEditorProps {
+  teams?: Team[];
+  problems?: Problem[];
+  isLoading?: boolean;
+  onCreateProblem?: (title: string, description: string) => Promise<any>;
+  onUpdateProblem?: (problemId: number, title: string, description: string) => Promise<any>;
+  onAssignProblem?: (teamId: number, problemId: number) => Promise<any>;
   showSidebarPanels?: boolean;
 }
 
-export default function ProblemEditor({ showSidebarPanels = true }: ProblemEditorProps) {
-  // Mock teams data - replace with actual API call
-  const teams: Team[] = [
-    { id: "1", name: "CodeNinjas", leader: "John Doe", members: 3 },
-    { id: "2", name: "AlgoMasters", leader: "Jane Smith", members: 4 },
-    { id: "3", name: "ByteBreakers", leader: "Mike Johnson", members: 3 },
-    { id: "4", name: "DevDynamos", leader: "Sarah Williams", members: 4 },
-    { id: "5", name: "CodeCrafters", leader: "Alex Brown", members: 3 }
-  ];
-
+export default function ProblemEditor({ 
+  teams = [], 
+  problems = [], 
+  isLoading = false,
+  onCreateProblem,
+  onUpdateProblem,
+  onAssignProblem,
+  showSidebarPanels = true 
+}: ProblemEditorProps) {
   const [selectedTeam, setSelectedTeam] = useState<string>("");
+  const [selectedProblem, setSelectedProblem] = useState<string>("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [assignedProblem, setAssignedProblem] = useState<Problem | null>(null);
 
-  const handleSave = () => {
+  // Update form when a problem is selected
+  const handleProblemSelect = (problemId: string) => {
+    setSelectedProblem(problemId);
+    const problem = problems.find(p => p.problem_id === parseInt(problemId));
+    if (problem) {
+      setTitle(problem.title);
+      setDescription(problem.description);
+    }
+  };
+
+  // Fetch assigned problem when team is selected
+  useEffect(() => {
+    if (selectedTeam && teams.length > 0) {
+      // In a real implementation, we would fetch the assigned problem from the database
+      // For now, we'll just reset the assigned problem
+      setAssignedProblem(null);
+    }
+  }, [selectedTeam, teams]);
+
+  const handleSave = async () => {
+    if (!selectedTeam) return;
+    
     setIsSaving(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      let problemId = parseInt(selectedProblem);
+      
+      if (problemId) {
+        // Update existing problem
+        if (onUpdateProblem) {
+          const result = await onUpdateProblem(problemId, title, description);
+          if (!result.success) {
+            console.error("Failed to update problem:", result.error);
+          }
+        }
+      } else {
+        // Create new problem
+        if (onCreateProblem) {
+          const result = await onCreateProblem(title, description);
+          if (result.success) {
+            problemId = result.data.problem_id;
+            // Add the new problem to the problems list
+            // In a real app, you'd refetch the problems list
+          } else {
+            console.error("Failed to create problem:", result.error);
+          }
+        }
+      }
+      
+      // Assign problem to team if both are selected
+      if (selectedTeam && problemId && onAssignProblem) {
+        const result = await onAssignProblem(parseInt(selectedTeam), problemId);
+        if (!result.success) {
+          console.error("Failed to assign problem to team:", result.error);
+        }
+      }
+      
       setShowSuccess(true);
       
       // Hide success message after 3 seconds
       setTimeout(() => {
         setShowSuccess(false);
       }, 3000);
-    }, 1000);
+    } catch (error) {
+      console.error("Failed to save problem:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePreview = () => {
-    console.log("Preview problem statement for team:", selectedTeam);
+    if (!selectedTeam) return;
+    
+    // Create a preview window with the problem statement
+    const previewWindow = window.open("", "_blank");
+    if (previewWindow) {
+      previewWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Problem Preview - ${title || "Untitled Problem"}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: #f5f5f5;
+            }
+            .problem-header {
+              background: white;
+              padding: 20px;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              margin-bottom: 20px;
+            }
+            .problem-title {
+              font-size: 24px;
+              font-weight: bold;
+              color: #2c3e50;
+              margin-bottom: 10px;
+            }
+            .problem-content {
+              background: white;
+              padding: 20px;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              white-space: pre-wrap;
+              font-family: 'Courier New', monospace;
+            }
+            .team-info {
+              background: #e3f2fd;
+              padding: 15px;
+              border-radius: 8px;
+              margin-bottom: 20px;
+              border-left: 4px solid #2196f3;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="team-info">
+            <h2>Problem Preview for Team</h2>
+            <p><strong>Team:</strong> ${teams.find(t => t.team_id === parseInt(selectedTeam))?.team_name || "Unknown Team"}</p>
+          </div>
+          
+          <div class="problem-header">
+            <div class="problem-title">${title || "Untitled Problem"}</div>
+          </div>
+          
+          <div class="problem-content">
+            ${description || "No problem description provided."}
+          </div>
+        </body>
+        </html>
+      `);
+      previewWindow.document.close();
+    }
   };
 
-  const selectedTeamData = teams.find(t => t.id === selectedTeam);
+  const selectedTeamData = teams.find(t => t.team_id === parseInt(selectedTeam));
+  const selectedProblemData = problems.find(p => p.problem_id === parseInt(selectedProblem));
 
   return (
     <div className="space-y-6">
@@ -119,7 +254,7 @@ export default function ProblemEditor({ showSidebarPanels = true }: ProblemEdito
             <div>
               <p className="font-semibold text-matrix-green">Problem Statement Saved!</p>
               <p className="text-sm text-gray-400">
-                The problem has been updated for {selectedTeamData?.name}
+                The problem has been updated for {selectedTeamData?.team_name}
               </p>
             </div>
           </div>
@@ -148,13 +283,14 @@ export default function ProblemEditor({ showSidebarPanels = true }: ProblemEdito
                 value={selectedTeam}
                 onChange={(e) => setSelectedTeam(e.target.value)}
                 className="w-full px-4 py-4 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 appearance-none cursor-pointer bg-transparent"
+                disabled={isLoading}
               >
                 <option value="" className="bg-hack-navy text-gray-400">
                   -- Select a Team --
                 </option>
                 {teams.map((team) => (
-                  <option key={team.id} value={team.id} className="bg-hack-navy text-gray-200">
-                    {team.name} - Led by {team.leader} ({team.members} members)
+                  <option key={team.team_id} value={team.team_id} className="bg-hack-navy text-gray-200">
+                    {team.team_name} ({team.members.length} members)
                   </option>
                 ))}
               </select>
@@ -167,19 +303,62 @@ export default function ProblemEditor({ showSidebarPanels = true }: ProblemEdito
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-gray-200">{selectedTeamData.name}</p>
+                      <p className="font-semibold text-gray-200">{selectedTeamData.team_name}</p>
                       <p className="text-sm text-gray-400">
-                        Team Leader: {selectedTeamData.leader}
+                        Team Leader: {selectedTeamData.members.find((m: any) => m.role === 'Leader')?.name || 'N/A'}
                       </p>
                     </div>
                     <div className="px-3 py-1 bg-neon-blue/10 border border-neon-blue/30 rounded-full">
                       <span className="text-xs font-semibold text-neon-blue">
-                        {selectedTeamData.members} Members
+                        {selectedTeamData.members.length} Members
                       </span>
                     </div>
                   </div>
+                  
+                  {/* Display assigned problem if exists */}
+                  {assignedProblem && (
+                    <div className="mt-3 p-3 bg-matrix-green/10 border border-matrix-green/30 rounded-lg">
+                      <p className="text-sm text-matrix-green font-semibold">
+                        Currently Assigned: {assignedProblem.title}
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               )}
+            </div>
+          </motion.div>
+
+          {/* Problem Selection */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.05 }}
+            className="glass-panel-strong p-6 rounded-2xl border border-cyber-blue-400/20"
+          >
+            <h3 className="text-xl font-bold text-gray-200 mb-4 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-cyber-blue-400" />
+              Select or Create Problem
+            </h3>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-300 mb-3">
+                Choose an existing problem or create a new one
+              </label>
+              <select
+                value={selectedProblem}
+                onChange={(e) => handleProblemSelect(e.target.value)}
+                className="w-full px-4 py-4 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 appearance-none cursor-pointer bg-transparent"
+                disabled={isLoading}
+              >
+                <option value="" className="bg-hack-navy text-gray-400">
+                  -- Create New Problem --
+                </option>
+                {problems.map((problem) => (
+                  <option key={problem.problem_id} value={problem.problem_id} className="bg-hack-navy text-gray-200">
+                    {problem.title}
+                  </option>
+                ))}
+              </select>
             </div>
           </motion.div>
 
@@ -205,7 +384,7 @@ export default function ProblemEditor({ showSidebarPanels = true }: ProblemEdito
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  disabled={!selectedTeam}
+                  disabled={!selectedTeam || isLoading}
                   className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/20 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Enter problem title (e.g., Find Maximum Sum Subarray)"
                 />
@@ -219,7 +398,7 @@ export default function ProblemEditor({ showSidebarPanels = true }: ProblemEdito
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  disabled={!selectedTeam}
+                  disabled={!selectedTeam || isLoading}
                   rows={16}
                   className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/20 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 resize-none disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm leading-relaxed"
                   placeholder={`Enter the complete problem description including:
@@ -272,7 +451,14 @@ Sample Output:
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-400">Selected Team</span>
                   <span className="text-cyber-blue-400 font-semibold text-sm">
-                    {selectedTeamData ? selectedTeamData.name : "None"}
+                    {selectedTeamData ? selectedTeamData.team_name : "None"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Selected Problem</span>
+                  <span className="text-cyber-blue-400 font-semibold text-sm">
+                    {selectedProblemData ? selectedProblemData.title : "New Problem"}
                   </span>
                 </div>
 
@@ -318,11 +504,13 @@ Sample Output:
                   <p className="font-semibold text-warning-orange">Instructions</p>
                   <ul className="space-y-1 list-disc list-inside text-xs">
                     <li>Select a team from the dropdown</li>
+                    <li>Select an existing problem or create new</li>
                     <li>Enter a clear problem title</li>
                     <li>Write detailed problem description</li>
                     <li>Include input/output format</li>
                     <li>Add constraints and examples</li>
                     <li>Click Save to assign problem</li>
+                    <li>Use Preview to see how teams will view it</li>
                   </ul>
                 </div>
               </div>
@@ -344,13 +532,15 @@ Sample Output:
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Problems Assigned</span>
-                  <span className="text-matrix-green font-bold">3</span>
+                  <span className="text-sm text-gray-400">Problems Created</span>
+                  <span className="text-matrix-green font-bold">{problems.length}</span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">Pending</span>
-                  <span className="text-warning-orange font-bold">{teams.length - 3}</span>
+                  <span className="text-sm text-gray-400">Pending Assignments</span>
+                  <span className="text-warning-orange font-bold">
+                    {teams.length - problems.length > 0 ? teams.length - problems.length : 0}
+                  </span>
                 </div>
               </div>
             </motion.div>
