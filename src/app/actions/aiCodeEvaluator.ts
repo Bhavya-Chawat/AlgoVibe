@@ -1,13 +1,41 @@
-// Replace: import OpenAI from "openai";
 import { GoogleGenAI } from "@google/genai";
 
-// Initialization: The SDK automatically looks for the GEMINI_API_KEY
-// in the process.env object when no API key is passed explicitly.
-// NOTE: Ensure your GEMINI_API_KEY is set in .env.local
-const ai = new GoogleGenAI({});
+// --- CLIENT POOL CONFIGURATION ---
 
-// --- SIMPLIFIED SCHEMA FOR ALGORITHMIC EVALUATION ---
-// Renamed 'correctness_verdict' to 'verdict' and removed complexity fields.
+// Collect up to 5 API keys (GEMINI_API_KEY_1 ... GEMINI_API_KEY_5)
+const apiKeys = [
+  process.env.GEMINI_API_KEY_1,
+  process.env.GEMINI_API_KEY_2,
+  process.env.GEMINI_API_KEY_3,
+  process.env.GEMINI_API_KEY_4,
+  process.env.GEMINI_API_KEY_5,
+].filter((key) => key) as string[];
+
+if (apiKeys.length === 0) {
+  console.warn(
+    "--- WARNING: No Gemini API keys found. Proceeding only if environment sets a key dynamically. ---"
+  );
+}
+
+// Create client pool (Round-Robin ready)
+const aiClientPool: GoogleGenAI[] =
+  apiKeys.length > 0
+    ? apiKeys.map((key) => new GoogleGenAI({ apiKey: key }))
+    : [new GoogleGenAI({})]; // fallback single client
+
+// Round-Robin index
+let currentClientIndex = 0;
+
+/**
+ * Get the next GoogleGenAI client from the pool.
+ */
+function getNextClient(): GoogleGenAI {
+  const client = aiClientPool[currentClientIndex];
+  currentClientIndex = (currentClientIndex + 1) % aiClientPool.length;
+  return client;
+}
+
+// --- SIMPLIFIED SCHEMA ---
 const SIMPLIFIED_SCHEMA = {
   type: "OBJECT",
   properties: {
@@ -32,7 +60,7 @@ const SIMPLIFIED_SCHEMA = {
   required: ["verdict", "feedback", "issues"],
 };
 
-// --- UPDATED PROMPT TEMPLATE ---
+// --- PROMPT TEMPLATE ---
 const PROMPT_TEMPLATE = (problemDescription: string, userCode: string) => `
 You are a specialized competitive programming judge focused only on algorithmic correctness and complexity.
 
@@ -49,30 +77,37 @@ ${userCode}
 ---
 
 Your responsibilities are STRICTLY:
-1.  **Analyze Correctness:** Thoroughly test the code logic against the problem requirements, including edge cases (e.g., constraints on K, negative numbers, empty input).
-2.  **Evaluate Complexity:** Determine and verify the Time Complexity and Space Complexity of the algorithm. This analysis **MUST be included in the 'feedback' field** to justify the verdict.
-3.  **Verdict:** Provide a verdict of "correct" only if the algorithm is logically sound, handles all inputs correctly, and meets the implied efficiency goals.
-4.  **Ignore:** Do NOT comment on styling, variable names, or visualization potential.
+1. **Analyze Correctness:** Thoroughly test the code logic against the problem requirements, including edge cases.
+2. **Evaluate Complexity:** Determine and verify the Time Complexity and Space Complexity. Include this in 'feedback'.
+3. **Verdict:** Provide "correct" only if the code is fully correct and efficient.
+4. **Ignore:** Do NOT comment on styling or names.
 
-Output the result ONLY as the requested JSON format, which requires 'verdict', 'feedback', and 'issues'.
+Output only valid JSON with fields: 'verdict', 'feedback', and 'issues'.
 `;
 
-// Define the structure for the return value (matching the simplified schema)
+// --- TYPE DEFINITION ---
 export interface AlgorithmicEvaluationResult {
   verdict: "correct" | "incorrect";
   feedback: string;
   issues: string[];
 }
 
+// --- MAIN FUNCTION ---
 export async function aiEvaluateCode(
   problemDescription: string,
   codeText: string
 ): Promise<AlgorithmicEvaluationResult | { error: string }> {
   const prompt = PROMPT_TEMPLATE(problemDescription, codeText);
 
-  // --- DEBUG LOG 1: Log the final prompt being sent ---
+  const ai = getNextClient();
+
   console.log("--- DEBUG LOG: Final Prompt Sent to Gemini (Algorithmic) ---");
   console.log(prompt.substring(0, 500) + "...");
+  console.log(
+    `--- Using Client Index: ${
+      currentClientIndex === 0 ? aiClientPool.length : currentClientIndex
+    } of ${aiClientPool.length} ---`
+  );
   console.log("-------------------------------------------");
 
   try {
@@ -82,35 +117,30 @@ export async function aiEvaluateCode(
       config: {
         temperature: 0,
         responseMimeType: "application/json",
-        responseSchema: SIMPLIFIED_SCHEMA, // Using the simplified schema
+        responseSchema: SIMPLIFIED_SCHEMA,
       },
     });
 
-    // --- DEBUG LOG 2: Log the raw response object ---
     console.log("--- DEBUG LOG: Raw Gemini API Response (Candidates) ---");
     console.log(JSON.stringify(response.candidates, null, 2));
     console.log("-------------------------------------------------------");
 
     const content = response.candidates?.[0]?.content?.parts?.[0]?.text;
-
     if (!content) {
       console.error("--- DEBUG LOG: ERROR - No Content received ---");
       throw new Error("Empty response received from AI.");
     }
 
-    // --- DEBUG LOG 3: Log the content string before parsing ---
     console.log("--- DEBUG LOG: JSON Content String Received ---");
     console.log(content);
     console.log("----------------------------------------------");
 
-    // Parse the strict JSON response from AI
     return JSON.parse(content) as AlgorithmicEvaluationResult;
   } catch (error) {
     console.error("--- DEBUG LOG: AI Evaluation Failure ---");
     console.error("AI Evaluation Error:", error);
     console.error("---------------------------------------");
 
-    // Return a structured error object on failure
     return {
       error:
         "AI service failed to evaluate the code. Check server logs for details.",
