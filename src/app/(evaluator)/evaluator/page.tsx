@@ -4,28 +4,45 @@ import { motion } from "framer-motion";
 import ProblemViewer from "@/components/evaluator/ProblemViewer";
 import SubmissionReview from "@/components/evaluator/SubmissionReview";
 import { FileText, Code, Eye, Users } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getAllTeams } from "./actions";
 
 interface Team {
-  id: string;
-  name: string;
+  team_id: number;
+  team_name: string;
   leader: string;
-  members: number;
+  member_count: number;
 }
 
 export default function EvaluatorProblemPage() {
-  // Mock teams data - replace with actual API call
-  const teams: Team[] = [
-    { id: "1", name: "CodeNinjas", leader: "John Doe", members: 3 },
-    { id: "2", name: "AlgoMasters", leader: "Jane Smith", members: 4 },
-    { id: "3", name: "ByteBreakers", leader: "Mike Johnson", members: 3 },
-    { id: "4", name: "DevDynamos", leader: "Sarah Williams", members: 4 },
-    { id: "5", name: "CodeCrafters", leader: "Alex Brown", members: 3 }
-  ];
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedTeam, setSelectedTeam] = useState<number | "">("");
+  const [error, setError] = useState<string | null>(null);
 
-  const [selectedTeam, setSelectedTeam] = useState<string>("");
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        setLoading(true);
+        const result = await getAllTeams();
 
-  const selectedTeamData = teams.find(t => t.id === selectedTeam);
+        if (result.success && result.teams) {
+          setTeams(result.teams);
+        } else {
+          setError(result.error || "Failed to fetch teams");
+        }
+      } catch (err) {
+        setError("An unexpected error occurred");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeams();
+  }, []);
+
+  const selectedTeamData = teams.find((t) => t.team_id === selectedTeam);
 
   return (
     <div className="space-y-6">
@@ -64,20 +81,38 @@ export default function EvaluatorProblemPage() {
             <label className="block text-sm font-semibold text-gray-300 mb-3">
               Choose a team to review their problem and submissions
             </label>
-            <select
-              value={selectedTeam}
-              onChange={(e) => setSelectedTeam(e.target.value)}
-              className="w-full px-4 py-4 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 appearance-none cursor-pointer bg-transparent"
-            >
-              <option value="" className="bg-hack-navy text-gray-400">
-                -- Select a Team --
-              </option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id} className="bg-hack-navy text-gray-200">
-                  {team.name} - Led by {team.leader} ({team.members} members)
+
+            {loading ? (
+              <div className="w-full px-4 py-4 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 animate-pulse">
+                Loading teams...
+              </div>
+            ) : error ? (
+              <div className="w-full px-4 py-4 glass-panel border border-alert-red/30 rounded-xl text-alert-red">
+                Error: {error}
+              </div>
+            ) : (
+              <select
+                value={selectedTeam}
+                onChange={(e) =>
+                  setSelectedTeam(e.target.value ? Number(e.target.value) : "")
+                }
+                className="w-full px-4 py-4 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 appearance-none cursor-pointer bg-transparent"
+              >
+                <option value="" className="bg-hack-navy text-gray-400">
+                  -- Select a Team -- ({teams.length} teams available)
                 </option>
-              ))}
-            </select>
+                {teams.map((team) => (
+                  <option
+                    key={team.team_id}
+                    value={team.team_id}
+                    className="bg-hack-navy text-gray-200"
+                  >
+                    {team.team_name} - Led by {team.leader} ({team.member_count}{" "}
+                    members)
+                  </option>
+                ))}
+              </select>
+            )}
 
             {selectedTeamData && (
               <motion.div
@@ -87,14 +122,16 @@ export default function EvaluatorProblemPage() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-gray-200">{selectedTeamData.name}</p>
+                    <p className="font-semibold text-gray-200">
+                      {selectedTeamData.team_name}
+                    </p>
                     <p className="text-sm text-gray-400">
                       Team Leader: {selectedTeamData.leader}
                     </p>
                   </div>
                   <div className="px-3 py-1 bg-neon-blue/10 border border-neon-blue/30 rounded-full">
                     <span className="text-xs font-semibold text-neon-blue">
-                      {selectedTeamData.members} Members
+                      {selectedTeamData.member_count} Members
                     </span>
                   </div>
                 </div>
@@ -118,7 +155,7 @@ export default function EvaluatorProblemPage() {
               <FileText className="w-6 h-6" />
               Assigned Problem Statement
             </h2>
-            <ProblemViewer selectedTeam={selectedTeam} />
+            <ProblemViewer selectedTeam={selectedTeam.toString()} />
           </div>
 
           {/* Submissions */}
@@ -127,7 +164,7 @@ export default function EvaluatorProblemPage() {
               <Code className="w-6 h-6" />
               Team Submissions
             </h2>
-            <SubmissionReview selectedTeam={selectedTeam} />
+            <SubmissionReview selectedTeam={selectedTeam.toString()} />
           </div>
         </motion.div>
       )}
