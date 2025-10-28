@@ -483,31 +483,6 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
       {/* Use contest timer with real data */}
       <ContestTimerWrapper />
 
-      {/* Header with glowing title */}
-      <div className="mb-10 pb-10 border-b border-cyber-blue-400/30">
-        <div className="flex items-start justify-between gap-8 mb-8">
-          <h1 className="text-5xl font-bold text-gradient flex-1">
-            {problem.title}
-          </h1>
-          <Code2 className="w-12 h-12 text-cyber-blue-400 flex-shrink-0" />
-        </div>
-
-        {/* Meta Info */}
-        <div className="flex flex-wrap items-center gap-6">
-          <div className="flex items-center gap-4 text-lg text-gray-300">
-            <Trophy className="w-8 h-8 text-warning-orange" />
-            <span className="font-bold text-warning-orange text-2xl">
-              100 Points
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4 text-lg text-gray-400">
-            <Clock className="w-8 h-8" />
-            <span className="text-2xl">90 minutes</span>
-          </div>
-        </div>
-      </div>
-
       {/* Description */}
       <div className="mb-10">
         <h3 className="text-3xl font-bold text-cyber-blue-400 mb-6 flex items-center gap-4">
@@ -549,26 +524,30 @@ export default function ProblemStatement({ problem }: ProblemStatementProps) {
           <Trophy className="w-8 h-8" />
           Evaluation Criteria
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300 text-lg">Code Quality</span>
-              <span className="text-cyber-blue-400 font-mono">30%</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300 text-lg">Functionality</span>
-              <span className="text-cyber-blue-400 font-mono">30%</span>
-            </div>
+        <div className="grid grid-cols-1 gap-4">
+          <div className="flex items-center justify-between pb-2 border-b border-warning-orange/20">
+            <span className="text-gray-300 text-lg">
+              Visualization Quality & Insight
+            </span>
+            <span className="text-cyber-blue-400 font-mono font-bold">45%</span>
           </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300 text-lg">Documentation</span>
-              <span className="text-cyber-blue-400 font-mono">20%</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300 text-lg">Deployment</span>
-              <span className="text-cyber-blue-400 font-mono">20%</span>
-            </div>
+          <div className="flex items-center justify-between py-2 border-b border-warning-orange/10">
+            <span className="text-gray-300 text-lg">
+              Core Logic & Efficiency
+            </span>
+            <span className="text-cyber-blue-400 font-mono font-bold">25%</span>
+          </div>
+          <div className="flex items-center justify-between py-2 border-b border-warning-orange/10">
+            <span className="text-gray-300 text-lg">
+              Web Application UX & Polish
+            </span>
+            <span className="text-cyber-blue-400 font-mono font-bold">20%</span>
+          </div>
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-gray-300 text-lg">
+              Engineering & Repository Management
+            </span>
+            <span className="text-cyber-blue-400 font-mono font-bold">10%</span>
           </div>
         </div>
       </div>
