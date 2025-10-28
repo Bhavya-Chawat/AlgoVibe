@@ -1,10 +1,10 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle, XCircle } from "lucide-react";
 
 interface ApiResult {
-  status: 'correct' | 'error' | 'warning';
-  message: string;      
+  verdict: "correct" | "incorrect";
+  feedback: string;
 }
 
 interface ApiResultsProps {
@@ -12,30 +12,19 @@ interface ApiResultsProps {
 }
 
 export default function ApiResults({ result }: ApiResultsProps) {
-  const getStatusConfig = () => {
-    switch (result.status) {
-      case "correct":
-        return {
-          icon: <CheckCircle className="w-6 h-6 text-matrix-green" />,
-          borderColor: "border-matrix-green/30",
-          textColor: "text-matrix-green"
-        };
-      case "error":
-        return {
-          icon: <XCircle className="w-6 h-6 text-alert-red" />,
-          borderColor: "border-alert-red/30",
-          textColor: "text-alert-red"
-        };
-      default:
-        return {
-          icon: <AlertTriangle className="w-6 h-6 text-warning-orange" />,
-          borderColor: "border-warning-orange/30",
-          textColor: "text-warning-orange"
-        };
-    }
-  };
+  const isCorrect = result.verdict === "correct";
 
-  const { icon, borderColor, textColor } = getStatusConfig();
+  const icon = isCorrect ? (
+    <CheckCircle className="w-6 h-6 text-matrix-green" />
+  ) : (
+    <XCircle className="w-6 h-6 text-alert-red" />
+  );
+
+  const borderColor = isCorrect
+    ? "border-matrix-green/30"
+    : "border-alert-red/30";
+  const textColor = isCorrect ? "text-matrix-green" : "text-alert-red";
+  const title = isCorrect ? "Correct" : "Incorrect";
 
   return (
     <AnimatePresence>
@@ -52,32 +41,22 @@ export default function ApiResults({ result }: ApiResultsProps) {
         `}
       >
         <div className="relative">
-          {/* Header with icon */}
           <div className="flex items-center gap-4 mb-4">
-            <div className={`
-              p-3 rounded-lg 
-              border ${borderColor}
-            `}>
-              {icon}
-            </div>
+            <div className={`p-3 rounded-lg border ${borderColor}`}>{icon}</div>
             <div>
-              <h4 className={`text-xl font-bold ${textColor}`}>
-                {result.status.charAt(0).toUpperCase() + result.status.slice(1)}
-              </h4>
+              <h4 className={`text-xl font-bold ${textColor}`}>{title}</h4>
             </div>
           </div>
 
-          {/* Message */}
-          {result.message && (
+          {/* Feedback Message */}
+          {result.feedback && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="p-4 rounded-lg bg-black/20 border border-white/5"
             >
-              <p className="text-gray-300 leading-relaxed">
-                {result.message}
-              </p>
+              <p className="text-gray-300 leading-relaxed">{result.feedback}</p>
             </motion.div>
           )}
         </div>

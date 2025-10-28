@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import Image from "next/image"; // add this
+// remove: import { Zap } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -12,7 +13,15 @@ export default function Footer() {
           {/* Brand + Tagline */}
           <div className="md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <Zap className="w-8 h-8 text-cyber-blue-400" />
+              {/* Replace Zap with your logo image from public/images/logo.png */}
+              <Image
+                src="/images/logo.png"
+                alt="Algovibe logo"
+                width={32}
+                height={32}
+                priority
+                className="rounded-sm"
+              />
               <span className="text-2xl font-bold">
                 <span className="text-gradient">ALGO</span>
                 <span className="text-white">VIBE</span>
@@ -80,7 +89,6 @@ export default function Footer() {
                   Opportunities
                 </Link>
               </li>
-
               <li>
                 <Link
                   href="/register"

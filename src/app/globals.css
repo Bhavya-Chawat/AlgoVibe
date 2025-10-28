@@ -166,6 +166,34 @@
       left: 100%;
     }
   }
+  
+  /* Glitch effect for headings */
+  @keyframes glitch-1 {
+    0%, 100% { transform: translate(0); }
+    10% { transform: translate(-3px, -1px) skew(-5deg); }
+    20% { transform: translate(2px, 1px) skew(3deg); }
+    30% { transform: translate(-1px, -2px) skew(2deg); }
+    40% { transform: translate(1px, 2px) skew(-1deg); }
+    50% { transform: translate(-2px, 1px) skew(4deg); }
+    60% { transform: translate(3px, -1px) skew(-3deg); }
+    70% { transform: translate(-1px, 2px) skew(2deg); }
+    80% { transform: translate(2px, -2px) skew(-4deg); }
+    90% { transform: translate(-3px, 1px) skew(3deg); }
+  }
+  
+  @keyframes glitch-2 {
+    0%, 100% { transform: translate(0); }
+    5% { transform: translate(1px, -1px) skew(2deg); }
+    15% { transform: translate(-2px, 2px) skew(-3deg); }
+    25% { transform: translate(3px, 1px) skew(1deg); }
+    35% { transform: translate(-1px, -2px) skew(4deg); }
+    45% { transform: translate(2px, 2px) skew(-2deg); }
+    55% { transform: translate(-3px, -1px) skew(3deg); }
+    65% { transform: translate(1px, 1px) skew(-4deg); }
+    75% { transform: translate(-2px, -2px) skew(2deg); }
+    85% { transform: translate(3px, 1px) skew(-1deg); }
+    95% { transform: translate(-1px, 2px) skew(3deg); }
+  }
 }
 
 @layer utilities {
@@ -182,4 +210,112 @@
   width: 100%;
   height: 100%;
   display: block;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-scan {
+  animation: scan 2s linear infinite;
+}
+
+/* globals.css */
+
+.text-gradient-red {
+  background: linear-gradient(135deg, #c0152f 0%, #ff5459 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-orange {
+  background: linear-gradient(135deg, #a84b2f 0%, #e68161 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s;
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-scan {
+  animation: scan 2s linear infinite;
+}
+/* globals.css */
+
+.text-gradient-red {
+  background: linear-gradient(135deg, #c0152f 0%, #ff5459 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-orange {
+  background: linear-gradient(135deg, #a84b2f 0%, #e68161 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-panel-strong {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }

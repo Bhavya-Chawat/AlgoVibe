@@ -1,78 +1,114 @@
 "use client";
 
-import { useState } from "react";
-import { Link, Zap, Loader2, XCircle, AlertTriangle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Code, Zap, Loader2, Clock } from "lucide-react";
 import { MagneticButton } from "@/components/effects/react-effects-lib/src/components/effects/MagneticButton";
 import { ConcentricRings } from "@/components/effects/react-effects-lib/src/components/effects/ConcentricRings";
-import { Input } from "@/components/ui/modern-ui/src/components/ui/Input";
 import { motion, AnimatePresence } from "framer-motion";
 import ApiResults from "./ApiResults";
 import SubmissionCard from "./SubmissionCard";
+import { submitSubmission } from "@/app/actions/contest";
 
 interface CodeSubmissionBoxProps {
   onSubmit: (submission: any) => void;
+  disabled?: boolean;
 }
 
-export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) {
-  const [codeLink, setCodeLink] = useState("");
+export default function CodeSubmissionBox({
+  onSubmit,
+}: CodeSubmissionBoxProps) {
+  const [codeText, setCodeText] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(45 * 60); // 45 minutes in seconds
+  const [timeRemaining, setTimeRemaining] = useState(45 * 60);
+  const [cooldownTime, setCooldownTime] = useState<number | null>(null);
 
   const handleSubmit = async () => {
-    if (!codeLink.trim()) return;
+    if (!codeText.trim()) return;
 
     setIsChecking(true);
     setResult(null);
 
     try {
-      // Submit code link
-      const submitResponse = await fetch("/api/submissions/code/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ codeLink }),
+      // Call server action to submit code and trigger AI evaluation
+      const res = await submitSubmission({
+        submission: codeText,
+        submission_type: "code",
       });
 
-      const submitData = await submitResponse.json();
+      if (!res.success) {
+        setResult({
+          verdict: "incorrect",
+          feedback: res.error || "Submission failed",
+        });
+        // Check if it's a cooldown error
+        if (res.error && res.error.includes("Please wait")) {
+          // Extract minutes from error message
+          const match = res.error.match(/Please wait (\d+) minute/);
+          if (match) {
+            setCooldownTime(parseInt(match[1], 10) * 60); // Convert to seconds
+          }
+        }
+        setIsChecking(false);
+        return;
+      }
 
-      // Evaluate code using OpenRouter API
-      const evaluateResponse = await fetch("/api/submissions/code/evaluate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          submissionId: submitData.id,
-          codeLink,
-        }),
+      // Get the AI verdict and feedback from the response
+      // If you store aiResult into submission, use those fields directly.
+      const verdict =
+        res.submission.ai_verdict ||
+        (res.submission.status === "ACCEPTED" ? "correct" : "incorrect");
+      const feedback = res.submission.feedback || "";
+
+      setResult({
+        verdict,
+        feedback,
       });
 
-      const evaluateData = await evaluateResponse.json();
-      setResult(evaluateData);
-
-      if (evaluateData.status === "correct") {
+      if (verdict === "correct") {
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
       }
 
+      // Pass the correct data structure to onSubmit
       onSubmit({
-        type: "code",
-        link: codeLink,
-        status: evaluateData.status,
-        timestamp: new Date(),
+        submission: codeText,
+        submission_type: "code",
       });
+
+      // Reset cooldown time on successful submission
+      setCooldownTime(null);
     } catch (error) {
       console.error("Submission error:", error);
       setResult({
-        status: "error",
-        message: "Failed to evaluate code. Please try again.",
+        verdict: "incorrect",
+        feedback: "Failed to submit and evaluate code.",
       });
     } finally {
       setIsChecking(false);
     }
   };
 
+  // Handle cooldown timer
+  useEffect(() => {
+    if (cooldownTime !== null && cooldownTime > 0) {
+      const timer = setInterval(() => {
+        setCooldownTime((prev) => {
+          if (prev === null || prev <= 1) {
+            clearInterval(timer);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [cooldownTime]);
+
   const handleClear = () => {
-    setCodeLink("");
+    setCodeText("");
     setResult(null);
   };
 
@@ -88,63 +124,92 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
     return `${mins}:${String(secs).padStart(2, "0")}`;
   };
 
+  // Format cooldown time
+  const formatCooldownTime = (seconds: number | null) => {
+    if (seconds === null) return "";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${String(secs).padStart(2, "0")}`;
+  };
+
   return (
     <SubmissionCard
       title="CODE SUBMISSION"
       icon={<Zap className="w-6 h-6" />}
       color="cyber-blue-400"
     >
-      {/* Timer */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-cyber-blue-400/20">
-        <span className="text-sm text-gray-400">Time Remaining:</span>
-        <span className={`text-2xl font-bold tabular-nums ${getTimerColor()}`}>
-          {formatTime(timeRemaining)}
-        </span>
-      </div>
-
-      {/* Input Field */}
+      {/* Code Text Input */}
       <div className="mb-6">
         <label className="block text-sm font-semibold text-cyber-blue-400 mb-3">
-          Code Link (Codeforces/LeetCode/etc)
+          Paste Your Code Solution
         </label>
         <div className="relative group">
-          <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-cyber-blue-400 transition-colors z-10" />
-          <Input
-            value={codeLink}
-            onChange={(e) => setCodeLink(e.target.value)}
-            placeholder="https://codeforces.com/..."
-            className="w-full bg-hack-navy/50 border-cyber-blue-400/30 pl-12 pr-4 py-4 rounded-xl text-gray-200 placeholder-gray-500 focus:border-cyber-blue-400 focus:ring-2 focus:ring-cyber-blue-400/20 transition-all duration-300"
+          <Code className="absolute left-4 top-4 w-5 h-5 text-gray-400 z-10" />
+          <textarea
+            value={codeText}
+            onChange={(e) => setCodeText(e.target.value)}
+            placeholder="Paste your code solution here..."
+            className="w-full h-64 bg-hack-navy/50 border-cyber-blue-400/30 pl-12 pr-4 py-4 rounded-xl text-gray-200 placeholder-gray-500 focus:border-cyber-blue-400 focus:ring-2 focus:ring-cyber-blue-400/20 transition-all duration-300 font-mono text-sm resize-y"
             disabled={isChecking}
           />
           <motion.div
             className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyber-blue-400/0 via-cyber-blue-400/5 to-cyber-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-            animate={{
-              x: [-100, 400],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "linear",
-            }}
+            animate={{ x: [-100, 400] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           />
         </div>
       </div>
 
       {/* Action Buttons */}
       <div className="flex gap-4 mb-6">
-        <MagneticButton className="flex-1">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+        <MagneticButton
+          className="flex-1"
+          disabled={isChecking || !codeText.trim() || cooldownTime !== null}
+        >
+          <motion.div
+            whileHover={{
+              scale:
+                !isChecking && codeText.trim() && cooldownTime === null
+                  ? 1.02
+                  : 1,
+            }}
+            whileTap={{
+              scale:
+                !isChecking && codeText.trim() && cooldownTime === null
+                  ? 0.98
+                  : 1,
+            }}
             onClick={handleSubmit}
-            disabled={isChecking || !codeLink.trim()}
-            className="w-full relative overflow-hidden px-6 py-4 bg-gradient-to-r from-cyber-blue-400 to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(28,171,242,0.4)] hover:shadow-[0_0_30px_rgba(28,171,242,0.6)]"
+            className={`w-full relative overflow-hidden px-6 py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(28,171,242,0.4)] hover:shadow-[0_0_30px_rgba(28,171,242,0.6)] cursor-pointer ${
+              cooldownTime !== null
+                ? "bg-gray-600 text-gray-300"
+                : "bg-gradient-to-r from-cyber-blue-400 to-neon-blue text-hack-black font-bold"
+            }`}
+            {...(isChecking || !codeText.trim() || cooldownTime !== null
+              ? {}
+              : { tabIndex: 0 })}
+            onKeyDown={(e) => {
+              if (
+                (e.key === "Enter" || e.key === " ") &&
+                !isChecking &&
+                codeText.trim() &&
+                cooldownTime === null
+              ) {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
           >
             <div className="flex items-center justify-center gap-2">
               {isChecking ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span>Evaluating Code...</span>
+                </>
+              ) : cooldownTime !== null ? (
+                <>
+                  <Clock className="w-5 h-5" />
+                  <span>Cooldown: {formatCooldownTime(cooldownTime)}</span>
                 </>
               ) : (
                 <>
@@ -153,20 +218,14 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
                 </>
               )}
             </div>
-            {!isChecking && (
+            {!isChecking && cooldownTime === null && (
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                animate={{
-                  x: [-200, 400],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
+                animate={{ x: [-200, 400] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               />
             )}
-          </motion.button>
+          </motion.div>
         </MagneticButton>
 
         <motion.button
@@ -174,6 +233,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
           whileTap={{ scale: 0.95 }}
           onClick={handleClear}
           className="px-6 py-4 glass-panel border border-alert-red/30 text-alert-red font-semibold rounded-xl hover:bg-alert-red/10 transition-all duration-300"
+          disabled={cooldownTime !== null}
         >
           Clear
         </motion.button>
@@ -203,11 +263,7 @@ export default function CodeSubmissionBox({ onSubmit }: CodeSubmissionBoxProps) 
             exit={{ opacity: 0 }}
             className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center"
           >
-            <ConcentricRings
-              color="#00FF41"
-              count={5}
-              duration={1000}
-            />
+            <ConcentricRings color="#00FF41" count={5} duration={1000} />
           </motion.div>
         )}
       </AnimatePresence>

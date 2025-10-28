@@ -1,106 +1,55 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import Image from "next/image"; // add this
 
 // --- COMPONENTS (Inlined for self-contained functionality) ---
 
 const Header: React.FC = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Timeline", href: "/#timeline" },
-    { name: "Event Details", href: "/#details" },
-    { name: "Guide", href: "/vibe-coding-guide" },
-  ];
-
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-hack-navy/80 backdrop-blur-2xl border-b border-white/10"
-          : "bg-transparent"
-      }`}
-    >
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          <a href="/" className="flex items-center space-x-3 group">
+    <header className="bg-hack-black py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => window.history.back()}
+            className="text-white hover:text-cyber-blue-400 transition-colors flex items-center space-x-2 px-4 py-2 rounded-lg glass-panel border border-white/10"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            <span>Back</span>
+          </button>
+          <div className="flex items-center space-x-4">
             <div className="relative">
-              <Zap className="w-8 h-8 text-cyber-blue-400 group-hover:text-neon-blue transition-colors" />
-              <div className="absolute inset-0 bg-cyber-blue-400/20 blur-xl group-hover:bg-neon-blue/30 transition-colors"></div>
+              <Image
+                src="/images/logo.png"
+                alt="Algovibe logo"
+                width={48}
+                height={48}
+                priority
+                className="rounded-sm"
+              />
+              <div className="absolute inset-0 bg-cyber-blue-400/20 blur-xl"></div>
             </div>
-            <span className="text-2xl font-bold">
+            <span className="text-3xl font-bold">
               <span className="text-gradient">ALGO</span>
               <span className="text-white">VIBE</span>
-              <span className="text-cyber-blue-400 ml-2 text-lg">2025</span>
+              <span className="text-cyber-blue-400 ml-2 text-xl">2025</span>
             </span>
-          </a>
-          <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-gray-300 hover:text-cyber-blue-400 transition-colors duration-300 font-medium"
-              >
-                {link.name}
-              </a>
-            ))}
-            <div className="flex items-center space-x-4">
-              <a
-                href="/register"
-                className="px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyber-blue-400/50"
-              >
-                Register Now
-              </a>
-            </div>
           </div>
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-gray-300 hover:text-cyber-blue-400 transition-colors"
-          >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
         </div>
-        {isMobileMenuOpen && (
-          <div className="md:hidden py-4 glass-panel-strong mt-2 rounded-2xl">
-            <div className="flex flex-col space-y-4 px-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-gray-300 hover:text-cyber-blue-400 transition-colors duration-300 font-medium py-2"
-                >
-                  {link.name}
-                </a>
-              ))}
-              <div className="pt-4 border-t border-white/10 space-y-3">
-                <a
-                  href="/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg text-center transition-all duration-300"
-                >
-                  Register Now
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
-      </nav>
+      </div>
     </header>
   );
 };
@@ -185,8 +134,10 @@ const VibeCodingGuide: React.FC = () => {
     <div className="relative min-h-screen bg-hack-black text-white">
       <Beams />
       <div className="relative z-10">
-        <Header />
-        <main className="max-w-6xl mx-auto px-4 py-12 pt-32">
+        <div className="mt-4">
+          <Header />
+        </div>
+        <main className="max-w-6xl mx-auto px-4 py-8">
           <div className="glass-panel-strong p-8 mb-12">
             <div className="text-center mb-10">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gradient">

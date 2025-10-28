@@ -4,7 +4,6 @@ import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/home/HeroSection";
 import EventTimeline from "@/components/home/EventTimeline";
 import OpportunitiesSection from "@/components/home/OpportunitiesSection";
-import ScrollIndicator from "@/components/home/ScrollIndicator";
 import EventDetailsSection from "@/components/home/EventDetailsSection";
 import ReadyToParticipateCTA from "@/components/home/ReadyToParticipateCTA";
 
@@ -16,7 +15,6 @@ export default function Home() {
       {/* Hero Section — hero owns height; section provides only anchor offset */}
       <section id="home" className="relative scroll-mt-20 md:scroll-mt-24">
         <HeroSection />
-        <ScrollIndicator />
       </section>
 
       {/* Event Timeline — consistent outer rhythm via section py */}
