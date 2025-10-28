@@ -29,7 +29,9 @@ interface SubmissionHistoryProps {
   }>;
 }
 
-export default function SubmissionHistory({ submissions }: SubmissionHistoryProps) {
+export default function SubmissionHistory({
+  submissions,
+}: SubmissionHistoryProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
 
@@ -47,38 +49,43 @@ export default function SubmissionHistory({ submissions }: SubmissionHistoryProp
   };
 
   const getStatusBadge = (status: string) => {
-    const configs: Record<string, { color: string; icon: any; label: string }> = {
-      accepted: {
-        color: "bg-matrix-green/20 text-matrix-green border-matrix-green/50",
-        icon: <CheckCircle className="w-4 h-4" />,
-        label: "Accepted",
-      },
-      rejected: {
-        color: "bg-alert-red/20 text-alert-red border-alert-red/50",
-        icon: <XCircle className="w-4 h-4" />,
-        label: "Rejected",
-      },
-      submitted: {
-        color: "bg-cyber-blue-400/20 text-cyber-blue-400 border-cyber-blue-400/50",
-        icon: <CheckCircle className="w-4 h-4" />,
-        label: "Submitted",
-      },
-      live: {
-        color: "bg-matrix-green/20 text-matrix-green border-matrix-green/50",
-        icon: <CheckCircle className="w-4 h-4" />,
-        label: "Live",
-      },
-      pending: {
-        color: "bg-warning-orange/20 text-warning-orange border-warning-orange/50",
-        icon: <Clock className="w-4 h-4" />,
-        label: "Pending",
-      },
-    };
+    const configs: Record<string, { color: string; icon: any; label: string }> =
+      {
+        accepted: {
+          color: "bg-matrix-green/20 text-matrix-green border-matrix-green/50",
+          icon: <CheckCircle className="w-4 h-4" />,
+          label: "Accepted",
+        },
+        rejected: {
+          color: "bg-alert-red/20 text-alert-red border-alert-red/50",
+          icon: <XCircle className="w-4 h-4" />,
+          label: "Rejected",
+        },
+        submitted: {
+          color:
+            "bg-cyber-blue-400/20 text-cyber-blue-400 border-cyber-blue-400/50",
+          icon: <CheckCircle className="w-4 h-4" />,
+          label: "Submitted",
+        },
+        live: {
+          color: "bg-matrix-green/20 text-matrix-green border-matrix-green/50",
+          icon: <CheckCircle className="w-4 h-4" />,
+          label: "Live",
+        },
+        pending: {
+          color:
+            "bg-warning-orange/20 text-warning-orange border-warning-orange/50",
+          icon: <Clock className="w-4 h-4" />,
+          label: "Pending",
+        },
+      };
 
     const config = configs[status.toLowerCase()] || configs.pending;
 
     return (
-      <Badge className={`px-3 py-1 text-xs font-semibold border flex items-center gap-1.5 ${config.color}`}>
+      <Badge
+        className={`px-3 py-1 text-xs font-semibold border flex items-center gap-1.5 ${config.color}`}
+      >
         {config.icon} {config.label}
       </Badge>
     );
@@ -99,7 +106,8 @@ export default function SubmissionHistory({ submissions }: SubmissionHistoryProp
 
   const getTimeAgo = (timestamp: Date | string) => {
     const now = new Date();
-    const inputDate = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+    const inputDate =
+      typeof timestamp === "string" ? new Date(timestamp) : timestamp;
     const diff = now.getTime() - inputDate.getTime();
     const minutes = Math.floor(diff / 60000);
 
@@ -130,13 +138,18 @@ export default function SubmissionHistory({ submissions }: SubmissionHistoryProp
         >
           <div className="flex items-center gap-3">
             <Clock className="w-6 h-6 text-cyber-blue-400" />
-            <h3 className="text-2xl font-bold text-gradient">SUBMISSION HISTORY</h3>
+            <h3 className="text-2xl font-bold text-gradient">
+              SUBMISSION HISTORY
+            </h3>
             <Badge className="px-2 py-1 text-xs bg-cyber-blue-400/20 text-cyber-blue-400 border border-cyber-blue-400/30">
               {submissions.length}
             </Badge>
           </div>
 
-          <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.3 }}>
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
             <ChevronDown className="w-6 h-6 text-cyber-blue-400 group-hover:text-neon-blue transition-colors" />
           </motion.div>
         </button>
@@ -156,7 +169,9 @@ export default function SubmissionHistory({ submissions }: SubmissionHistoryProp
                 <div className="text-center py-12 glass-panel rounded-xl border border-cyber-blue-400/10">
                   <AlertCircle className="w-12 h-12 text-gray-500 mx-auto mb-3" />
                   <p className="text-gray-400">No submissions yet</p>
-                  <p className="text-gray-500 text-sm mt-1">Your submissions will appear here</p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Your submissions will appear here
+                  </p>
                 </div>
               ) : (
                 submissions.map((submission, index) => (
@@ -174,21 +189,19 @@ export default function SubmissionHistory({ submissions }: SubmissionHistoryProp
                           {getIcon(submission.type)}
                           <div>
                             <h4 className="font-semibold text-gray-200 group-hover:text-cyber-blue-400 transition-colors">
-                              #{submissions.length - index} • {getTypeLabel(submission.type)}
+                              #{submissions.length - index} •{" "}
+                              {getTypeLabel(submission.type)}
                             </h4>
-                            <p className="text-xs text-gray-500 mt-0.5">{getTimeAgo(submission.timestamp)}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {getTimeAgo(submission.timestamp)}
+                            </p>
                           </div>
                         </div>
 
                         {submission.message && (
-                          <p className="text-sm text-gray-400 mb-3 whitespace-pre-wrap">{submission.message}</p>
-                        )}
-
-                        {submission.score !== undefined && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-400">Score:</span>
-                            <span className="text-cyber-blue-400 font-bold">{submission.score}/100</span>
-                          </div>
+                          <p className="text-sm text-gray-400 mb-3 whitespace-pre-wrap">
+                            {submission.message}
+                          </p>
                         )}
                       </div>
 
@@ -196,25 +209,30 @@ export default function SubmissionHistory({ submissions }: SubmissionHistoryProp
                       <div className="flex flex-col items-end gap-3">
                         {getStatusBadge(submission.status)}
 
-                        {submission.type === "code" && submission.submission && (
+                        {submission.type === "code" && (
                           <button
-                            onClick={() => setSelectedCode(submission.submission || "")}
+                            onClick={() =>
+                              setSelectedCode(submission.submission || "")
+                            }
                             className="flex items-center gap-2 px-3 py-1.5 glass-panel border border-cyber-blue-400/30 rounded-lg text-xs text-cyber-blue-400 hover:bg-cyber-blue-400/10 transition-all"
                           >
                             View Code
                           </button>
                         )}
 
-                        {(submission.type === "github" || submission.type === "deployment") && submission.link && (
-                          <a
-                            href={submission.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-3 py-1.5 glass-panel border border-cyber-blue-400/30 rounded-lg text-xs text-cyber-blue-400 hover:bg-cyber-blue-400/10 transition-all"
-                          >
-                            View Submission <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        )}
+                        {(submission.type === "github" ||
+                          submission.type === "deployment") &&
+                          submission.link && (
+                            <a
+                              href={submission.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 px-3 py-1.5 glass-panel border border-cyber-blue-400/30 rounded-lg text-xs text-cyber-blue-400 hover:bg-cyber-blue-400/10 transition-all"
+                            >
+                              View Submission{" "}
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          )}
                       </div>
                     </div>
                   </motion.div>
@@ -247,8 +265,12 @@ export default function SubmissionHistory({ submissions }: SubmissionHistoryProp
               >
                 <X className="w-6 h-6" />
               </button>
-              <h3 className="text-lg font-semibold mb-4 text-cyber-blue-400">Code Submission</h3>
-              <pre className="whitespace-pre-wrap text-sm font-mono text-gray-200 bg-gray-900 p-4 rounded-lg">{selectedCode}</pre>
+              <h3 className="text-lg font-semibold mb-4 text-cyber-blue-400">
+                Code Submission
+              </h3>
+              <pre className="whitespace-pre-wrap text-sm font-mono text-gray-200 bg-gray-900 p-4 rounded-lg">
+                {selectedCode}
+              </pre>
             </motion.div>
           </motion.div>
         )}

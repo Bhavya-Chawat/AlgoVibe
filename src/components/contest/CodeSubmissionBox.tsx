@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Code, Zap, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Code, Zap, Loader2, Clock } from "lucide-react";
 import { MagneticButton } from "@/components/effects/react-effects-lib/src/components/effects/MagneticButton";
 import { ConcentricRings } from "@/components/effects/react-effects-lib/src/components/effects/ConcentricRings";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +22,7 @@ export default function CodeSubmissionBox({
   const [result, setResult] = useState<any>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(45 * 60);
+  const [cooldownTime, setCooldownTime] = useState<number | null>(null);
 
   const handleSubmit = async () => {
     if (!codeText.trim()) return;
@@ -41,6 +42,14 @@ export default function CodeSubmissionBox({
           verdict: "incorrect",
           feedback: res.error || "Submission failed",
         });
+        // Check if it's a cooldown error
+        if (res.error && res.error.includes("Please wait")) {
+          // Extract minutes from error message
+          const match = res.error.match(/Please wait (\d+) minute/);
+          if (match) {
+            setCooldownTime(parseInt(match[1], 10) * 60); // Convert to seconds
+          }
+        }
         setIsChecking(false);
         return;
       }
@@ -62,12 +71,14 @@ export default function CodeSubmissionBox({
         setTimeout(() => setShowSuccess(false), 3000);
       }
 
+      // Pass the correct data structure to onSubmit
       onSubmit({
-        type: "code",
-        verdict,
-        feedback,
-        timestamp: new Date(),
+        submission: codeText,
+        submission_type: "code",
       });
+
+      // Reset cooldown time on successful submission
+      setCooldownTime(null);
     } catch (error) {
       console.error("Submission error:", error);
       setResult({
@@ -78,6 +89,23 @@ export default function CodeSubmissionBox({
       setIsChecking(false);
     }
   };
+
+  // Handle cooldown timer
+  useEffect(() => {
+    if (cooldownTime !== null && cooldownTime > 0) {
+      const timer = setInterval(() => {
+        setCooldownTime((prev) => {
+          if (prev === null || prev <= 1) {
+            clearInterval(timer);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [cooldownTime]);
 
   const handleClear = () => {
     setCodeText("");
@@ -91,6 +119,14 @@ export default function CodeSubmissionBox({
   };
 
   const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${String(secs).padStart(2, "0")}`;
+  };
+
+  // Format cooldown time
+  const formatCooldownTime = (seconds: number | null) => {
+    if (seconds === null) return "";
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${String(secs).padStart(2, "0")}`;
@@ -128,19 +164,36 @@ export default function CodeSubmissionBox({
       <div className="flex gap-4 mb-6">
         <MagneticButton
           className="flex-1"
-          disabled={isChecking || !codeText.trim()}
+          disabled={isChecking || !codeText.trim() || cooldownTime !== null}
         >
           <motion.div
-            whileHover={{ scale: !isChecking && codeText.trim() ? 1.02 : 1 }}
-            whileTap={{ scale: !isChecking && codeText.trim() ? 0.98 : 1 }}
+            whileHover={{
+              scale:
+                !isChecking && codeText.trim() && cooldownTime === null
+                  ? 1.02
+                  : 1,
+            }}
+            whileTap={{
+              scale:
+                !isChecking && codeText.trim() && cooldownTime === null
+                  ? 0.98
+                  : 1,
+            }}
             onClick={handleSubmit}
-            className="w-full relative overflow-hidden px-6 py-4 bg-gradient-to-r from-cyber-blue-400 to-neon-blue text-hack-black font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(28,171,242,0.4)] hover:shadow-[0_0_30px_rgba(28,171,242,0.6)] cursor-pointer"
-            {...(isChecking || !codeText.trim() ? {} : { tabIndex: 0 })}
+            className={`w-full relative overflow-hidden px-6 py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(28,171,242,0.4)] hover:shadow-[0_0_30px_rgba(28,171,242,0.6)] cursor-pointer ${
+              cooldownTime !== null
+                ? "bg-gray-600 text-gray-300"
+                : "bg-gradient-to-r from-cyber-blue-400 to-neon-blue text-hack-black font-bold"
+            }`}
+            {...(isChecking || !codeText.trim() || cooldownTime !== null
+              ? {}
+              : { tabIndex: 0 })}
             onKeyDown={(e) => {
               if (
                 (e.key === "Enter" || e.key === " ") &&
                 !isChecking &&
-                codeText.trim()
+                codeText.trim() &&
+                cooldownTime === null
               ) {
                 e.preventDefault();
                 handleSubmit();
@@ -153,6 +206,11 @@ export default function CodeSubmissionBox({
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span>Evaluating Code...</span>
                 </>
+              ) : cooldownTime !== null ? (
+                <>
+                  <Clock className="w-5 h-5" />
+                  <span>Cooldown: {formatCooldownTime(cooldownTime)}</span>
+                </>
               ) : (
                 <>
                   <Zap className="w-5 h-5" />
@@ -160,7 +218,7 @@ export default function CodeSubmissionBox({
                 </>
               )}
             </div>
-            {!isChecking && (
+            {!isChecking && cooldownTime === null && (
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                 animate={{ x: [-200, 400] }}
@@ -175,6 +233,7 @@ export default function CodeSubmissionBox({
           whileTap={{ scale: 0.95 }}
           onClick={handleClear}
           className="px-6 py-4 glass-panel border border-alert-red/30 text-alert-red font-semibold rounded-xl hover:bg-alert-red/10 transition-all duration-300"
+          disabled={cooldownTime !== null}
         >
           Clear
         </motion.button>
