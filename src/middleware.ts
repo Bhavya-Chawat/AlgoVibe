@@ -69,7 +69,8 @@ export async function middleware(request: NextRequest) {
     }
     if (
       pathname.startsWith("/contest") ||
-      pathname.startsWith("/pre-contest")
+      pathname.startsWith("/pre-contest") ||
+      pathname === "/contest-end"
     ) {
       if (isDev)
         console.log("[MIDDLEWARE] Redirecting to /login for contestant area");
@@ -121,20 +122,71 @@ export async function middleware(request: NextRequest) {
   const role = userRole?.role || "contestant";
   if (isDev) console.log(`[MIDDLEWARE] Computed role: ${role}`);
 
-  // Fetch contest active status once for contestant redirects
+  // Fetch contest information to check if it has ended
   const { data: contest, error: contestError } = await supabaseAdmin
     .from("contest")
-    .select("is_active")
+    .select("is_active, start_time, duration_minutes, end_time")
     .single();
 
   if (isDev) {
     if (contestError) {
       console.log("[MIDDLEWARE] Contest fetch error:", contestError.message);
     }
-    console.log(`[MIDDLEWARE] Contest is_active: ${contest?.is_active}`);
+    console.log(`[MIDDLEWARE] Contest data:`, contest);
   }
 
-  const contestActive = contest?.is_active === true;
+  // Check if contest has ended
+  let contestHasEnded = false;
+  let contestIsActive = false;
+
+  if (contest) {
+    contestIsActive = contest.is_active === true;
+
+    if (contest.end_time) {
+      const endTime = new Date(contest.end_time);
+      const now = new Date();
+      contestHasEnded = now > endTime;
+
+      if (isDev) {
+        console.log(`[MIDDLEWARE] Contest end time: ${endTime}`);
+        console.log(`[MIDDLEWARE] Current time: ${now}`);
+        console.log(`[MIDDLEWARE] Contest has ended: ${contestHasEnded}`);
+      }
+    } else if (isDev) {
+      console.log(`[MIDDLEWARE] No end time found`);
+    }
+  } else if (isDev) {
+    console.log(`[MIDDLEWARE] No contest data found`);
+  }
+
+  // Handle contest-end page access
+  if (pathname === "/contest-end") {
+    // Only allow access to contest-end page when contest has actually ended
+    if (!contestHasEnded) {
+      if (isDev)
+        console.log(
+          "[MIDDLEWARE] Contest not ended yet - redirecting from /contest-end"
+        );
+
+      // Redirect to appropriate contest page based on contest state
+      if (contestIsActive) {
+        return NextResponse.redirect(new URL("/contest", request.url));
+      } else {
+        return NextResponse.redirect(new URL("/pre-contest", request.url));
+      }
+    }
+
+    if (isDev) console.log(`[MIDDLEWARE] Accessing contest-end page directly`);
+    // Add cache control headers to prevent caching
+    const response = NextResponse.next({ request });
+    response.headers.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+    return response;
+  }
 
   // Role-based access control:
 
@@ -160,8 +212,12 @@ export async function middleware(request: NextRequest) {
     if (isDev) console.log("[MIDDLEWARE] Evaluator access granted");
   }
 
-  // Contestant routes (/contest & /pre-contest)
-  if (pathname.startsWith("/contest") || pathname.startsWith("/pre-contest")) {
+  // Contestant routes (/contest & /pre-contest & /contest-end)
+  if (
+    pathname.startsWith("/contest") ||
+    pathname.startsWith("/pre-contest") ||
+    pathname === "/contest-end"
+  ) {
     if (role !== "contestant") {
       if (isDev)
         console.log(
@@ -171,20 +227,62 @@ export async function middleware(request: NextRequest) {
     }
 
     // Redirect contestant based on contest state
-    if (pathname.startsWith("/contest") && !contestActive) {
-      if (isDev)
-        console.log(
-          "[MIDDLEWARE] Contest inactive - redirecting /contest → /pre-contest"
+    if (pathname.startsWith("/contest")) {
+      // If contest has ended, redirect to contest-end
+      if (contestHasEnded) {
+        if (isDev)
+          console.log(
+            "[MIDDLEWARE] Contest has ended - redirecting /contest → /contest-end"
+          );
+        const response = NextResponse.redirect(
+          new URL("/contest-end", request.url)
         );
-      return NextResponse.redirect(new URL("/pre-contest", request.url));
+        response.headers.set(
+          "Cache-Control",
+          "no-store, no-cache, must-revalidate, proxy-revalidate"
+        );
+        response.headers.set("Pragma", "no-cache");
+        response.headers.set("Expires", "0");
+        return response;
+      }
+
+      // If contest is not active, redirect to pre-contest
+      if (!contestIsActive) {
+        if (isDev)
+          console.log(
+            "[MIDDLEWARE] Contest inactive - redirecting /contest → /pre-contest"
+          );
+        return NextResponse.redirect(new URL("/pre-contest", request.url));
+      }
     }
 
-    if (pathname.startsWith("/pre-contest") && contestActive) {
-      if (isDev)
-        console.log(
-          "[MIDDLEWARE] Contest active - redirecting /pre-contest → /contest"
+    if (pathname.startsWith("/pre-contest")) {
+      // If contest has ended, redirect to contest-end
+      if (contestHasEnded) {
+        if (isDev)
+          console.log(
+            "[MIDDLEWARE] Contest has ended - redirecting /pre-contest → /contest-end"
+          );
+        const response = NextResponse.redirect(
+          new URL("/contest-end", request.url)
         );
-      return NextResponse.redirect(new URL("/contest", request.url));
+        response.headers.set(
+          "Cache-Control",
+          "no-store, no-cache, must-revalidate, proxy-revalidate"
+        );
+        response.headers.set("Pragma", "no-cache");
+        response.headers.set("Expires", "0");
+        return response;
+      }
+
+      // If contest is active, redirect to contest
+      if (contestIsActive) {
+        if (isDev)
+          console.log(
+            "[MIDDLEWARE] Contest active - redirecting /pre-contest → /contest"
+          );
+        return NextResponse.redirect(new URL("/contest", request.url));
+      }
     }
 
     if (isDev) console.log("[MIDDLEWARE] Contestant access granted");
@@ -196,7 +294,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/admin", request.url));
     if (role === "evaluator")
       return NextResponse.redirect(new URL("/evaluator", request.url));
-    if (contestActive) {
+
+    // Redirect to appropriate contest page based on contest state
+    if (contestHasEnded) {
+      return NextResponse.redirect(new URL("/contest-end", request.url));
+    } else if (contestIsActive) {
       return NextResponse.redirect(new URL("/contest", request.url));
     } else {
       return NextResponse.redirect(new URL("/pre-contest", request.url));

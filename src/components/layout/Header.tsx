@@ -3,11 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, LogIn } from "lucide-react";
+import { Menu, X, LogIn, LogOut } from "lucide-react";
+import { getUser, logout } from "@/app/actions/auth";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -15,12 +18,130 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Check authentication status on mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const userData = await getUser();
+      setUser(userData);
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setUser(null);
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   const navLinks = [
     { name: "Home", href: "/#home" },
     { name: "Timeline", href: "/#timeline" },
     { name: "Event Details", href: "/#details" },
     { name: "Guide", href: "/vibe-coding-guide" },
   ];
+
+  // Don't render auth buttons until we know auth status
+  const renderAuthButtons = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center space-x-4">
+          <div className="w-24 h-10 bg-gray-700 rounded-lg animate-pulse"></div>
+          <div className="w-32 h-10 bg-gray-700 rounded-lg animate-pulse"></div>
+        </div>
+      );
+    }
+
+    return user ? (
+      // Logout Button - Outline Style
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-2 px-6 py-2.5 border-2 border-red-400 text-red-400 hover:bg-red-400/10 font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-400/30"
+      >
+        <LogOut className="w-4 h-4" />
+        <span>Logout</span>
+      </button>
+    ) : (
+      <>
+        {/* Login Button - Outline Style */}
+        <Link
+          href="/login"
+          className="flex items-center gap-2 px-6 py-2.5 border-2 border-cyber-blue-400 text-cyber-blue-400 hover:bg-cyber-blue-400/10 font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyber-blue-400/30"
+        >
+          <LogIn className="w-4 h-4" />
+          <span>Login</span>
+        </Link>
+
+        {/* Register Button - Filled Style */}
+        <Link
+          href="/register"
+          className="px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyber-blue-400/50"
+        >
+          Register Now
+        </Link>
+      </>
+    );
+  };
+
+  const renderMobileAuthButtons = () => {
+    if (loading) {
+      return (
+        <div className="pt-4 border-t border-white/10 space-y-3">
+          <div className="flex items-center justify-center gap-2 w-full px-6 py-2.5 border-2 border-gray-700 text-gray-700 font-semibold rounded-lg text-center">
+            <div className="w-20 h-4 bg-gray-700 rounded animate-pulse"></div>
+          </div>
+          <div className="block w-full px-6 py-2.5 bg-gray-700 text-gray-700 font-semibold rounded-lg text-center">
+            <div className="w-24 h-4 bg-gray-700 rounded animate-pulse"></div>
+          </div>
+        </div>
+      );
+    }
+
+    return user ? (
+      // Logout Button - Mobile
+      <button
+        onClick={() => {
+          setIsMobileMenuOpen(false);
+          handleLogout();
+        }}
+        className="flex items-center justify-center gap-2 w-full px-6 py-2.5 border-2 border-red-400 text-red-400 hover:bg-red-400/10 font-semibold rounded-lg text-center transition-all duration-300"
+      >
+        <LogOut className="w-4 h-4" />
+        <span>Logout</span>
+      </button>
+    ) : (
+      <>
+        {/* Login Button - Mobile */}
+        <Link
+          href="/login"
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="flex items-center justify-center gap-2 w-full px-6 py-2.5 border-2 border-cyber-blue-400 text-cyber-blue-400 hover:bg-cyber-blue-400/10 font-semibold rounded-lg text-center transition-all duration-300"
+        >
+          <LogIn className="w-4 h-4" />
+          <span>Login</span>
+        </Link>
+
+        {/* Register Button - Mobile */}
+        <Link
+          href="/register"
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="block w-full px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg text-center transition-all duration-300"
+        >
+          Register Now
+        </Link>
+      </>
+    );
+  };
 
   return (
     <header
@@ -66,22 +187,7 @@ export default function Header() {
 
             {/* CTA Buttons */}
             <div className="flex items-center space-x-4">
-              {/* Login Button - Outline Style */}
-              <Link
-                href="/login"
-                className="flex items-center gap-2 px-6 py-2.5 border-2 border-cyber-blue-400 text-cyber-blue-400 hover:bg-cyber-blue-400/10 font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyber-blue-400/30"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Login</span>
-              </Link>
-
-              {/* Register Button - Filled Style */}
-              <Link
-                href="/register"
-                className="px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyber-blue-400/50"
-              >
-                Register Now
-              </Link>
+              {renderAuthButtons()}
             </div>
           </div>
 
@@ -114,24 +220,7 @@ export default function Header() {
                 </Link>
               ))}
               <div className="pt-4 border-t border-white/10 space-y-3">
-                {/* Login Button - Mobile */}
-                <Link
-                  href="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full px-6 py-2.5 border-2 border-cyber-blue-400 text-cyber-blue-400 hover:bg-cyber-blue-400/10 font-semibold rounded-lg text-center transition-all duration-300"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>Login</span>
-                </Link>
-
-                {/* Register Button - Mobile */}
-                <Link
-                  href="/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block w-full px-6 py-2.5 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white font-semibold rounded-lg text-center transition-all duration-300"
-                >
-                  Register Now
-                </Link>
+                {renderMobileAuthButtons()}
               </div>
             </div>
           </div>
