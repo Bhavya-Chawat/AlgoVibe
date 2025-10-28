@@ -1,11 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, Code, Trophy, TrendingUp, Clock, CheckCircle } from "lucide-react";
+import {
+  Users,
+  Code,
+  Trophy,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  Medal,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import LiveStats from "@/components/admin/LiveStats";
 import SubmissionMonitor from "@/components/admin/SubmissionMonitor";
-import { getAnalytics } from "./actions";
+import { getAnalytics, getTopPerformers } from "./actions";
 import Link from "next/link";
 
 export default function AdminDashboard() {
@@ -18,12 +26,18 @@ export default function AdminDashboard() {
     timeRemaining: "00:00:00",
   });
 
+  const [topPerformers, setTopPerformers] = useState<any[]>([]);
+
   useEffect(() => {
     // Fetch dashboard stats
     fetchDashboardStats();
-    
+    fetchTopPerformers();
+
     // Refresh stats every 30 seconds
-    const interval = setInterval(fetchDashboardStats, 30000);
+    const interval = setInterval(() => {
+      fetchDashboardStats();
+      fetchTopPerformers();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -37,6 +51,19 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Failed to fetch stats:", error);
+    }
+  };
+
+  const fetchTopPerformers = async () => {
+    try {
+      const result = await getTopPerformers();
+      if (result.success && result.data) {
+        setTopPerformers(result.data);
+      } else {
+        console.error("Failed to fetch top performers:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to fetch top performers:", error);
     }
   };
 
@@ -84,10 +111,12 @@ export default function AdminDashboard() {
             Monitor and manage AlgoVibe 2025 contest in real-time
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2 px-4 py-2 glass-panel-strong border border-matrix-green/30 rounded-lg">
           <div className="w-2 h-2 bg-matrix-green rounded-full animate-pulse" />
-          <span className="text-sm font-semibold text-matrix-green">System Active</span>
+          <span className="text-sm font-semibold text-matrix-green">
+            System Active
+          </span>
         </div>
       </div>
 
@@ -104,7 +133,9 @@ export default function AdminDashboard() {
               className={`glass-panel-strong p-6 rounded-2xl border border-${card.color}/20 hover:border-${card.color}/40 transition-all duration-300 group`}
             >
               <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 bg-gradient-to-br ${card.bgGradient} rounded-xl`}>
+                <div
+                  className={`p-3 bg-gradient-to-br ${card.bgGradient} rounded-xl`}
+                >
                   <Icon className={`w-6 h-6 text-${card.color}`} />
                 </div>
                 <div className="text-right">
@@ -113,11 +144,13 @@ export default function AdminDashboard() {
                   </span>
                 </div>
               </div>
-              
+
               <h3 className="text-sm font-semibold text-gray-400 mb-2">
                 {card.title}
               </h3>
-              <p className={`text-3xl font-bold text-${card.color} group-hover:scale-105 transition-transform`}>
+              <p
+                className={`text-3xl font-bold text-${card.color} group-hover:scale-105 transition-transform`}
+              >
                 {card.value}
               </p>
             </motion.div>
@@ -129,10 +162,12 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Live Stats - Takes 2 columns */}
         <div className="lg:col-span-2">
-          <LiveStats status={stats.contestStatus as "pre" | "live" | "paused" | "ended"} />
+          <LiveStats
+            status={stats.contestStatus as "pre" | "live" | "paused" | "ended"}
+          />
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions and Top Performers */}
         <div className="space-y-6">
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -179,37 +214,47 @@ export default function AdminDashboard() {
             </div>
           </motion.div>
 
-          {/* Contest Info */}
+          {/* Top Performers */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
             className="glass-panel-strong p-6 rounded-2xl border border-cyber-blue-400/20"
           >
-            <h3 className="text-xl font-bold text-gradient mb-4">
-              Contest Info
+            <h3 className="text-xl font-bold text-gradient mb-4 flex items-center gap-2">
+              <Medal className="w-5 h-5" />
+              Top Performers
             </h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Duration:</span>
-                <span className="text-cyber-blue-400 font-semibold">90 minutes</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Status:</span>
-                <span className={`font-semibold ${
-                  stats.contestStatus === "live" ? "text-matrix-green" : "text-gray-400"
-                }`}>
-                  {stats.contestStatus === "live" ? "Live" : "Not Started"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Time Remaining:</span>
-                <span className="text-warning-orange font-semibold">{stats.timeRemaining}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Total Problems:</span>
-                <span className="text-neon-blue font-semibold">1</span>
-              </div>
+            <div className="space-y-3">
+              {topPerformers.length > 0 ? (
+                topPerformers.map((performer, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-hack-navy/30 rounded-lg border border-cyber-blue-400/10"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{performer.badge}</span>
+                      <div>
+                        <div className="font-semibold text-gray-200">
+                          {performer.team}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {performer.submissions} submissions
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-matrix-green">
+                        {performer.score} pts
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-400">
+                  No data available
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

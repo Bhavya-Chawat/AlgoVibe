@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Download, Filter, UserPlus } from "lucide-react";
+import { Search, Download, Filter, UserPlus, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/modern-ui/src/components/ui/Input";
 import TeamManagementTable from "@/components/admin/TeamManagementTable";
@@ -12,6 +12,7 @@ export default function AdminTeamsPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [teams, setTeams] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     fetchTeams();
@@ -34,25 +35,65 @@ export default function AdminTeamsPage() {
   };
 
   const handleExport = () => {
-    // Export teams data to CSV
-    const csv = [
-      ["Team Name", "Leader", "Email", "Members", "Status"].join(","),
-      ...teams.map((team: any) => 
-        [team.team_name, team.members[0]?.name || "N/A", team.members[0]?.email || "N/A", team.members.length, team.status].join(",")
-      )
-    ].join("\n");
-    
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "teams-export.csv";
-    a.click();
+    try {
+      // Create CSV content with proper formatting
+      let csvContent = "data:text/csv;charset=utf-8,";
+
+      // Add headers
+      csvContent +=
+        "Team Name,Leader Name,Leader Email,Members Count,Status,Created At,Member Details\n";
+
+      // Add team data
+      teams.forEach((team: any) => {
+        const leader =
+          team.members && team.members.length > 0 ? team.members[0] : null;
+        const leaderName = leader?.name || "N/A";
+        const leaderEmail = leader?.email || "N/A";
+        const membersCount = team.members ? team.members.length : 0;
+        const createdAt = team.created_at
+          ? new Date(team.created_at).toLocaleDateString()
+          : "N/A";
+
+        // Create member details string
+        let memberDetails = "";
+        if (team.members && team.members.length > 0) {
+          memberDetails = team.members
+            .map((member: any) => `${member.name} (${member.email})`)
+            .join("; ");
+        }
+
+        // Properly escape and quote values
+        csvContent += `"${team.team_name}","${leaderName}","${leaderEmail}",${membersCount},"${team.status}","${createdAt}","${memberDetails}"\n`;
+      });
+
+      // Create download link
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute(
+        "download",
+        `teams_${new Date().toISOString().slice(0, 10)}.csv`
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      console.log("Teams data exported successfully");
+    } catch (error) {
+      console.error("Failed to export teams data:", error);
+    }
   };
 
   const handleAddNewTeam = () => {
     // Redirect to the registration page or open a modal
     window.location.href = "/register";
+  };
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchTeams().finally(() => {
+      setTimeout(() => setIsRefreshing(false), 500);
+    });
   };
 
   return (
@@ -63,11 +104,9 @@ export default function AdminTeamsPage() {
           <h1 className="text-4xl font-bold text-gradient mb-2">
             Team Management
           </h1>
-          <p className="text-gray-400">
-            View and manage all registered teams
-          </p>
+          <p className="text-gray-400">View and manage all registered teams</p>
         </div>
-        
+
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -82,8 +121,16 @@ export default function AdminTeamsPage() {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Teams", value: teams.length || 0, color: "cyber-blue-400" },
-          { label: "Active", value: teams.filter((t: any) => t.status === "active").length || 0, color: "matrix-green" },
+          {
+            label: "Total Teams",
+            value: teams.length || 0,
+            color: "cyber-blue-400",
+          },
+          {
+            label: "Active",
+            value: teams.filter((t: any) => t.status === "active").length || 0,
+            color: "matrix-green",
+          },
         ].map((stat, index) => (
           <motion.div
             key={stat.label}
@@ -93,7 +140,9 @@ export default function AdminTeamsPage() {
             className="glass-panel-strong p-4 rounded-xl border border-cyber-blue-400/20"
           >
             <p className="text-sm text-gray-400 mb-1">{stat.label}</p>
-            <p className={`text-3xl font-bold text-${stat.color}`}>{stat.value}</p>
+            <p className={`text-3xl font-bold text-${stat.color}`}>
+              {stat.value}
+            </p>
           </motion.div>
         ))}
       </div>
@@ -127,10 +176,27 @@ export default function AdminTeamsPage() {
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="pending">Pending</option>
-              <option value="inactive">Inactive</option>
             </select>
             <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
           </div>
+
+          {/* Refresh Button */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className={`px-6 py-3 glass-panel border border-cyber-blue-400/30 hover:border-cyber-blue-400 rounded-xl transition-all duration-300 flex items-center gap-2 font-semibold ${
+              isRefreshing ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            <RefreshCw
+              className={`w-5 h-5 text-cyber-blue-400 ${
+                isRefreshing ? "animate-spin" : ""
+              }`}
+            />
+            Refresh
+          </motion.button>
 
           {/* Export Button */}
           <motion.button
@@ -152,7 +218,9 @@ export default function AdminTeamsPage() {
         transition={{ duration: 0.5, delay: 0.5 }}
       >
         <TeamManagementTable
-          {...({ teams, searchQuery, filterStatus, isLoading } as any)}
+          searchQuery={searchQuery}
+          filterStatus={filterStatus}
+          isLoading={isLoading}
         />
       </motion.div>
     </div>

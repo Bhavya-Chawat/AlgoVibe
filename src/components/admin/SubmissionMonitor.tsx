@@ -1,9 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Filter, Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Download } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Eye,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Code,
+  Github,
+  Globe,
+  Download,
+} from "lucide-react";
 import { motion } from "framer-motion";
-import { getSubmissions, updateSubmissionStatus } from "@/app/(admin)/admin/actions";
+import {
+  getSubmissions,
+  updateSubmissionStatus,
+} from "@/app/(admin)/admin/actions";
+import SubmissionDetailsModal from "@/components/admin/SubmissionDetailsModal";
 
 interface Submission {
   submission_id: number;
@@ -14,7 +29,8 @@ interface Submission {
   member: {
     member_id: number;
     name: string;
-  };
+    email: string;
+  } | null;
   problem: {
     problem_id: number;
     title: string;
@@ -30,8 +46,13 @@ interface Submission {
 export default function SubmissionMonitor() {
   const [searchQuery, setSearchQuery] = useState("");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>([]);
+  const [filteredSubmissions, setFilteredSubmissions] = useState<Submission[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<Submission | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchSubmissions();
@@ -42,8 +63,10 @@ export default function SubmissionMonitor() {
 
   useEffect(() => {
     // Filter submissions based on search query
-    const filtered = submissions.filter(submission => {
-      const matchesSearch = submission.team.team_name.toLowerCase().includes(searchQuery.toLowerCase());
+    const filtered = submissions.filter((submission) => {
+      const matchesSearch = submission.team.team_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
       return matchesSearch;
     });
     setFilteredSubmissions(filtered);
@@ -65,24 +88,46 @@ export default function SubmissionMonitor() {
     }
   };
 
-  const handleStatusUpdate = async (submissionId: number, status: "ACCEPTED" | "REJECTED", score?: number, feedback?: string) => {
+  const handleStatusUpdate = async (
+    submissionId: number,
+    status: "ACCEPTED" | "REJECTED",
+    score?: number,
+    feedback?: string
+  ) => {
     try {
       // Set default score based on status if not provided
-      const finalScore = score !== undefined ? score : (status === "ACCEPTED" ? 100 : 0);
-      const finalFeedback = feedback || (status === "ACCEPTED" ? "Well done!" : "Needs improvement");
-      
-      const result = await updateSubmissionStatus(submissionId, status, finalFeedback, finalScore);
+      const finalScore =
+        score !== undefined ? score : status === "ACCEPTED" ? 100 : 0;
+      const finalFeedback =
+        feedback ||
+        (status === "ACCEPTED" ? "Well done!" : "Needs improvement");
+
+      const result = await updateSubmissionStatus(
+        submissionId,
+        status,
+        finalFeedback,
+        finalScore
+      );
       if (result.success && result.data) {
         // Update the local state
-        setSubmissions(prev => prev.map(sub => 
-          sub.submission_id === submissionId ? { ...sub, status, score: finalScore, feedback: finalFeedback } : sub
-        ));
+        setSubmissions((prev) =>
+          prev.map((sub) =>
+            sub.submission_id === submissionId
+              ? { ...sub, status, score: finalScore, feedback: finalFeedback }
+              : sub
+          )
+        );
       } else {
         console.error("Failed to update submission status:", result.error);
       }
     } catch (error) {
       console.error("Failed to update submission status:", error);
     }
+  };
+
+  const handleViewDetails = (submission: Submission) => {
+    setSelectedSubmission(submission);
+    setIsModalOpen(true);
   };
 
   const getStatusIcon = (status: Submission["status"]) => {
@@ -120,10 +165,13 @@ export default function SubmissionMonitor() {
             </div>
           </div>
         </div>
-        
+
         <div className="space-y-4">
           {[1, 2, 3].map((index) => (
-            <div key={index} className="p-4 bg-hack-black/50 border border-cyber-blue-400/20 rounded-xl animate-pulse">
+            <div
+              key={index}
+              className="p-4 bg-hack-black/50 border border-cyber-blue-400/20 rounded-xl animate-pulse"
+            >
               <div className="h-4 bg-gray-700 rounded w-1/4 mb-2"></div>
               <div className="h-3 bg-gray-700 rounded w-1/3"></div>
             </div>
@@ -164,7 +212,9 @@ export default function SubmissionMonitor() {
                   {getSubmissionTypeIcon(submission.submission_type)}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">{submission.team.team_name}</h3>
+                  <h3 className="font-semibold text-white">
+                    {submission.team.team_name}
+                  </h3>
                   <p className="text-sm text-gray-400">
                     {new Date(submission.submitted_at).toLocaleString()}
                   </p>
@@ -174,23 +224,36 @@ export default function SubmissionMonitor() {
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   {getStatusIcon(submission.status)}
-                  <span className="text-sm font-medium capitalize">{submission.status.toLowerCase()}</span>
-                </div>
-                <div className="text-cyber-blue-400 font-semibold">
-                  {submission.score} pts
+                  <span className="text-sm font-medium capitalize">
+                    {submission.status.toLowerCase()}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   {submission.status === "PENDING" && (
                     <>
                       <button
-                        onClick={() => handleStatusUpdate(submission.submission_id, "ACCEPTED", 100, "Well done!")}
+                        onClick={() =>
+                          handleStatusUpdate(
+                            submission.submission_id,
+                            "ACCEPTED",
+                            100,
+                            "Well done!"
+                          )
+                        }
                         className="p-2 hover:bg-matrix-green/10 rounded-lg transition-all text-matrix-green"
                         title="Accept"
                       >
                         <CheckCircle className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => handleStatusUpdate(submission.submission_id, "REJECTED", 0, "Needs improvement")}
+                        onClick={() =>
+                          handleStatusUpdate(
+                            submission.submission_id,
+                            "REJECTED",
+                            0,
+                            "Needs improvement"
+                          )
+                        }
                         className="p-2 hover:bg-alert-red/10 rounded-lg transition-all text-alert-red"
                         title="Reject"
                       >
@@ -198,7 +261,10 @@ export default function SubmissionMonitor() {
                       </button>
                     </>
                   )}
-                  <button className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all">
+                  <button
+                    className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all"
+                    onClick={() => handleViewDetails(submission)}
+                  >
                     <Eye className="w-5 h-5" />
                   </button>
                 </div>
@@ -207,6 +273,13 @@ export default function SubmissionMonitor() {
           </motion.div>
         ))}
       </div>
+
+      {/* Submission Details Modal */}
+      <SubmissionDetailsModal
+        submission={selectedSubmission}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }

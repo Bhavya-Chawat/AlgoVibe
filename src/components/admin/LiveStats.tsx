@@ -1,9 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TrendingUp, Users, Code, Clock, Activity, Award, Target, Zap } from "lucide-react";
+import {
+  TrendingUp,
+  Users,
+  Code,
+  Clock,
+  Activity,
+  Award,
+  Target,
+  Zap,
+} from "lucide-react";
 import { motion } from "framer-motion";
-import { getAnalytics, getRecentActivity, getTopPerformers } from "@/app/(admin)/admin/actions";
+import {
+  getAnalytics,
+  getRecentActivity,
+  getTopPerformers,
+} from "@/app/(admin)/admin/actions";
+import Link from "next/link";
 
 interface StatCard {
   title: string;
@@ -58,7 +72,7 @@ export default function LiveStats({ status }: LiveStatsProps) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch analytics data
       const analyticsResult = await getAnalytics();
       if (analyticsResult.success && analyticsResult.data) {
@@ -70,19 +84,23 @@ export default function LiveStats({ status }: LiveStatsProps) {
             change: "+0",
             trend: "up",
             icon: Users,
-            color: "#1cabf2"
+            color: "#1cabf2",
           },
           {
             title: "Total Submissions",
-            value: (analyticsData.activeSubmissions + analyticsData.acceptedSubmissions + analyticsData.rejectedSubmissions).toString(),
+            value: (
+              analyticsData.activeSubmissions +
+              analyticsData.acceptedSubmissions +
+              analyticsData.rejectedSubmissions
+            ).toString(),
             change: "+0",
             trend: "up",
             icon: Code,
-            color: "#00ff41"
-          }
+            color: "#00ff41",
+          },
         ]);
       }
-      
+
       // Fetch recent activity
       const activityResult = await getRecentActivity();
       if (activityResult.success && activityResult.data) {
@@ -91,11 +109,11 @@ export default function LiveStats({ status }: LiveStatsProps) {
           team: item.team,
           action: item.action,
           time: item.time,
-          status: item.status as "success" | "error" | "pending"
+          status: item.status as "success" | "error" | "pending",
         }));
         setRecentActivity(typedActivity);
       }
-      
+
       // Fetch top performers
       const performersResult = await getTopPerformers();
       if (performersResult.success && performersResult.data) {
@@ -109,9 +127,21 @@ export default function LiveStats({ status }: LiveStatsProps) {
   };
 
   const statusColors = {
-    success: { bg: "bg-[#00ff41]/10", text: "text-[#00ff41]", dot: "bg-[#00ff41]" },
-    error: { bg: "bg-[#ff0055]/10", text: "text-[#ff0055]", dot: "bg-[#ff0055]" },
-    pending: { bg: "bg-[#ff6b35]/10", text: "text-[#ff6b35]", dot: "bg-[#ff6b35]" }
+    success: {
+      bg: "bg-[#00ff41]/10",
+      text: "text-[#00ff41]",
+      dot: "bg-[#00ff41]",
+    },
+    error: {
+      bg: "bg-[#ff0055]/10",
+      text: "text-[#ff0055]",
+      dot: "bg-[#ff0055]",
+    },
+    pending: {
+      bg: "bg-[#ff6b35]/10",
+      text: "text-[#ff6b35]",
+      dot: "bg-[#ff6b35]",
+    },
   };
 
   if (loading) {
@@ -126,10 +156,13 @@ export default function LiveStats({ status }: LiveStatsProps) {
             <span className="text-sm text-gray-400">Loading data...</span>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[1, 2].map((index) => (
-            <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 animate-pulse">
+            <div
+              key={index}
+              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 animate-pulse"
+            >
               <div className="h-4 bg-gray-700 rounded w-1/3 mb-4"></div>
               <div className="h-8 bg-gray-700 rounded w-1/2"></div>
             </div>
@@ -156,7 +189,7 @@ export default function LiveStats({ status }: LiveStatsProps) {
             Updated {Math.floor((Date.now() - lastUpdate) / 1000)}s ago
           </span>
         </div>
-        
+
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <Activity className="w-4 h-4" />
           Real-time monitoring active
@@ -176,12 +209,17 @@ export default function LiveStats({ status }: LiveStatsProps) {
               className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all duration-300"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-xl" style={{ backgroundColor: `${stat.color}20` }}>
+                <div
+                  className="p-3 rounded-xl"
+                  style={{ backgroundColor: `${stat.color}20` }}
+                >
                   <Icon className="w-6 h-6" style={{ color: stat.color }} />
                 </div>
               </div>
-              
-              <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
+
+              <div className="text-3xl font-bold text-white mb-1">
+                {stat.value}
+              </div>
               <div className="text-sm text-gray-400">{stat.title}</div>
             </motion.div>
           );
@@ -213,24 +251,39 @@ export default function LiveStats({ status }: LiveStatsProps) {
                 transition={{ delay: index * 0.05 }}
                 className="flex items-start gap-3 p-3 bg-[#0a0a1f] border border-[#1cabf2]/10 rounded-xl hover:border-[#1cabf2]/30 transition-all duration-300"
               >
-                <div className={`w-2 h-2 rounded-full mt-2 ${statusColors[activity.status].dot} animate-pulse`} />
+                <div
+                  className={`w-2 h-2 rounded-full mt-2 ${
+                    statusColors[activity.status].dot
+                  } animate-pulse`}
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-white text-sm">{activity.team}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${statusColors[activity.status].bg} ${statusColors[activity.status].text}`}>
+                    <span className="font-semibold text-white text-sm">
+                      {activity.team}
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                        statusColors[activity.status].bg
+                      } ${statusColors[activity.status].text}`}
+                    >
                       {activity.status}
                     </span>
                   </div>
                   <div className="text-xs text-gray-400">{activity.action}</div>
                 </div>
-                <div className="text-xs text-gray-500 flex-shrink-0">{activity.time}</div>
+                <div className="text-xs text-gray-500 flex-shrink-0">
+                  {activity.time}
+                </div>
               </motion.div>
             ))}
           </div>
 
-          <button className="w-full mt-4 py-2 text-sm text-[#1cabf2] hover:text-[#00d9ff] font-semibold transition-colors duration-300">
+          <Link
+            href="/admin/activity"
+            className="w-full mt-4 py-2 text-sm text-[#1cabf2] hover:text-[#00d9ff] font-semibold transition-colors duration-300 block text-center"
+          >
             View All Activity →
-          </button>
+          </Link>
         </motion.div>
 
         {/* Top Performers */}
@@ -256,22 +309,28 @@ export default function LiveStats({ status }: LiveStatsProps) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
                 className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 ${
-                  performer.rank <= 3 
-                    ? "bg-gradient-to-r from-[#1cabf2]/20 to-[#1cabf2]/5 border-[#1cabf2]/40" 
+                  performer.rank <= 3
+                    ? "bg-gradient-to-r from-[#1cabf2]/20 to-[#1cabf2]/5 border-[#1cabf2]/40"
                     : "bg-[#0a0a1f] border-[#1cabf2]/10 hover:border-[#1cabf2]/30"
                 }`}
               >
                 <div className="flex items-center justify-center w-8 h-8 bg-[#1cabf2]/20 rounded-lg font-bold text-[#1cabf2]">
                   {performer.badge || performer.rank}
                 </div>
-                
+
                 <div className="flex-1">
-                  <div className="font-semibold text-white text-sm">{performer.team}</div>
-                  <div className="text-xs text-gray-400">{performer.submissions} submissions</div>
+                  <div className="font-semibold text-white text-sm">
+                    {performer.team}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {performer.submissions} submissions
+                  </div>
                 </div>
-                
+
                 <div className="text-right">
-                  <div className="text-xl font-bold text-[#1cabf2]">{performer.score}</div>
+                  <div className="text-xl font-bold text-[#1cabf2]">
+                    {performer.score}
+                  </div>
                   <div className="text-xs text-gray-400">points</div>
                 </div>
               </motion.div>
