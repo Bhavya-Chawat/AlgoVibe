@@ -16,34 +16,19 @@ export default function AdminContestPage() {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [durationMinutes, setDurationMinutes] = useState(90);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchContestStatus();
   }, []);
 
-  useEffect(() => {
-    if (contestStatus === "live") {
-      const interval = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 0) {
-            clearInterval(interval);
-            setContestStatus("ended");
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [contestStatus]);
-
   const fetchContestStatus = async () => {
     try {
+      setLoading(true);
       const result = await getContestStatus();
       if (result.success) {
         const contest = result.data;
-        setContestStatus(contest.is_active ? "live" : "pre");
+        setContestStatus(contest.is_active ? "live" : (contest.start_time && !contest.end_time ? "paused" : "pre"));
         setDurationMinutes(contest.duration_minutes || 90);
         
         if (contest.start_time) {
@@ -55,9 +40,31 @@ export default function AdminContestPage() {
           // Calculate remaining time
           const now = new Date();
           const end = new Date(contest.end_time);
-          if (end > now) {
+          if (end > now && contest.is_active) {
             const remaining = Math.floor((end.getTime() - now.getTime()) / 1000);
             setTimeRemaining(remaining);
+          } else {
+            // Contest has ended or is not active
+            if (!contest.is_active && contest.start_time && !contest.end_time) {
+              setContestStatus("paused");
+            } else {
+              setContestStatus("ended");
+            }
+            setTimeRemaining(0);
+          }
+        } else {
+          // Contest is active but no end time set, use duration
+          if (contest.is_active && contest.start_time) {
+            const start = new Date(contest.start_time);
+            const end = new Date(start.getTime() + (contest.duration_minutes || 90) * 60 * 1000);
+            const now = new Date();
+            if (end > now) {
+              const remaining = Math.floor((end.getTime() - now.getTime()) / 1000);
+              setTimeRemaining(remaining);
+            } else {
+              setContestStatus("ended");
+              setTimeRemaining(0);
+            }
           }
         }
       } else {
@@ -65,16 +72,24 @@ export default function AdminContestPage() {
       }
     } catch (error) {
       console.error("Failed to fetch contest status:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleStartContest = async () => {
+  const handleStartContest = async (duration: number) => {
     try {
-      const result = await startContest(durationMinutes);
+      const result = await startContest(duration);
       if (result.success) {
         setContestStatus("live");
-        setStartTime(new Date());
-        setEndTime(new Date(Date.now() + durationMinutes * 60 * 1000));
+        setDurationMinutes(duration);
+        const startTime = new Date();
+        const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
+        setStartTime(startTime);
+        setEndTime(endTime);
+        setTimeRemaining(duration * 60);
+        // Refresh the status to ensure sync with database
+        setTimeout(fetchContestStatus, 500);
       } else {
         console.error("Failed to start contest:", result.error);
       }
@@ -88,6 +103,8 @@ export default function AdminContestPage() {
       const result = await pauseContest();
       if (result.success) {
         setContestStatus("paused");
+        // Refresh the status to ensure sync with database
+        setTimeout(fetchContestStatus, 500);
       } else {
         console.error("Failed to pause contest:", result.error);
       }
@@ -101,6 +118,10 @@ export default function AdminContestPage() {
       const result = await stopContest();
       if (result.success) {
         setContestStatus("ended");
+        setTimeRemaining(0);
+        setEndTime(new Date());
+        // Refresh the status to ensure sync with database
+        setTimeout(fetchContestStatus, 500);
       } else {
         console.error("Failed to stop contest:", result.error);
       }
@@ -121,11 +142,24 @@ export default function AdminContestPage() {
         setTimeRemaining(durationMinutes * 60);
         setStartTime(null);
         setEndTime(null);
+        // Refresh the status to ensure sync with database
+        setTimeout(fetchContestStatus, 500);
       } else {
         console.error("Failed to reset contest:", result.error);
       }
     } catch (error) {
       console.error("Failed to reset contest:", error);
+    }
+  };
+
+  const handleTimeUpdate = (newTimeRemaining: number) => {
+    setTimeRemaining(newTimeRemaining);
+    
+    // If time is up, update contest status
+    if (newTimeRemaining <= 0) {
+      setContestStatus("ended");
+      // Refresh the status to ensure sync with database
+      setTimeout(fetchContestStatus, 500);
     }
   };
 
@@ -171,6 +205,24 @@ export default function AdminContestPage() {
 
   const statusConfig = getStatusConfig();
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-4xl font-bold text-gradient mb-2">
+            Contest Controls
+          </h1>
+          <p className="text-gray-400">
+            Loading contest status...
+          </p>
+        </div>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-matrix-green"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -190,6 +242,9 @@ export default function AdminContestPage() {
         onPause={handlePauseContest}
         onStop={handleStopContest}
         onReset={handleResetContest}
+        durationMinutes={durationMinutes}
+        timeRemaining={timeRemaining}
+        onTimeUpdate={handleTimeUpdate}
       />
 
       {/* Live Stats Component */}

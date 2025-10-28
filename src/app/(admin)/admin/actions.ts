@@ -12,6 +12,13 @@ export async function startContest(durationMinutes: number = 90) {
     const startTime = new Date();
     const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
 
+    console.log("Starting contest with params:", {
+      is_active: true,
+      start_time: startTime.toISOString(),
+      end_time: endTime.toISOString(),
+      duration_minutes: durationMinutes
+    });
+
     const { data, error } = await adminClient
       .from('contest')
       .update({
@@ -20,11 +27,16 @@ export async function startContest(durationMinutes: number = 90) {
         end_time: endTime.toISOString(),
         duration_minutes: durationMinutes
       })
-      .eq('contest_id', 1)
+      .eq('contest_id', 2)  // Fixed: Use contest_id = 2 instead of 1
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("Failed to start contest - Supabase error:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Contest started successfully:", data);
 
     revalidatePath('/admin');
     revalidatePath('/admin/contest');
@@ -40,14 +52,21 @@ export async function pauseContest() {
   const adminClient = createAdminClient();
   
   try {
+    console.log("Pausing contest");
+
     const { data, error } = await adminClient
       .from('contest')
       .update({ is_active: false })
-      .eq('contest_id', 1)
+      .eq('contest_id', 2)  // Fixed: Use contest_id = 2 instead of 1
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("Failed to pause contest - Supabase error:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Contest paused successfully:", data);
 
     revalidatePath('/admin');
     revalidatePath('/admin/contest');
@@ -63,17 +82,26 @@ export async function stopContest() {
   const adminClient = createAdminClient();
   
   try {
+    const endTime = new Date().toISOString();
+    console.log("Stopping contest with end time:", endTime);
+
+    // Update contest with proper end time
     const { data, error } = await adminClient
       .from('contest')
       .update({ 
         is_active: false,
-        end_time: new Date().toISOString()
+        end_time: endTime
       })
-      .eq('contest_id', 1)
+      .eq('contest_id', 2)  // Fixed: Use contest_id = 2 instead of 1
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("Failed to stop contest - Supabase error:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Contest stopped successfully:", data);
 
     revalidatePath('/admin');
     revalidatePath('/admin/contest');
@@ -89,6 +117,8 @@ export async function resetContest() {
   const adminClient = createAdminClient();
   
   try {
+    console.log("Resetting contest");
+
     const { data, error } = await adminClient
       .from('contest')
       .update({ 
@@ -97,11 +127,16 @@ export async function resetContest() {
         end_time: null,
         duration_minutes: 90
       })
-      .eq('contest_id', 1)
+      .eq('contest_id', 2)  // Fixed: Use contest_id = 2 instead of 1
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("Failed to reset contest - Supabase error:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Contest reset successfully:", data);
 
     revalidatePath('/admin');
     revalidatePath('/admin/contest');
@@ -117,12 +152,19 @@ export async function getContestStatus() {
   const adminClient = createAdminClient();
   
   try {
+    console.log("Fetching contest status");
+
     const { data, error } = await adminClient
       .from('contest')
       .select('*')
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("Failed to get contest status - Supabase error:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("Contest status fetched successfully:", data);
     
     return { success: true, data };
   } catch (error) {

@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, Clock, Calendar, AlertCircle } from "lucide-react";
+import { Play, Pause, RotateCcw, Clock, Calendar, AlertCircle, Square } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface ContestControlsProps {
   status: "pre" | "live" | "paused" | "ended";
-  onStart: () => Promise<void>;
+  onStart: (durationMinutes: number) => Promise<void>;
   onPause: () => Promise<void>;
   onStop: () => Promise<void>;
   onReset: () => Promise<void>;
+  durationMinutes: number;
+  timeRemaining: number;
+  onTimeUpdate: (timeRemaining: number) => void;
 }
 
 export default function ContestControls({
@@ -17,37 +20,49 @@ export default function ContestControls({
   onStart,
   onPause,
   onStop,
-  onReset
+  onReset,
+  durationMinutes: parentDurationMinutes,
+  timeRemaining: parentTimeRemaining,
+  onTimeUpdate
 }: ContestControlsProps) {
   const [contestStatus, setContestStatus] = useState(status);
-  const [durationMinutes, setDurationMinutes] = useState("90");
+  const [durationMinutes, setDurationMinutes] = useState(parentDurationMinutes.toString());
   const [startTime, setStartTime] = useState("");
-  const [timeRemaining, setTimeRemaining] = useState(0); // in seconds
-  const [totalDuration, setTotalDuration] = useState(0); // in seconds
+  const [timeRemaining, setTimeRemaining] = useState(parentTimeRemaining);
+  const [totalDuration, setTotalDuration] = useState(parentDurationMinutes * 60);
 
   useEffect(() => {
     setContestStatus(status);
   }, [status]);
 
   useEffect(() => {
+    setDurationMinutes(parentDurationMinutes.toString());
+    setTotalDuration(parentDurationMinutes * 60);
+  }, [parentDurationMinutes]);
+
+  useEffect(() => {
+    setTimeRemaining(parentTimeRemaining);
+  }, [parentTimeRemaining]);
+
+  useEffect(() => {
     let interval: NodeJS.Timeout;
     
     if (contestStatus === "live" && timeRemaining > 0) {
       interval = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            setContestStatus("ended");
-            return 0;
-          }
-          return prev - 1;
-        });
+        const newTime = timeRemaining - 1;
+        setTimeRemaining(newTime);
+        onTimeUpdate(newTime);
+        
+        if (newTime <= 0) {
+          setContestStatus("ended");
+        }
       }, 1000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [contestStatus, timeRemaining]);
+  }, [contestStatus, timeRemaining, onTimeUpdate]);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -63,7 +78,7 @@ export default function ContestControls({
     setTotalDuration(seconds);
     setTimeRemaining(seconds);
     setContestStatus("live");
-    onStart();
+    onStart(minutes);
   };
 
   const handlePauseContest = () => {
@@ -73,13 +88,22 @@ export default function ContestControls({
 
   const handleResumeContest = () => {
     setContestStatus("live");
-    onStart();
+    const minutes = parseInt(durationMinutes) || 90;
+    onStart(minutes);
+  };
+
+  const handleStopContest = () => {
+    setContestStatus("ended");
+    setTimeRemaining(0);
+    onStop();
   };
 
   const handleResetContest = () => {
     setContestStatus("pre");
-    setTimeRemaining(0);
-    setTotalDuration(0);
+    const minutes = parseInt(durationMinutes) || 90;
+    const seconds = minutes * 60;
+    setTimeRemaining(seconds);
+    setTotalDuration(seconds);
     onReset();
   };
 
@@ -147,7 +171,9 @@ export default function ContestControls({
           <div className="text-3xl font-bold text-[#1cabf2]">
             {durationMinutes}:00
           </div>
-          <div className="text-xs text-gray-400">minutes</div>
+          <div className="text-xs text-gray-400 mt-1">
+            minutes
+          </div>
         </motion.div>
       </div>
 
@@ -316,10 +342,10 @@ export default function ContestControls({
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={onStop}
+                onClick={handleStopContest}
                 className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#ff0055] to-[#ff0055]/80 rounded-xl font-bold text-white transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,0,85,0.4)]"
               >
-                <Pause className="w-5 h-5" />
+                <Square className="w-5 h-5" />
                 Stop Contest
               </motion.button>
             )}

@@ -54,13 +54,17 @@ export default function AdminSubmissionsPage() {
     }
   };
 
-  const handleStatusUpdate = async (submissionId: number, status: "ACCEPTED" | "REJECTED" | "PENDING", feedback?: string) => {
+  const handleStatusUpdate = async (submissionId: number, status: "ACCEPTED" | "REJECTED", score?: number, feedback?: string) => {
     try {
-      const result = await updateSubmissionStatus(submissionId, status, feedback);
+      // Set default score based on status if not provided
+      const finalScore = score !== undefined ? score : (status === "ACCEPTED" ? 100 : 0);
+      const finalFeedback = feedback || (status === "ACCEPTED" ? "Well done!" : "Needs improvement");
+      
+      const result = await updateSubmissionStatus(submissionId, status, finalFeedback, finalScore);
       if (result.success && result.data) {
         // Update the local state
         setSubmissions(prev => prev.map(sub => 
-          sub.submission_id === submissionId ? { ...sub, status, feedback: feedback || sub.feedback } : sub
+          sub.submission_id === submissionId ? { ...sub, status, score: finalScore, feedback: finalFeedback } : sub
         ));
       } else {
         console.error("Failed to update submission status:", result.error);
@@ -243,14 +247,14 @@ export default function AdminSubmissionsPage() {
                         {submission.status === "PENDING" && (
                           <>
                             <button
-                              onClick={() => handleStatusUpdate(submission.submission_id, "ACCEPTED")}
+                              onClick={() => handleStatusUpdate(submission.submission_id, "ACCEPTED", 100, "Well done!")}
                               className="p-2 bg-matrix-green/10 hover:bg-matrix-green/20 rounded-lg text-matrix-green transition-colors duration-300"
                               title="Accept"
                             >
                               <CheckCircle className="w-5 h-5" />
                             </button>
                             <button
-                              onClick={() => handleStatusUpdate(submission.submission_id, "REJECTED")}
+                              onClick={() => handleStatusUpdate(submission.submission_id, "REJECTED", 0, "Needs improvement")}
                               className="p-2 bg-alert-red/10 hover:bg-alert-red/20 rounded-lg text-alert-red transition-colors duration-300"
                               title="Reject"
                             >

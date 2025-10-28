@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, Filter, Eye, CheckCircle, XCircle, Clock, Code, Github, Globe, Download } from "lucide-react";
 import { motion } from "framer-motion";
-import { getSubmissions } from "@/app/(admin)/admin/actions";
+import { getSubmissions, updateSubmissionStatus } from "@/app/(admin)/admin/actions";
 
 interface Submission {
   submission_id: number;
@@ -62,6 +62,26 @@ export default function SubmissionMonitor() {
       console.error("Failed to fetch submissions:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (submissionId: number, status: "ACCEPTED" | "REJECTED", score?: number, feedback?: string) => {
+    try {
+      // Set default score based on status if not provided
+      const finalScore = score !== undefined ? score : (status === "ACCEPTED" ? 100 : 0);
+      const finalFeedback = feedback || (status === "ACCEPTED" ? "Well done!" : "Needs improvement");
+      
+      const result = await updateSubmissionStatus(submissionId, status, finalFeedback, finalScore);
+      if (result.success && result.data) {
+        // Update the local state
+        setSubmissions(prev => prev.map(sub => 
+          sub.submission_id === submissionId ? { ...sub, status, score: finalScore, feedback: finalFeedback } : sub
+        ));
+      } else {
+        console.error("Failed to update submission status:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to update submission status:", error);
     }
   };
 
@@ -159,9 +179,29 @@ export default function SubmissionMonitor() {
                 <div className="text-cyber-blue-400 font-semibold">
                   {submission.score} pts
                 </div>
-                <button className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all">
-                  <Eye className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  {submission.status === "PENDING" && (
+                    <>
+                      <button
+                        onClick={() => handleStatusUpdate(submission.submission_id, "ACCEPTED", 100, "Well done!")}
+                        className="p-2 hover:bg-matrix-green/10 rounded-lg transition-all text-matrix-green"
+                        title="Accept"
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleStatusUpdate(submission.submission_id, "REJECTED", 0, "Needs improvement")}
+                        className="p-2 hover:bg-alert-red/10 rounded-lg transition-all text-alert-red"
+                        title="Reject"
+                      >
+                        <XCircle className="w-5 h-5" />
+                      </button>
+                    </>
+                  )}
+                  <button className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all">
+                    <Eye className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
