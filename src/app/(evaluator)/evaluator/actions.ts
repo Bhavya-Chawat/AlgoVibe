@@ -103,12 +103,18 @@ export async function getTeamSubmissions(teamId: number) {
   return { success: true, submissions: submissions || [] };
 }
 
-// Assign score to all submissions of a team for a specific problem
-export async function assignScoreToTeamSubmissions(
+// Assign detailed scores to all submissions of a team for a specific problem
+export async function assignDetailedScoresToTeamSubmissions(
   teamId: number,
   problemId: number,
-  score: number,
-  feedback: string
+  scores: {
+    visualizationQuality: number;
+    coreLogicEfficiency: number;
+    webAppUX: number;
+    engineeringRepo: number;
+  },
+  feedback: string,
+  evaluatorName: string
 ) {
   const supabase = createAdminClient();
 
@@ -124,11 +130,76 @@ export async function assignScoreToTeamSubmissions(
     return { success: false, error: "Failed to fetch submissions" };
   }
 
-  // Update all submissions with the same score and feedback
+  // Calculate total score
+  const totalScore =
+    scores.visualizationQuality +
+    scores.coreLogicEfficiency +
+    scores.webAppUX +
+    scores.engineeringRepo;
+
+  // Check if a score record already exists for this team and problem
+  const { data: existingScores, error: fetchScoresError } = await supabase
+    .from("scores")
+    .select("score_id")
+    .eq("team_id", teamId)
+    .eq("problem_id", problemId)
+    .limit(1);
+
+  let scoreError = null;
+
+  if (fetchScoresError) {
+    console.error("Error checking existing scores:", fetchScoresError);
+    return { success: false, error: "Failed to check existing scores" };
+  }
+
+  if (existingScores && existingScores.length > 0) {
+    // Update existing score record
+    const { error: updateError } = await supabase
+      .from("scores")
+      .update({
+        visualization_quality_score: scores.visualizationQuality,
+        core_logic_efficiency_score: scores.coreLogicEfficiency,
+        web_app_ux_score: scores.webAppUX,
+        engineering_repo_score: scores.engineeringRepo,
+        total_score: totalScore,
+        feedback: feedback,
+        evaluator_name: evaluatorName,
+        evaluated: true,
+        evaluated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("score_id", existingScores[0].score_id);
+
+    scoreError = updateError;
+  } else {
+    // Create a new score record for the team/problem combination
+    const { error: insertError } = await supabase.from("scores").insert({
+      team_id: teamId,
+      problem_id: problemId,
+      visualization_quality_score: scores.visualizationQuality,
+      core_logic_efficiency_score: scores.coreLogicEfficiency,
+      web_app_ux_score: scores.webAppUX,
+      engineering_repo_score: scores.engineeringRepo,
+      total_score: totalScore,
+      feedback: feedback,
+      evaluator_name: evaluatorName,
+      evaluated: true,
+      evaluated_at: new Date().toISOString(),
+    });
+
+    scoreError = insertError;
+  }
+
+  if (scoreError) {
+    console.error("Error saving scores:", scoreError);
+    return { success: false, error: "Failed to save scores" };
+  }
+
+  // Update all submissions with the total score and feedback
   const { error: updateError } = await supabase
     .from("submissions")
     .update({
-      score: score,
+      score: totalScore,
       feedback: feedback,
       evaluated_at: new Date().toISOString(),
     })
@@ -143,4 +214,24 @@ export async function assignScoreToTeamSubmissions(
   }
 
   return { success: true, message: "Scores assigned successfully" };
+}
+
+// Get scores for a specific team and problem
+export async function getTeamScores(teamId: number, problemId: number) {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("scores")
+    .select("*")
+    .eq("team_id", teamId)
+    .eq("problem_id", problemId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Error fetching team scores:", error);
+    return { success: false, error: "Failed to fetch team scores" };
+  }
+
+  return { success: true, scores: data?.[0] || null };
 }

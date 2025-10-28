@@ -195,6 +195,11 @@ export default function ProblemViewer({ selectedTeam }: ProblemViewerProps) {
     fetchProblem();
   }, [selectedTeam]);
 
+  // Expose problem ID for other components
+  if (typeof window !== "undefined" && problem) {
+    (window as any).currentProblemId = problem.problem_id;
+  }
+
   // If no team is selected, don't show anything
   if (!selectedTeam) {
     return null;

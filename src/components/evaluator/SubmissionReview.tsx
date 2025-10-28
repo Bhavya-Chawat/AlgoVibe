@@ -15,12 +15,15 @@ import {
   Award,
   AlertCircle,
   Copy,
+  User,
+  Calendar,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/modern-ui/src/components/ui/Badge";
 import {
   getTeamSubmissions,
-  assignScoreToTeamSubmissions,
+  assignDetailedScoresToTeamSubmissions,
+  getTeamScores,
 } from "@/app/(evaluator)/evaluator/actions";
 
 interface SubmissionMember {
@@ -50,7 +53,14 @@ export default function SubmissionReview({
 }: SubmissionReviewProps) {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [showMarksModal, setShowMarksModal] = useState(false);
-  const [marks, setMarks] = useState({ score: 0, review: "" });
+  const [detailedScores, setDetailedScores] = useState({
+    visualizationQuality: 0,
+    coreLogicEfficiency: 0,
+    webAppUX: 0,
+    engineeringRepo: 0,
+    review: "",
+    evaluatorName: "",
+  });
   const [codeModal, setCodeModal] = useState<{
     isOpen: boolean;
     code: string;
@@ -59,6 +69,8 @@ export default function SubmissionReview({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [problemId, setProblemId] = useState<number | null>(null);
+  const [existingScores, setExistingScores] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Load submissions for the selected team
   useEffect(() => {
@@ -106,6 +118,38 @@ export default function SubmissionReview({
 
     fetchSubmissions();
   }, [selectedTeam]);
+
+  // Load existing scores when team and problem are selected
+  useEffect(() => {
+    const fetchExistingScores = async () => {
+      if (selectedTeam && problemId) {
+        try {
+          const teamId = parseInt(selectedTeam, 10);
+          const result = await getTeamScores(teamId, problemId);
+
+          if (result.success && result.scores) {
+            setExistingScores(result.scores);
+            setDetailedScores({
+              visualizationQuality:
+                result.scores.visualization_quality_score || 0,
+              coreLogicEfficiency:
+                result.scores.core_logic_efficiency_score || 0,
+              webAppUX: result.scores.web_app_ux_score || 0,
+              engineeringRepo: result.scores.engineering_repo_score || 0,
+              review: result.scores.feedback || "",
+              evaluatorName: result.scores.evaluator_name || "",
+            });
+          } else {
+            setExistingScores(null);
+          }
+        } catch (err) {
+          console.error("Error fetching existing scores:", err);
+        }
+      }
+    };
+
+    fetchExistingScores();
+  }, [selectedTeam, problemId]);
 
   const getIcon = (type: Submission["submission_type"]) => {
     switch (type) {
@@ -186,7 +230,6 @@ export default function SubmissionReview({
 
   const handleCloseMarksModal = () => {
     setShowMarksModal(false);
-    setMarks({ score: 0, review: "" });
   };
 
   const handleSaveMarks = async () => {
@@ -196,12 +239,19 @@ export default function SubmissionReview({
     }
 
     try {
+      setIsSaving(true);
       const teamId = parseInt(selectedTeam, 10);
-      const result = await assignScoreToTeamSubmissions(
+      const result = await assignDetailedScoresToTeamSubmissions(
         teamId,
         problemId,
-        marks.score,
-        marks.review
+        {
+          visualizationQuality: detailedScores.visualizationQuality,
+          coreLogicEfficiency: detailedScores.coreLogicEfficiency,
+          webAppUX: detailedScores.webAppUX,
+          engineeringRepo: detailedScores.engineeringRepo,
+        },
+        detailedScores.review,
+        detailedScores.evaluatorName
       );
 
       if (result.success) {
@@ -229,6 +279,8 @@ export default function SubmissionReview({
     } catch (err) {
       console.error("Error assigning marks:", err);
       alert("An unexpected error occurred while assigning marks");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -244,6 +296,13 @@ export default function SubmissionReview({
   if (!selectedTeam) {
     return null;
   }
+
+  // Calculate total score
+  const totalScore =
+    detailedScores.visualizationQuality +
+    detailedScores.coreLogicEfficiency +
+    detailedScores.webAppUX +
+    detailedScores.engineeringRepo;
 
   return (
     <div className="space-y-6">
@@ -310,12 +369,6 @@ export default function SubmissionReview({
                         </div>
                       </div>
 
-                      {submission.score !== undefined && (
-                        <div className="text-cyber-blue-400 font-semibold">
-                          {submission.score}/100
-                        </div>
-                      )}
-
                       <button className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all">
                         <Eye className="w-5 h-5" />
                       </button>
@@ -327,6 +380,8 @@ export default function SubmissionReview({
           )}
         </div>
       )}
+
+      {/* Evaluation Status Box - REMOVED as it's now shown in the evaluator page */}
 
       {/* Assign Marks Button - Moved above Judging Criteria */}
       <div className="flex justify-center mt-6">
@@ -340,7 +395,7 @@ export default function SubmissionReview({
           }`}
         >
           <Award className="w-5 h-5" />
-          Assign Marks to All Submissions
+          {existingScores ? "Update Evaluation" : "Evaluate Team"}
         </button>
       </div>
 
@@ -349,50 +404,135 @@ export default function SubmissionReview({
         <h3 className="text-xl font-bold text-gradient mb-4">
           Judging Criteria
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="glass-panel p-4 rounded-lg">
-            <h4 className="font-bold text-cyber-blue-400 mb-2">
-              Correctness (40%)
-            </h4>
-            <p className="text-gray-300 text-sm">
-              Solution produces correct output for all test cases including edge
-              cases.
-            </p>
-          </div>
-          <div className="glass-panel p-4 rounded-lg">
-            <h4 className="font-bold text-cyber-blue-400 mb-2">
-              Efficiency (30%)
-            </h4>
-            <p className="text-gray-300 text-sm">
-              Optimal time and space complexity. Code should be efficient and
-              well-structured.
-            </p>
-          </div>
-          <div className="glass-panel p-4 rounded-lg">
-            <h4 className="font-bold text-cyber-blue-400 mb-2">
-              Code Quality (20%)
-            </h4>
-            <p className="text-gray-300 text-sm">
-              Clean, readable, and well-documented code with proper variable
-              naming.
-            </p>
-          </div>
-          <div className="glass-panel p-4 rounded-lg">
-            <h4 className="font-bold text-cyber-blue-400 mb-2">
-              Visualization (10%)
-            </h4>
-            <p className="text-gray-300 text-sm">
-              Quality and creativity of the visualization for the solution.
-            </p>
+
+        {/* Visualization Quality & Insight (45%) */}
+        <div className="glass-panel p-4 rounded-lg mb-4">
+          <h4 className="font-bold text-cyber-blue-400 mb-2">
+            1. Visualization Quality & Insight (45%)
+          </h4>
+          <p className="text-gray-300 text-sm mb-3">
+            Clarity, Creativity, and Pedagogical Value. Does the visualization
+            clearly explain the algorithm's steps? Is it creative, engaging, and
+            easy to follow? Must include advanced features like reset buttons,
+            speed control, step-by-step navigation, and optional sound/animation
+            controls.
+          </p>
+
+          <div className="ml-4 space-y-2">
+            <div>
+              <h5 className="font-semibold text-gray-300">
+                A. Clarity of Steps & Pedagogical Value (15 pts)
+              </h5>
+              <p className="text-gray-400 text-sm">
+                Precision in reflecting the algorithm's execution; clearly
+                highlighting the current operation (e.g., comparison, swap,
+                recursion). The visualization must genuinely aid understanding.
+              </p>
+            </div>
+            <div>
+              <h5 className="font-semibold text-gray-300">
+                B. Interactivity & Advanced Controls (15 pts)
+              </h5>
+              <p className="text-gray-400 text-sm">
+                Must include Reset/Randomize input button, Speed Control slider,
+                Step-by-Step navigation (forward/backward), and the ability to
+                input custom test cases.
+              </p>
+            </div>
+            <div>
+              <h5 className="font-semibold text-gray-300">
+                C. Creativity, Animation, & Engagement (10 pts)
+              </h5>
+              <p className="text-gray-400 text-sm">
+                Creative use of animations, sound effects (optional), color, and
+                visual metaphors to make the complex logic intuitive and highly
+                engaging.
+              </p>
+            </div>
+            <div>
+              <h5 className="font-semibold text-gray-300">
+                D. Display of Performance Metrics (5 pts)
+              </h5>
+              <p className="text-gray-400 text-sm">
+                The visualization should display real-time or final metrics like
+                the number of comparisons/swaps or the actual execution time for
+                the given input.
+              </p>
+            </div>
           </div>
         </div>
+
+        {/* Core Logic & Efficiency (25%) */}
+        <div className="glass-panel p-4 rounded-lg mb-4">
+          <h4 className="font-bold text-cyber-blue-400 mb-2">
+            2. Core Logic & Efficiency (25%)
+          </h4>
+          <p className="text-gray-300 text-sm mb-3">
+            Correctness, Robustness, and Performance. The solution must produce
+            the correct output for all test cases. Focus remains on choosing
+            optimal data structures and achieving strong time/space complexity,
+            though with a reduced weight.
+          </p>
+
+          <div className="ml-4 space-y-2">
+            <div>
+              <h5 className="font-semibold text-gray-300">
+                A. Algorithmic Correctness (15 pts)
+              </h5>
+              <p className="text-gray-400 text-sm">
+                The underlying code must solve the problem completely and handle
+                all specified constraints and edge cases without runtime errors.
+              </p>
+            </div>
+            <div>
+              <h5 className="font-semibold text-gray-300">
+                B. Time & Space Complexity (10 pts)
+              </h5>
+              <p className="text-gray-400 text-sm">
+                Solution achieves the theoretically optimal (or near-optimal)
+                time and space complexity. The repository should briefly justify
+                the complexity.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Web Application UX & Polish (20%) */}
+        <div className="glass-panel p-4 rounded-lg mb-4">
+          <h4 className="font-bold text-cyber-blue-400 mb-2">
+            3. Web Application UX & Polish (20%)
+          </h4>
+          <p className="text-gray-300 text-sm">
+            User Experience, Aesthetics, and Responsiveness. Is the deployed
+            application visually appealing, intuitive, and easy to navigate?
+            Focus includes clear presentation of the DSA problem description and
+            a smooth user flow.
+          </p>
+        </div>
+
+        {/* Engineering & Repository Management (10%) */}
+        <div className="glass-panel p-4 rounded-lg">
+          <h4 className="font-bold text-cyber-blue-400 mb-2">
+            4. Engineering & Repository Management (10%)
+          </h4>
+          <p className="text-gray-300 text-sm">
+            Documentation, Readability, and Project Structure. Repository must
+            be well-organized with a clear README.md. Emphasis on code
+            maintainability (clear separation of concerns) and professional
+            documentation.
+          </p>
+        </div>
+
         <div className="mt-4 p-4 bg-hack-navy/50 rounded-lg border border-warning-orange/30">
           <h4 className="font-bold text-warning-orange mb-2">Instructions</h4>
           <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">
-            <li>Assign a score out of 100 based on the criteria above</li>
+            <li>
+              Assign scores based on the criteria above with the specified
+              weightings
+            </li>
             <li>
               All 3 submissions (code, GitHub, deployment) will receive the same
-              score
+              detailed scores
             </li>
             <li>Provide constructive feedback to help teams improve</li>
             <li>Ensure fairness and consistency across all evaluations</li>
@@ -455,81 +595,262 @@ export default function SubmissionReview({
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="glass-panel-strong max-w-md w-full rounded-2xl border border-cyber-blue-400/30 p-6"
+            className="glass-panel-strong max-w-2xl w-full rounded-2xl border border-cyber-blue-400/30 p-6 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gradient">Assign Marks</h2>
+              <h2 className="text-2xl font-bold text-gradient">
+                Team Evaluation
+              </h2>
               <button
                 onClick={handleCloseMarksModal}
                 className="p-2 hover:bg-cyber-blue-400/10 rounded-lg transition-all"
+                disabled={isSaving}
               >
                 <XCircle className="w-6 h-6 text-gray-400" />
               </button>
             </div>
 
-            <div className="space-y-6">
-              {/* Score Input */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  Score (out of 100)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={marks.score === 0 ? "" : marks.score}
-                  onChange={(e) =>
-                    setMarks({
-                      ...marks,
-                      score:
-                        e.target.value === ""
-                          ? 0
-                          : parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 bg-transparent"
-                  placeholder="Enter score"
-                />
+            {isSaving ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyber-blue-400 mb-4"></div>
+                <p className="text-gray-400">Saving evaluation...</p>
               </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Evaluator Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    Evaluator Name *
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={detailedScores.evaluatorName}
+                      onChange={(e) =>
+                        setDetailedScores({
+                          ...detailedScores,
+                          evaluatorName: e.target.value,
+                        })
+                      }
+                      className="w-full pl-10 px-4 py-3 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 bg-transparent"
+                      placeholder="Enter your name"
+                      required
+                    />
+                  </div>
+                </div>
 
-              {/* Review Input */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  Review Comments
-                </label>
-                <textarea
-                  value={marks.review}
-                  onChange={(e) =>
-                    setMarks({ ...marks, review: e.target.value })
-                  }
-                  rows={4}
-                  className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 bg-transparent resize-none"
-                  placeholder="Enter your review comments here..."
-                />
-              </div>
+                {/* Detailed Scoring Section */}
+                <div className="border border-cyber-blue-400/20 rounded-xl p-4">
+                  <h3 className="font-bold text-cyber-blue-400 mb-4">
+                    Detailed Scoring
+                  </h3>
 
-              {/* Action Buttons */}
-              <div className="flex gap-4">
-                <button
-                  onClick={handleCloseMarksModal}
-                  className="flex-1 px-4 py-3 glass-panel border border-gray-400/30 rounded-xl text-gray-300 font-semibold hover:border-gray-400 transition-all duration-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveMarks}
-                  disabled={marks.score < 0 || marks.score > 100}
-                  className={`flex-1 px-4 py-3 font-semibold rounded-xl transition-all duration-300 ${
-                    marks.score < 0 || marks.score > 100
-                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                      : "bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white"
-                  }`}
-                >
-                  Save Marks
-                </button>
+                  <div className="space-y-5">
+                    {/* Visualization Quality & Insight (45%) */}
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <label className="text-sm font-semibold text-gray-300">
+                          Visualization Quality & Insight (45%)
+                        </label>
+                        <span className="text-sm font-semibold text-cyber-blue-400">
+                          {detailedScores.visualizationQuality}/45
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="45"
+                        value={detailedScores.visualizationQuality}
+                        onChange={(e) =>
+                          setDetailedScores({
+                            ...detailedScores,
+                            visualizationQuality: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyber-blue-400"
+                      />
+                      <div className="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>0</span>
+                        <span>45</span>
+                      </div>
+                    </div>
+
+                    {/* Core Logic & Efficiency (25%) */}
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <label className="text-sm font-semibold text-gray-300">
+                          Core Logic & Efficiency (25%)
+                        </label>
+                        <span className="text-sm font-semibold text-cyber-blue-400">
+                          {detailedScores.coreLogicEfficiency}/25
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="25"
+                        value={detailedScores.coreLogicEfficiency}
+                        onChange={(e) =>
+                          setDetailedScores({
+                            ...detailedScores,
+                            coreLogicEfficiency: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyber-blue-400"
+                      />
+                      <div className="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>0</span>
+                        <span>25</span>
+                      </div>
+                    </div>
+
+                    {/* Web Application UX & Polish (20%) */}
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <label className="text-sm font-semibold text-gray-300">
+                          Web Application UX & Polish (20%)
+                        </label>
+                        <span className="text-sm font-semibold text-cyber-blue-400">
+                          {detailedScores.webAppUX}/20
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="20"
+                        value={detailedScores.webAppUX}
+                        onChange={(e) =>
+                          setDetailedScores({
+                            ...detailedScores,
+                            webAppUX: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyber-blue-400"
+                      />
+                      <div className="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>0</span>
+                        <span>20</span>
+                      </div>
+                    </div>
+
+                    {/* Engineering & Repository Management (10%) */}
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <label className="text-sm font-semibold text-gray-300">
+                          Engineering & Repository Management (10%)
+                        </label>
+                        <span className="text-sm font-semibold text-cyber-blue-400">
+                          {detailedScores.engineeringRepo}/10
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="10"
+                        value={detailedScores.engineeringRepo}
+                        onChange={(e) =>
+                          setDetailedScores({
+                            ...detailedScores,
+                            engineeringRepo: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyber-blue-400"
+                      />
+                      <div className="flex justify-between text-xs text-gray-400 mt-1">
+                        <span>0</span>
+                        <span>10</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total Score Display */}
+                <div className="p-4 bg-cyber-blue-400/10 rounded-xl border border-cyber-blue-400/30">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-gray-300">
+                      Total Score:
+                    </span>
+                    <span className="text-2xl font-bold text-cyber-blue-400">
+                      {totalScore}/100
+                    </span>
+                  </div>
+                </div>
+
+                {/* Review Input */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                    Review Comments
+                  </label>
+                  <textarea
+                    value={detailedScores.review}
+                    onChange={(e) =>
+                      setDetailedScores({
+                        ...detailedScores,
+                        review: e.target.value,
+                      })
+                    }
+                    rows={4}
+                    className="w-full px-4 py-3 glass-panel border border-cyber-blue-400/30 rounded-xl text-gray-200 focus:border-cyber-blue-400 focus:outline-none transition-all duration-300 bg-transparent resize-none"
+                    placeholder="Enter your review comments here..."
+                  />
+                </div>
+
+                {/* Evaluated Status */}
+                {existingScores && (
+                  <div className="p-4 bg-green-400/10 rounded-xl border border-green-400/30">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                      <span className="font-semibold text-green-400">
+                        Already Evaluated
+                      </span>
+                    </div>
+                    <div className="mt-2 text-sm text-gray-300">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        <span>
+                          Evaluated by: {existingScores.evaluator_name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          Evaluated at:{" "}
+                          {new Date(
+                            existingScores.evaluated_at
+                          ).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleCloseMarksModal}
+                    className="flex-1 px-4 py-3 glass-panel border border-gray-400/30 rounded-xl text-gray-300 font-semibold hover:border-gray-400 transition-all duration-300"
+                    disabled={isSaving}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveMarks}
+                    disabled={!detailedScores.evaluatorName.trim() || isSaving}
+                    className={`flex-1 px-4 py-3 font-semibold rounded-xl transition-all duration-300 ${
+                      !detailedScores.evaluatorName.trim()
+                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                        : "bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white"
+                    }`}
+                  >
+                    {existingScores ? "Update Evaluation" : "Submit Evaluation"}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </motion.div>
         </motion.div>
       )}

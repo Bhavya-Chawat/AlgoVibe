@@ -3,9 +3,19 @@
 import { motion } from "framer-motion";
 import ProblemViewer from "@/components/evaluator/ProblemViewer";
 import SubmissionReview from "@/components/evaluator/SubmissionReview";
-import { FileText, Code, Eye, Users } from "lucide-react";
+import EvaluationStatusBadge from "@/components/evaluator/EvaluationStatusBadge";
+import {
+  FileText,
+  Code,
+  Eye,
+  Users,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Award,
+} from "lucide-react";
 import { useState, useEffect } from "react";
-import { getAllTeams } from "./actions";
+import { getAllTeams, getTeamProblem } from "./actions";
 
 interface Team {
   team_id: number;
@@ -19,6 +29,7 @@ export default function EvaluatorProblemPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTeam, setSelectedTeam] = useState<number | "">("");
   const [error, setError] = useState<string | null>(null);
+  const [problemId, setProblemId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -41,6 +52,40 @@ export default function EvaluatorProblemPage() {
 
     fetchTeams();
   }, []);
+
+  // Fetch problem ID when team is selected
+  useEffect(() => {
+    const fetchProblemId = async () => {
+      if (selectedTeam) {
+        try {
+          const teamId = parseInt(selectedTeam.toString(), 10);
+          const result = await getTeamProblem(teamId);
+
+          if (result.success && result.problem) {
+            // Handle the case where result.problem might be an array
+            const problem = Array.isArray(result.problem)
+              ? result.problem[0] || null
+              : result.problem;
+
+            if (problem && problem.problem_id) {
+              setProblemId(problem.problem_id);
+            } else {
+              setProblemId(null);
+            }
+          } else {
+            setProblemId(null);
+          }
+        } catch (err) {
+          console.error("Error fetching problem ID:", err);
+          setProblemId(null);
+        }
+      } else {
+        setProblemId(null);
+      }
+    };
+
+    fetchProblemId();
+  }, [selectedTeam]);
 
   const selectedTeamData = teams.find((t) => t.team_id === selectedTeam);
 
@@ -149,6 +194,20 @@ export default function EvaluatorProblemPage() {
           transition={{ delay: 0.2 }}
           className="space-y-6"
         >
+          {/* Evaluation Status Badge - Shown above Problem Statement */}
+          {problemId && (
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gradient mb-4 flex items-center gap-2">
+                <Award className="w-6 h-6" />
+                Evaluation Status
+              </h2>
+              <EvaluationStatusBadge
+                teamId={parseInt(selectedTeam.toString(), 10)}
+                problemId={problemId}
+              />
+            </div>
+          )}
+
           {/* Problem Statement */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gradient mb-6 flex items-center gap-2">
