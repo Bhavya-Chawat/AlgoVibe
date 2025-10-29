@@ -7,6 +7,7 @@ import CodeSubmissionBox from "@/components/contest/CodeSubmissionBox";
 import GitHubSubmissionBox from "@/components/contest/GitHubSubmissionBox";
 import DeploymentSubmissionBox from "@/components/contest/DeploymentSubmissionBox";
 import SubmissionHistory from "@/components/contest/SubmissionHistory";
+import ProblemNavigator from "@/components/contest/ProblemNavigator";
 import { motion } from "framer-motion";
 import { submitSubmission, getTeamContestData } from "@/app/actions/contest";
 
@@ -33,10 +34,11 @@ interface ContestPageClientProps {
 }
 
 export default function ContestPageClient({
-  problem,
+  problem: initialProblem,
   initialSubmissions,
   teamId,
 }: ContestPageClientProps) {
+  const [problem, setProblem] = useState<Problem | null>(initialProblem);
   const [submissions, setSubmissions] =
     useState<Submission[]>(initialSubmissions);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,6 +81,10 @@ export default function ContestPageClient({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleProblemChange = (newProblem: Problem) => {
+    setProblem(newProblem);
   };
 
   // Particle configuration for background effect
@@ -124,6 +130,20 @@ export default function ContestPageClient({
       <div className="relative z-10 pt-20">
         <div className="max-w-[1920px] mx-auto px-6 py-8">
           <div className="flex flex-col">
+            {/* Problem Navigator - Only show for testing */}
+            {process.env.NODE_ENV === 'development' && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <ProblemNavigator 
+                  currentProblemId={problem.problem_id} 
+                  onProblemChange={handleProblemChange} 
+                />
+              </motion.div>
+            )}
+
             {/* Full Width Problem Statement */}
             <motion.div
               initial={{ opacity: 0, y: -50 }}
