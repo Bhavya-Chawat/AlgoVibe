@@ -5,14 +5,20 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/modern
 import { Button } from "@/components/ui/modern-ui/src/components/ui/Button";
 
 export default function TimerPage() {
-  const [time, setTime] = useState(0); // Time in seconds
+  const [time, setTime] = useState(30 * 60); // Time in seconds (30 minutes default)
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (isRunning) {
+    if (isRunning && time > 0) {
       intervalRef.current = setInterval(() => {
-        setTime(prevTime => prevTime + 1);
+        setTime(prevTime => {
+          if (prevTime <= 1) {
+            setIsRunning(false);
+            return 0;
+          }
+          return prevTime - 1;
+        });
       }, 1000);
     } else if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -23,7 +29,7 @@ export default function TimerPage() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning]);
+  }, [isRunning, time]);
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -41,12 +47,14 @@ export default function TimerPage() {
   };
 
   const resetTimer = () => {
-    setTime(0);
+    setTime(30 * 60); // Reset to 30 minutes
     setIsRunning(false);
   };
 
   const toggleTimer = () => {
-    setIsRunning(!isRunning);
+    if (time > 0) {
+      setIsRunning(!isRunning);
+    }
   };
 
   return (
@@ -54,20 +62,20 @@ export default function TimerPage() {
       <div className="w-full max-w-4xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            <span className="text-gradient">Stopwatch Timer</span>
+            <span className="text-gradient">Countdown Timer</span>
           </h1>
           <p className="text-gray-400 text-lg">
-            A customizable stopwatch for timing events
+            A customizable countdown timer
           </p>
         </div>
         
         <Card glow className="w-full max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-center text-3xl md:text-4xl">Stopwatch</CardTitle>
+            <CardTitle className="text-center text-3xl md:text-4xl">Countdown</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex justify-center mb-8">
-              <div className="text-6xl md:text-7xl font-mono font-bold text-gradient">
+              <div className={`text-6xl md:text-7xl font-mono font-bold ${time === 0 ? 'text-red-500' : 'text-gradient'}`}>
                 {formatTime(time)}
               </div>
             </div>
@@ -76,8 +84,9 @@ export default function TimerPage() {
               <Button 
                 onClick={toggleTimer}
                 className="px-6 py-3 text-lg"
+                disabled={time === 0}
               >
-                {isRunning ? "Pause" : "Start"}
+                {isRunning ? "Pause" : time === 0 ? "Finished" : "Start"}
               </Button>
               <Button 
                 onClick={resetTimer}
@@ -110,7 +119,7 @@ export default function TimerPage() {
         </Card>
         
         <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>Stopwatch timer with customizable duration controls</p>
+          <p>Countdown timer that counts down to zero</p>
         </div>
       </div>
     </div>
