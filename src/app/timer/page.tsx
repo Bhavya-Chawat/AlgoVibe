@@ -7,7 +7,30 @@ import { Button } from "@/components/ui/modern-ui/src/components/ui/Button";
 export default function TimerPage() {
   const [time, setTime] = useState(30 * 60); // Time in seconds (30 minutes default)
   const [isRunning, setIsRunning] = useState(false);
+  const [glitchText, setGlitchText] = useState("ALGOVIBE");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Glitch effect
+  useEffect(() => {
+    const glitchInterval = setInterval(() => {
+      const chars = "!@#$%^&*(){}[]<>?/~`"
+      const original = "ALGOVIBE"
+      const glitched = original
+        .split("")
+        .map((char) => {
+          if (Math.random() > 0.9 && char !== " ") {
+            return chars[Math.floor(Math.random() * chars.length)]
+          }
+          return char
+        })
+        .join("")
+
+      setGlitchText(glitched)
+      setTimeout(() => setGlitchText(original), 30)
+    }, 1500)
+
+    return () => clearInterval(glitchInterval)
+  }, [])
 
   useEffect(() => {
     if (isRunning && time > 0) {
@@ -62,7 +85,7 @@ export default function TimerPage() {
       <div className="w-full max-w-4xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            <span className="text-gradient">ALGOVIBE</span>
+            <span className="text-gradient text-7xl">{glitchText}</span>
           </h1>
           <p className="text-gray-400 text-lg">
             Time Left
