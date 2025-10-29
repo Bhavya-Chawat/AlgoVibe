@@ -1,68 +1,79 @@
-"use client"
+"use client";
 
-import { useState, FormEvent, useEffect } from "react"
-import Link from "next/link"
-import { MagneticButton } from "@/components/effects/react-effects-lib/src/components/effects/MagneticButton"
-import { Users, Lock, Zap, AlertCircle, X, Eye, EyeOff, Shield } from "lucide-react"
-import { login } from "@/app/actions/auth"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, FormEvent, useEffect } from "react";
+import Link from "next/link";
+import { MagneticButton } from "@/components/effects/react-effects-lib/src/components/effects/MagneticButton";
+import {
+  Users,
+  Lock,
+  Zap,
+  AlertCircle,
+  X,
+  Eye,
+  EyeOff,
+  Shield,
+} from "lucide-react";
+import { login } from "@/app/actions/auth";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function LoginPage() {
-  const [teamName, setTeamName] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [glitchText, setGlitchText] = useState("ALGOVIBE 2025")
+  const [teamName, setTeamName] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [glitchText, setGlitchText] = useState("ALGOVIBE 2025");
 
   // Glitch effect
   useEffect(() => {
     const glitchInterval = setInterval(() => {
-      const chars = "!@#$%^&*(){}[]<>?/~`"
-      const original = "ALGOVIBE 2025"
+      const chars = "!@#$%^&*(){}[]<>?/~`";
+      const original = "ALGOVIBE 2025";
       const glitched = original
         .split("")
         .map((char) => {
           if (Math.random() > 0.9 && char !== " ") {
-            return chars[Math.floor(Math.random() * chars.length)]
+            return chars[Math.floor(Math.random() * chars.length)];
           }
-          return char
+          return char;
         })
-        .join("")
+        .join("");
 
-      setGlitchText(glitched)
-      setTimeout(() => setGlitchText(original), 30)
-    }, 1500)
+      setGlitchText(glitched);
+      setTimeout(() => setGlitchText(original), 30);
+    }, 1500);
 
-    return () => clearInterval(glitchInterval)
-  }, [])
+    return () => clearInterval(glitchInterval);
+  }, []);
 
   // Auto-hide error after 6 seconds
   useEffect(() => {
-    if (!error) return
-    const timer = setTimeout(() => setError(""), 6000)
-    return () => clearTimeout(timer)
-  }, [error])
+    if (!error) return;
+    const timer = setTimeout(() => setError(""), 6000);
+    return () => clearTimeout(timer);
+  }, [error]);
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
-    const result = await login(teamName, password)
+    const result = await login(teamName, password);
 
     if (result && !result.success) {
-      setError(result.message || "Login failed")
-      setIsLoading(false)
+      setError(result.message || "Login failed");
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <>
       <div className="w-full max-w-md">
         {/* Header with glitch text */}
         <div className="text-center mb-8">
-          <h1 className="text-7xl font-bold mb-2 text-gradient">{glitchText}</h1>
+          <h1 className="text-7xl font-bold mb-2 text-gradient">
+            {glitchText}
+          </h1>
           <p className="text-xl text-gray-300 mt-4">Team Login Portal</p>
         </div>
 
@@ -227,88 +238,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-
-      {/* Admin Access - Bottom Left */}
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.7, duration: 0.5 }}
-        className="fixed bottom-6 left-6 z-50"
-      >
-        <Link href="/admin/login">
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            className="group relative"
-            title="Admin Access"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-alert-red/10 to-red-600/10 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
-            
-            <div className="relative p-2.5 bg-hack-navy/60 backdrop-blur-xl border border-alert-red/20 rounded-full transition-all duration-300 group-hover:border-alert-red/50 group-hover:bg-hack-navy/80">
-              <Shield className="w-4 h-4 text-gray-600 group-hover:text-alert-red transition-colors" />
-            </div>
-
-            <motion.div
-              className="absolute inset-0 rounded-full border border-alert-red/0"
-              animate={{
-                borderColor: ["rgba(192,21,47,0)", "rgba(192,21,47,0.3)", "rgba(192,21,47,0)"],
-                scale: [1, 1.3, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          </motion.div>
-        </Link>
-      </motion.div>
-
-      {/* Evaluator Access - Bottom Right */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-        className="fixed bottom-6 right-6 z-50"
-      >
-        <Link href="/evaluator/login">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="group relative"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-warning-orange/20 to-orange-600/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
-            
-            <div className="relative flex items-center gap-2 px-4 py-2.5 bg-hack-navy/80 backdrop-blur-xl border-2 border-warning-orange/30 rounded-full transition-all duration-300 group-hover:border-warning-orange/60 group-hover:bg-hack-navy/90">
-              <Shield className="w-4 h-4 text-warning-orange group-hover:text-orange-400 transition-colors" />
-              <span className="text-sm font-medium text-gray-400 group-hover:text-warning-orange transition-colors">
-                Evaluator Access
-              </span>
-              
-              <motion.span
-                className="text-warning-orange opacity-0 group-hover:opacity-100 transition-opacity"
-                animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                →
-              </motion.span>
-            </div>
-
-            <motion.div
-              className="absolute inset-0 rounded-full border-2 border-warning-orange/0"
-              animate={{
-                borderColor: ["rgba(168,75,47,0)", "rgba(168,75,47,0.3)", "rgba(168,75,47,0)"],
-                scale: [1, 1.1, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-          </motion.div>
-        </Link>
-      </motion.div>
     </>
-  )
+  );
 }
