@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 
 export async function startContest(durationMinutes: number = 90) {
   const adminClient = createAdminClient();
-
+  
   try {
     const startTime = new Date();
     const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
@@ -16,9 +16,10 @@ export async function startContest(durationMinutes: number = 90) {
       is_active: true,
       start_time: startTime.toISOString(),
       end_time: endTime.toISOString(),
-      duration_minutes: durationMinutes,
+      duration_minutes: durationMinutes
     });
 
+    // First try to update existing contest record
     const { data, error } = await adminClient
       .from("contest")
       .update({
@@ -27,9 +28,35 @@ export async function startContest(durationMinutes: number = 90) {
         end_time: endTime.toISOString(),
         duration_minutes: durationMinutes,
       })
-      .eq("contest_id", 2) // Fixed: Use contest_id = 2 instead of 1
+      .eq("contest_id", 3) // Use contest_id = 3 as requested
       .select()
       .single();
+
+    // If no record exists, insert a new one
+    if (error && error.code === "PGRST116") {
+      // No rows found
+      const { data: newData, error: insertError } = await adminClient
+        .from("contest")
+        .insert({
+          contest_id: 3, // Use contest_id = 3 as requested
+          is_active: true,
+          start_time: startTime.toISOString(),
+          end_time: endTime.toISOString(),
+          duration_minutes: durationMinutes,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Failed to insert contest - Supabase error:", insertError);
+        throw new Error(insertError.message);
+      }
+
+      console.log("Contest inserted successfully:", newData);
+      revalidatePath("/admin");
+      revalidatePath("/admin/contest");
+      return { success: true, data: newData };
+    }
 
     if (error) {
       console.error("Failed to start contest - Supabase error:", error);
@@ -50,7 +77,7 @@ export async function startContest(durationMinutes: number = 90) {
 
 export async function stopContest() {
   const adminClient = createAdminClient();
-
+  
   try {
     const endTime = new Date().toISOString();
     console.log("Stopping contest with end time:", endTime);
@@ -62,7 +89,7 @@ export async function stopContest() {
         is_active: false,
         end_time: endTime,
       })
-      .eq("contest_id", 2) // Fixed: Use contest_id = 2 instead of 1
+      .eq("contest_id", 3) // Use contest_id = 3 as requested
       .select()
       .single();
 
@@ -85,19 +112,19 @@ export async function stopContest() {
 
 export async function resetContest() {
   const adminClient = createAdminClient();
-
+  
   try {
     console.log("Resetting contest");
 
     const { data, error } = await adminClient
       .from("contest")
-      .update({
+      .update({ 
         is_active: false,
         start_time: null,
         end_time: null,
-        duration_minutes: 90,
+        duration_minutes: 90
       })
-      .eq("contest_id", 2) // Fixed: Use contest_id = 2 instead of 1
+      .eq("contest_id", 3) // Use contest_id = 3 as requested
       .select()
       .single();
 
@@ -110,7 +137,7 @@ export async function resetContest() {
 
     revalidatePath("/admin");
     revalidatePath("/admin/contest");
-
+    
     return { success: true, data };
   } catch (error) {
     console.error("Failed to reset contest:", error);
@@ -120,13 +147,14 @@ export async function resetContest() {
 
 export async function getContestStatus() {
   const adminClient = createAdminClient();
-
+  
   try {
     console.log("Fetching contest status");
 
     const { data, error } = await adminClient
       .from("contest")
       .select("*")
+      .eq("contest_id", 3) // Use contest_id = 3 as requested
       .single();
 
     if (error) {
@@ -135,7 +163,7 @@ export async function getContestStatus() {
     }
 
     console.log("Contest status fetched successfully:", data);
-
+    
     return { success: true, data };
   } catch (error) {
     console.error("Failed to get contest status:", error);

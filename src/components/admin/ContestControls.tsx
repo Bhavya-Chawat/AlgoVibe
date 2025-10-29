@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 interface ContestControlsProps {
   status: "pre" | "live" | "ended";
   onStart: () => Promise<void>;
+  onStop: () => Promise<void>;  // Add onStop prop
   onReset: () => Promise<void>;
   timeRemaining: number;
   onTimeUpdate: (timeRemaining: number) => void;
@@ -15,9 +16,10 @@ interface ContestControlsProps {
 export default function ContestControls({
   status,
   onStart,
+  onStop,  // Add onStop prop
   onReset,
   timeRemaining: parentTimeRemaining,
-  onTimeUpdate,
+  onTimeUpdate
 }: ContestControlsProps) {
   const [contestStatus, setContestStatus] = useState(status);
   const [timeRemaining, setTimeRemaining] = useState(parentTimeRemaining);
@@ -33,13 +35,13 @@ export default function ContestControls({
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-
+    
     if (contestStatus === "live" && timeRemaining > 0) {
       interval = setInterval(() => {
         const newTime = timeRemaining - 1;
         setTimeRemaining(newTime);
         onTimeUpdate(newTime);
-
+        
         if (newTime <= 0) {
           setContestStatus("ended");
         }
@@ -55,11 +57,8 @@ export default function ContestControls({
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0"
-    )}:${String(secs).padStart(2, "0")}`;
+    
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
   const handleStartContest = () => {
@@ -69,9 +68,10 @@ export default function ContestControls({
     onStart();
   };
 
-  const handleStopContest = () => {
+  const handleStopContest = async () => {
     setContestStatus("ended");
     setTimeRemaining(0);
+    await onStop();  // Call the stop function from props
   };
 
   const handleResetContest = () => {
@@ -203,7 +203,7 @@ export default function ContestControls({
               </p>
             </div>
           </div>
-
+          
           {contestStatus !== "pre" && (
             <div className="text-right">
               <div className="text-3xl font-bold text-[#1cabf2]">
