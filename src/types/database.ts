@@ -53,6 +53,30 @@ export interface Database {
           }
         ];
       };
+      contest: {
+        Row: {
+          contest_id: number;
+          is_active: boolean;
+          start_time: string | null;
+          end_time: string | null;
+          duration_minutes: number;
+        };
+        Insert: {
+          contest_id?: number;
+          is_active?: boolean;
+          start_time?: string | null;
+          end_time?: string | null;
+          duration_minutes?: number;
+        };
+        Update: {
+          contest_id?: number;
+          is_active?: boolean;
+          start_time?: string | null;
+          end_time?: string | null;
+          duration_minutes?: number;
+        };
+        Relationships: [];
+      };
     };
     Views: {};
     Functions: {};
