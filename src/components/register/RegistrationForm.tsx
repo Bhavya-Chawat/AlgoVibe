@@ -124,6 +124,7 @@ export default function RegistrationForm() {
   const [formData, setFormData] =
     useState<RegistrationFormData>(initialFormData);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [showClosedModal, setShowClosedModal] = useState(false);
 
   const validateUrl = (v?: string, pattern?: RegExp) =>
     !v?.trim() ? true : !!pattern?.test(v.trim());
@@ -267,122 +268,10 @@ export default function RegistrationForm() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // Registrations are closed — show modal and do not submit
     e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    const newErrors = validateForm();
-    setErrors(newErrors);
-
-    // Must have Leader + Member 1; Member 2 is optional
-    const m1Provided = anyProvided([
-      formData.member1Name,
-      formData.member1USN,
-      formData.member1Email,
-      formData.member1Section,
-      formData.member1Phone,
-    ]);
-    const m2Provided = anyProvided([
-      formData.member2Name,
-      formData.member2USN,
-      formData.member2Email,
-      formData.member2Section,
-      formData.member2Phone,
-    ]);
-
-    if (!m1Provided) {
-      setIsSubmitting(false);
-      setError("Member 1 is required.");
-      return;
-    }
-
-    // Duplicate email check across all three
-    const emails = [
-      formData.teamLeaderEmail.trim().toLowerCase(),
-      formData.member1Email.trim().toLowerCase(),
-      formData.member2Email.trim().toLowerCase(),
-    ].filter(Boolean);
-    const hasDup = emails.some((e, idx) => e && emails.indexOf(e) !== idx);
-    if (hasDup) {
-      setIsSubmitting(false);
-      setError("Duplicate email addresses found");
-      return;
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setIsSubmitting(false);
-      setError("Please fix the highlighted fields and try again.");
-      return;
-    }
-
-    // Build members
-    const leader: TeamMember = {
-      name: formData.teamLeaderName.trim(),
-      usn: formData.teamLeaderUSN.trim().toUpperCase(),
-      email: formData.teamLeaderEmail.trim().toLowerCase(),
-      section: toSection(formData.teamLeaderSection),
-      phone_number: formData.teamLeaderPhone.trim(),
-      github_profile: formData.teamLeaderGithub?.trim() || undefined,
-      linkedin_profile: formData.teamLeaderLinkedin?.trim() || undefined,
-      role: "Leader",
-    };
-
-    const members: TeamMember[] = [leader];
-
-    // Member 1 (required)
-    members.push({
-      name: formData.member1Name.trim(),
-      usn: formData.member1USN.trim().toUpperCase(),
-      email: formData.member1Email.trim().toLowerCase(),
-      section: toSection(formData.member1Section),
-      phone_number: formData.member1Phone.trim(),
-      github_profile: formData.member1Github?.trim() || undefined,
-      linkedin_profile: formData.member1Linkedin?.trim() || undefined,
-      role: "Member",
-    });
-
-    // Member 2 (optional)
-    if (m2Provided) {
-      members.push({
-        name: formData.member2Name.trim(),
-        usn: formData.member2USN.trim().toUpperCase(),
-        email: formData.member2Email.trim().toLowerCase(),
-        section: toSection(formData.member2Section),
-        phone_number: formData.member2Phone.trim(),
-        github_profile: formData.member2Github?.trim() || undefined,
-        linkedin_profile: formData.member2Linkedin?.trim() || undefined,
-        role: "Member",
-      });
-    }
-
-    if (members.length < 2 || members.length > 3) {
-      setIsSubmitting(false);
-      setError("Team must have 2 to 3 members");
-      return;
-    }
-
-    // Include teamPassword in payload
-    const payload: RegistrationData = {
-      teamName: formData.teamName.trim(),
-      teamPassword: formData.teamPassword.trim(),
-      teamMembers: members,
-    };
-
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (!res.ok)
-        throw new Error(json?.error || "Failed to submit registration");
-      setIsSuccess(true);
-    } catch (err: any) {
-      setError(err?.message || "Failed to submit registration");
-    } finally {
-      setIsSubmitting(false);
-    }
+    setShowClosedModal(true);
+    return;
   };
 
   const handleReset = () => {
@@ -439,417 +328,456 @@ export default function RegistrationForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="glass-panel-strong p-8 md:p-12">
-      {/* Banner error */}
-      {error && (
-        <div
-          role="alert"
-          aria-live="assertive"
-          className="mb-6 p-4 bg-alert-red/10 border border-alert-red/30 rounded-lg text-alert-red text-sm"
-        >
-          {error}
-        </div>
-      )}
-
-      {/* Team Details */}
-      <div className="mb-8">
-        <label
-          htmlFor="teamName"
-          className="block text-sm font-semibold text-gray-300 mb-2"
-        >
-          Team Name <span className="text-alert-red">*</span>
-        </label>
-        <div className="relative">
-          <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-          <input
-            id="teamName"
-            type="text"
-            name="teamName"
-            value={formData.teamName}
-            onChange={handleChange}
-            required
-            placeholder="Enter a unique team name"
-            className="input-cyber pl-11"
-            aria-invalid={!!errors.teamName}
-            aria-errormessage={errors.teamName ? "err-teamName" : undefined}
-          />
-        </div>
-        <InlineError id="err-teamName" message={errors.teamName} />
-      </div>
-
-      {/* Team Password */}
-      <div className="mb-8">
-        <label
-          htmlFor="teamPassword"
-          className="block text-sm font-semibold text-gray-300 mb-2"
-        >
-          Team Password <span className="text-alert-red">*</span>
-        </label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-          <input
-            id="teamPassword"
-            type="password"
-            name="teamPassword"
-            value={formData.teamPassword}
-            onChange={handleChange}
-            required
-            placeholder="Enter a strong password"
-            className="input-cyber pl-11"
-            aria-invalid={!!errors.teamPassword}
-            aria-errormessage={
-              errors.teamPassword ? "err-teamPassword" : undefined
-            }
-          />
-        </div>
-        <InlineError id="err-teamPassword" message={errors.teamPassword} />
-      </div>
-
-      {/* Leader Section */}
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-lg bg-cyber-blue-400/10 border border-cyber-blue-400/30 flex items-center justify-center">
-            <Users className="w-5 h-5 text-cyber-blue-400" />
+    <>
+      <form onSubmit={handleSubmit} className="glass-panel-strong p-8 md:p-12">
+        {/* Banner error */}
+        {error && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mb-6 p-4 bg-alert-red/10 border border-alert-red/30 rounded-lg text-alert-red text-sm"
+          >
+            {error}
           </div>
-          <h2 className="text-2xl font-bold text-white">Team Leader Details</h2>
-        </div>
+        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Name */}
-          <div>
-            <label
-              htmlFor="teamLeaderName"
-              className="block text-sm font-semibold text-gray-300 mb-2"
-            >
-              Full Name <span className="text-alert-red">*</span>
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                id="teamLeaderName"
-                type="text"
-                name="teamLeaderName"
-                value={formData.teamLeaderName}
-                onChange={handleChange}
-                required
-                placeholder="Enter full name"
-                className="input-cyber pl-11"
-                aria-invalid={!!errors.teamLeaderName}
-                aria-errormessage={
-                  errors.teamLeaderName ? "err-teamLeaderName" : undefined
-                }
-              />
-            </div>
-            <InlineError
-              id="err-teamLeaderName"
-              message={errors.teamLeaderName}
+        {/* Team Details */}
+        <div className="mb-8">
+          <label
+            htmlFor="teamName"
+            className="block text-sm font-semibold text-gray-300 mb-2"
+          >
+            Team Name <span className="text-alert-red">*</span>
+          </label>
+          <div className="relative">
+            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <input
+              id="teamName"
+              type="text"
+              name="teamName"
+              value={formData.teamName}
+              onChange={handleChange}
+              required
+              placeholder="Enter a unique team name"
+              className="input-cyber pl-11"
+              aria-invalid={!!errors.teamName}
+              aria-errormessage={errors.teamName ? "err-teamName" : undefined}
             />
           </div>
+          <InlineError id="err-teamName" message={errors.teamName} />
+        </div>
 
-          {/* USN */}
-          <div>
-            <label
-              htmlFor="teamLeaderUSN"
-              className="block text-sm font-semibold text-gray-300 mb-2"
-            >
-              USN <span className="text-alert-red">*</span>
-            </label>
-            <div className="relative">
-              <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                id="teamLeaderUSN"
-                type="text"
-                name="teamLeaderUSN"
-                value={formData.teamLeaderUSN}
-                onChange={handleChange}
-                required
-                placeholder="1RV21CS001"
-                className="input-cyber pl-11"
-                aria-invalid={!!errors.teamLeaderUSN}
-                aria-errormessage={
-                  errors.teamLeaderUSN ? "err-teamLeaderUSN" : undefined
-                }
-              />
-            </div>
-            <InlineError
-              id="err-teamLeaderUSN"
-              message={errors.teamLeaderUSN}
+        {/* Team Password */}
+        <div className="mb-8">
+          <label
+            htmlFor="teamPassword"
+            className="block text-sm font-semibold text-gray-300 mb-2"
+          >
+            Team Password <span className="text-alert-red">*</span>
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <input
+              id="teamPassword"
+              type="password"
+              name="teamPassword"
+              value={formData.teamPassword}
+              onChange={handleChange}
+              required
+              placeholder="Enter a strong password"
+              className="input-cyber pl-11"
+              aria-invalid={!!errors.teamPassword}
+              aria-errormessage={
+                errors.teamPassword ? "err-teamPassword" : undefined
+              }
             />
           </div>
+          <InlineError id="err-teamPassword" message={errors.teamPassword} />
+        </div>
 
-          {/* RVCE Email */}
-          <div>
-            <label
-              htmlFor="teamLeaderEmail"
-              className="block text-sm font-semibold text-gray-300 mb-2"
-            >
-              RVCE Email ID <span className="text-alert-red">*</span>
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                id="teamLeaderEmail"
-                type="email"
-                name="teamLeaderEmail"
-                value={formData.teamLeaderEmail}
-                onChange={handleChange}
-                required
-                placeholder="student@rvce.edu.in"
-                pattern=".+@rvce\.edu\.in"
-                className="input-cyber pl-11"
-                aria-invalid={!!errors.teamLeaderEmail}
-                aria-errormessage={
-                  errors.teamLeaderEmail ? "err-teamLeaderEmail" : undefined
-                }
-              />
+        {/* Leader Section */}
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-cyber-blue-400/10 border border-cyber-blue-400/30 flex items-center justify-center">
+              <Users className="w-5 h-5 text-cyber-blue-400" />
             </div>
-            <InlineError
-              id="err-teamLeaderEmail"
-              message={errors.teamLeaderEmail}
-            />
+            <h2 className="text-2xl font-bold text-white">
+              Team Leader Details
+            </h2>
           </div>
 
-          {/* Section radios */}
-          <div>
-            <span className="block text-sm font-semibold text-gray-300 mb-2">
-              Section <span className="text-alert-red">*</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Name */}
+            <div>
+              <label
+                htmlFor="teamLeaderName"
+                className="block text-sm font-semibold text-gray-300 mb-2"
+              >
+                Full Name <span className="text-alert-red">*</span>
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  id="teamLeaderName"
+                  type="text"
+                  name="teamLeaderName"
+                  value={formData.teamLeaderName}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter full name"
+                  className="input-cyber pl-11"
+                  aria-invalid={!!errors.teamLeaderName}
+                  aria-errormessage={
+                    errors.teamLeaderName ? "err-teamLeaderName" : undefined
+                  }
+                />
+              </div>
+              <InlineError
+                id="err-teamLeaderName"
+                message={errors.teamLeaderName}
+              />
+            </div>
+
+            {/* USN */}
+            <div>
+              <label
+                htmlFor="teamLeaderUSN"
+                className="block text-sm font-semibold text-gray-300 mb-2"
+              >
+                USN <span className="text-alert-red">*</span>
+              </label>
+              <div className="relative">
+                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  id="teamLeaderUSN"
+                  type="text"
+                  name="teamLeaderUSN"
+                  value={formData.teamLeaderUSN}
+                  onChange={handleChange}
+                  required
+                  placeholder="1RV21CS001"
+                  className="input-cyber pl-11"
+                  aria-invalid={!!errors.teamLeaderUSN}
+                  aria-errormessage={
+                    errors.teamLeaderUSN ? "err-teamLeaderUSN" : undefined
+                  }
+                />
+              </div>
+              <InlineError
+                id="err-teamLeaderUSN"
+                message={errors.teamLeaderUSN}
+              />
+            </div>
+
+            {/* RVCE Email */}
+            <div>
+              <label
+                htmlFor="teamLeaderEmail"
+                className="block text-sm font-semibold text-gray-300 mb-2"
+              >
+                RVCE Email ID <span className="text-alert-red">*</span>
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  id="teamLeaderEmail"
+                  type="email"
+                  name="teamLeaderEmail"
+                  value={formData.teamLeaderEmail}
+                  onChange={handleChange}
+                  required
+                  placeholder="student@rvce.edu.in"
+                  pattern=".+@rvce\.edu\.in"
+                  className="input-cyber pl-11"
+                  aria-invalid={!!errors.teamLeaderEmail}
+                  aria-errormessage={
+                    errors.teamLeaderEmail ? "err-teamLeaderEmail" : undefined
+                  }
+                />
+              </div>
+              <InlineError
+                id="err-teamLeaderEmail"
+                message={errors.teamLeaderEmail}
+              />
+            </div>
+
+            {/* Section radios */}
+            <div>
+              <span className="block text-sm font-semibold text-gray-300 mb-2">
+                Section <span className="text-alert-red">*</span>
+              </span>
+              <div className="flex flex-wrap items-center gap-6">
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="teamLeaderSection"
+                    value="A"
+                    checked={formData.teamLeaderSection === "A"}
+                    onChange={handleChange}
+                    required
+                  />
+                  <span className="text-gray-300">A</span>
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="teamLeaderSection"
+                    value="B"
+                    checked={formData.teamLeaderSection === "B"}
+                    onChange={handleChange}
+                    required
+                  />
+                  <span className="text-gray-300">B</span>
+                </label>
+              </div>
+              <InlineError
+                id="err-teamLeaderSection"
+                message={errors.teamLeaderSection}
+              />
+            </div>
+
+            {/* Phone (required) */}
+            <div>
+              <label
+                htmlFor="teamLeaderPhone"
+                className="block text-sm font-semibold text-gray-300 mb-2"
+              >
+                Phone <span className="text-alert-red">*</span>
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  id="teamLeaderPhone"
+                  type="tel"
+                  name="teamLeaderPhone"
+                  value={formData.teamLeaderPhone}
+                  onChange={handleChange}
+                  required
+                  placeholder="10-digit number"
+                  className="input-cyber pl-11"
+                  aria-invalid={!!errors.teamLeaderPhone}
+                  aria-errormessage={
+                    errors.teamLeaderPhone ? "err-teamLeaderPhone" : undefined
+                  }
+                />
+              </div>
+              <InlineError
+                id="err-teamLeaderPhone"
+                message={errors.teamLeaderPhone}
+              />
+            </div>
+
+            {/* GitHub (not required) */}
+            <div>
+              <label
+                htmlFor="teamLeaderGithub"
+                className="block text-sm font-semibold text-gray-300 mb-2"
+              >
+                GitHub
+              </label>
+              <div className="relative">
+                <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  id="teamLeaderGithub"
+                  type="url"
+                  name="teamLeaderGithub"
+                  value={formData.teamLeaderGithub}
+                  onChange={handleChange}
+                  placeholder="https://github.com/username"
+                  className="input-cyber pl-11"
+                  aria-invalid={!!errors.teamLeaderGithub}
+                  aria-errormessage={
+                    errors.teamLeaderGithub ? "err-teamLeaderGithub" : undefined
+                  }
+                />
+              </div>
+              <InlineError
+                id="err-teamLeaderGithub"
+                message={errors.teamLeaderGithub}
+              />
+            </div>
+
+            {/* LinkedIn (not required) */}
+            <div className="md:col-span-2">
+              <label
+                htmlFor="teamLeaderLinkedin"
+                className="block text-sm font-semibold text-gray-300 mb-2"
+              >
+                LinkedIn
+              </label>
+              <div className="relative">
+                <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  id="teamLeaderLinkedin"
+                  type="url"
+                  name="teamLeaderLinkedin"
+                  value={formData.teamLeaderLinkedin}
+                  onChange={handleChange}
+                  placeholder="https://linkedin.com/in/username"
+                  className="input-cyber pl-11"
+                  aria-invalid={!!errors.teamLeaderLinkedin}
+                  aria-errormessage={
+                    errors.teamLeaderLinkedin
+                      ? "err-teamLeaderLinkedin"
+                      : undefined
+                  }
+                />
+              </div>
+              <InlineError
+                id="err-teamLeaderLinkedin"
+                message={errors.teamLeaderLinkedin}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="relative my-10">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-white/10" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="px-4 text-sm text-gray-500 glass-panel py-2">
+              Team Members (Member 1 required, Member 2 optional)
             </span>
-            <div className="flex flex-wrap items-center gap-6">
-              <label className="inline-flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="teamLeaderSection"
-                  value="A"
-                  checked={formData.teamLeaderSection === "A"}
-                  onChange={handleChange}
-                  required
-                />
-                <span className="text-gray-300">A</span>
-              </label>
-              <label className="inline-flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="teamLeaderSection"
-                  value="B"
-                  checked={formData.teamLeaderSection === "B"}
-                  onChange={handleChange}
-                  required
-                />
-                <span className="text-gray-300">B</span>
-              </label>
-            </div>
-            <InlineError
-              id="err-teamLeaderSection"
-              message={errors.teamLeaderSection}
-            />
-          </div>
-
-          {/* Phone (required) */}
-          <div>
-            <label
-              htmlFor="teamLeaderPhone"
-              className="block text-sm font-semibold text-gray-300 mb-2"
-            >
-              Phone <span className="text-alert-red">*</span>
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                id="teamLeaderPhone"
-                type="tel"
-                name="teamLeaderPhone"
-                value={formData.teamLeaderPhone}
-                onChange={handleChange}
-                required
-                placeholder="10-digit number"
-                className="input-cyber pl-11"
-                aria-invalid={!!errors.teamLeaderPhone}
-                aria-errormessage={
-                  errors.teamLeaderPhone ? "err-teamLeaderPhone" : undefined
-                }
-              />
-            </div>
-            <InlineError
-              id="err-teamLeaderPhone"
-              message={errors.teamLeaderPhone}
-            />
-          </div>
-
-          {/* GitHub (not required) */}
-          <div>
-            <label
-              htmlFor="teamLeaderGithub"
-              className="block text-sm font-semibold text-gray-300 mb-2"
-            >
-              GitHub
-            </label>
-            <div className="relative">
-              <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                id="teamLeaderGithub"
-                type="url"
-                name="teamLeaderGithub"
-                value={formData.teamLeaderGithub}
-                onChange={handleChange}
-                placeholder="https://github.com/username"
-                className="input-cyber pl-11"
-                aria-invalid={!!errors.teamLeaderGithub}
-                aria-errormessage={
-                  errors.teamLeaderGithub ? "err-teamLeaderGithub" : undefined
-                }
-              />
-            </div>
-            <InlineError
-              id="err-teamLeaderGithub"
-              message={errors.teamLeaderGithub}
-            />
-          </div>
-
-          {/* LinkedIn (not required) */}
-          <div className="md:col-span-2">
-            <label
-              htmlFor="teamLeaderLinkedin"
-              className="block text-sm font-semibold text-gray-300 mb-2"
-            >
-              LinkedIn
-            </label>
-            <div className="relative">
-              <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                id="teamLeaderLinkedin"
-                type="url"
-                name="teamLeaderLinkedin"
-                value={formData.teamLeaderLinkedin}
-                onChange={handleChange}
-                placeholder="https://linkedin.com/in/username"
-                className="input-cyber pl-11"
-                aria-invalid={!!errors.teamLeaderLinkedin}
-                aria-errormessage={
-                  errors.teamLeaderLinkedin
-                    ? "err-teamLeaderLinkedin"
-                    : undefined
-                }
-              />
-            </div>
-            <InlineError
-              id="err-teamLeaderLinkedin"
-              message={errors.teamLeaderLinkedin}
-            />
           </div>
         </div>
-      </div>
 
-      {/* Divider */}
-      <div className="relative my-10">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-white/10" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="px-4 text-sm text-gray-500 glass-panel py-2">
-            Team Members (Member 1 required, Member 2 optional)
-          </span>
-        </div>
-      </div>
+        {/* Member 1 (required star on all core fields, not on GitHub/LinkedIn) */}
+        <TeamMemberFields
+          memberNumber={1}
+          formData={{
+            name: formData.member1Name,
+            usn: formData.member1USN,
+            email: formData.member1Email,
+            section: formData.member1Section,
+            phone: formData.member1Phone,
+            github: formData.member1Github,
+            linkedin: formData.member1Linkedin,
+          }}
+          requiredFields={["name", "usn", "email", "section", "phone"]}
+          onChange={(field, value) => {
+            const suffix = fieldToSuffix(field);
+            const key = `member1${suffix}` as keyof RegistrationFormData;
+            setFormData((prev) => ({ ...prev, [key]: value }));
+            if (errors[key]) {
+              const next = { ...errors };
+              delete next[key];
+              setErrors(next);
+            }
+            if (error) setError(null);
+          }}
+        />
+        {m1Errors.length > 0 && (
+          <div
+            role="alert"
+            className="mt-3 p-3 bg-alert-red/10 border border-alert-red/30 rounded text-alert-red text-sm"
+          >
+            Please complete Member 1 details.
+          </div>
+        )}
 
-      {/* Member 1 (required star on all core fields, not on GitHub/LinkedIn) */}
-      <TeamMemberFields
-        memberNumber={1}
-        formData={{
-          name: formData.member1Name,
-          usn: formData.member1USN,
-          email: formData.member1Email,
-          section: formData.member1Section,
-          phone: formData.member1Phone,
-          github: formData.member1Github,
-          linkedin: formData.member1Linkedin,
-        }}
-        requiredFields={["name", "usn", "email", "section", "phone"]}
-        onChange={(field, value) => {
-          const suffix = fieldToSuffix(field);
-          const key = `member1${suffix}` as keyof RegistrationFormData;
-          setFormData((prev) => ({ ...prev, [key]: value }));
-          if (errors[key]) {
-            const next = { ...errors };
-            delete next[key];
-            setErrors(next);
-          }
-          if (error) setError(null);
-        }}
-      />
-      {m1Errors.length > 0 && (
+        {/* Divider */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-8" />
+
+        {/* Member 2 (optional) */}
+        <TeamMemberFields
+          memberNumber={2}
+          formData={{
+            name: formData.member2Name,
+            usn: formData.member2USN,
+            email: formData.member2Email,
+            section: formData.member2Section,
+            phone: formData.member2Phone,
+            github: formData.member2Github,
+            linkedin: formData.member2Linkedin,
+          }}
+          requiredFields={[]}
+          onChange={(field, value) => {
+            const suffix = fieldToSuffix(field);
+            const key = `member2${suffix}` as keyof RegistrationFormData;
+            setFormData((prev) => ({ ...prev, [key]: value }));
+            if (errors[key]) {
+              const next = { ...errors };
+              delete next[key];
+              setErrors(next);
+            }
+            if (error) setError(null);
+          }}
+        />
+        {m2Errors.length > 0 && (
+          <div
+            role="alert"
+            className="mt-3 p-3 bg-alert-red/10 border border-alert-red/30 rounded text-alert-red text-sm"
+          >
+            Please complete Member 2 details.
+          </div>
+        )}
+
+        {/* Submit / Reset */}
+        <div className="mt-10 flex flex-col sm:flex-row gap-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 px-8 py-4 bg-cyber-blue-400 hover:bg-cyber-blue-500 disabled:bg-gray-600 text-white font-bold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-cyber-blue-400/50 disabled:scale-100 disabled:shadow-none flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Registering...
+              </>
+            ) : (
+              <>
+                <Users className="w-5 h-5" />
+                Complete Registration
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            className="px-8 py-4 border-2 border-white/20 text-gray-300 font-bold rounded-lg hover:bg-white/5 hover:border-white/30 transition-all duration-300"
+            onClick={handleReset}
+          >
+            Reset
+          </button>
+        </div>
+      </form>
+      {/* Registrations closed modal */}
+      {showClosedModal && (
         <div
-          role="alert"
-          className="mt-3 p-3 bg-alert-red/10 border border-alert-red/30 rounded text-alert-red text-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reg-closed-title"
+          className="fixed inset-0 z-50 flex items-center justify-center"
         >
-          Please complete Member 1 details.
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setShowClosedModal(false)}
+          />
+          <div className="relative z-10 w-full max-w-lg mx-4 bg-neutral-900 border border-white/10 rounded-lg p-6 shadow-xl">
+            <h3
+              id="reg-closed-title"
+              className="text-lg font-bold text-white mb-3"
+            >
+              Registrations Closed
+            </h3>
+            <p className="text-sm text-gray-300 mb-6">
+              Registrations are currently closed. Please contact the
+              administrator for assistance.
+            </p>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="px-4 py-2 bg-cyber-blue-400 hover:bg-cyber-blue-500 text-white rounded-md font-semibold"
+                onClick={() => setShowClosedModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
-
-      {/* Divider */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-8" />
-
-      {/* Member 2 (optional) */}
-      <TeamMemberFields
-        memberNumber={2}
-        formData={{
-          name: formData.member2Name,
-          usn: formData.member2USN,
-          email: formData.member2Email,
-          section: formData.member2Section,
-          phone: formData.member2Phone,
-          github: formData.member2Github,
-          linkedin: formData.member2Linkedin,
-        }}
-        requiredFields={[]}
-        onChange={(field, value) => {
-          const suffix = fieldToSuffix(field);
-          const key = `member2${suffix}` as keyof RegistrationFormData;
-          setFormData((prev) => ({ ...prev, [key]: value }));
-          if (errors[key]) {
-            const next = { ...errors };
-            delete next[key];
-            setErrors(next);
-          }
-          if (error) setError(null);
-        }}
-      />
-      {m2Errors.length > 0 && (
-        <div
-          role="alert"
-          className="mt-3 p-3 bg-alert-red/10 border border-alert-red/30 rounded text-alert-red text-sm"
-        >
-          Please complete Member 2 details.
-        </div>
-      )}
-
-      {/* Submit / Reset */}
-      <div className="mt-10 flex flex-col sm:flex-row gap-4">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-1 px-8 py-4 bg-cyber-blue-400 hover:bg-cyber-blue-500 disabled:bg-gray-600 text-white font-bold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-cyber-blue-400/50 disabled:scale-100 disabled:shadow-none flex items-center justify-center gap-2"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Registering...
-            </>
-          ) : (
-            <>
-              <Users className="w-5 h-5" />
-              Complete Registration
-            </>
-          )}
-        </button>
-
-        <button
-          type="button"
-          className="px-8 py-4 border-2 border-white/20 text-gray-300 font-bold rounded-lg hover:bg-white/5 hover:border-white/30 transition-all duration-300"
-          onClick={handleReset}
-        >
-          Reset
-        </button>
-      </div>
-    </form>
+    </>
   );
 }

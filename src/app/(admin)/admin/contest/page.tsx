@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Play, RotateCcw } from "lucide-react";
 import ContestControls from "@/components/admin/ContestControls";
 import LiveStats from "@/components/admin/LiveStats";
-import { getContestStatus, startContest, resetContest } from "../actions";
+import { getContestStatus, startContest, resetContest, stopContest } from "../actions";
 
 // Add type for contest status
 type ContestStatus = "pre" | "live" | "ended";
@@ -28,23 +28,20 @@ export default function AdminContestPage() {
       if (result.success) {
         const contest = result.data;
         setContestStatus(contest.is_active ? "live" : "pre");
-
+        
         if (contest.start_time) {
           setStartTime(new Date(contest.start_time));
         }
-
+        
         if (contest.end_time) {
           setEndTime(new Date(contest.end_time));
           // Calculate remaining time
           const now = new Date();
           const end = new Date(contest.end_time);
           if (end > now && contest.is_active) {
-            const remaining = Math.floor(
-              (end.getTime() - now.getTime()) / 1000
-            );
+            const remaining = Math.floor((end.getTime() - now.getTime()) / 1000);
             setTimeRemaining(remaining);
           } else {
-            // Contest has ended or is not active
             setContestStatus("ended");
             setTimeRemaining(0);
           }
@@ -81,6 +78,23 @@ export default function AdminContestPage() {
     }
   };
 
+  const handleStopContest = async () => {
+    try {
+      const result = await stopContest();
+      if (result.success) {
+        setContestStatus("ended");
+        setTimeRemaining(0);
+        setEndTime(new Date());
+        // Refresh the status to ensure sync with database
+        setTimeout(fetchContestStatus, 500);
+      } else {
+        console.error("Failed to stop contest:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to stop contest:", error);
+    }
+  };
+
   const handleResetContest = async () => {
     // Remove the confirmation dialog
     try {
@@ -102,7 +116,7 @@ export default function AdminContestPage() {
 
   const handleTimeUpdate = (newTimeRemaining: number) => {
     setTimeRemaining(newTimeRemaining);
-
+    
     // If time is up, update contest status
     if (newTimeRemaining <= 0) {
       setContestStatus("ended");
@@ -115,10 +129,7 @@ export default function AdminContestPage() {
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(
-      2,
-      "0"
-    )}:${String(secs).padStart(2, "0")}`;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
   const getStatusConfig = () => {
@@ -156,7 +167,9 @@ export default function AdminContestPage() {
           <h1 className="text-4xl font-bold text-gradient mb-2">
             Contest Controls
           </h1>
-          <p className="text-gray-400">Loading contest status...</p>
+          <p className="text-gray-400">
+            Loading contest status...
+          </p>
         </div>
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-matrix-green"></div>
@@ -172,13 +185,16 @@ export default function AdminContestPage() {
         <h1 className="text-4xl font-bold text-gradient mb-2">
           Contest Controls
         </h1>
-        <p className="text-gray-400">Start or reset the contest</p>
+        <p className="text-gray-400">
+          Start or reset the contest
+        </p>
       </div>
 
       {/* Contest Controls Component */}
       <ContestControls
         status={contestStatus}
         onStart={handleStartContest}
+        onStop={handleStopContest}  // Add onStop prop
         onReset={handleResetContest}
         timeRemaining={timeRemaining}
         onTimeUpdate={handleTimeUpdate}
