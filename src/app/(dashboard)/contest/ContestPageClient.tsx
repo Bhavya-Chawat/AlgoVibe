@@ -137,9 +137,9 @@ export default function ContestPageClient({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <ProblemNavigator 
-                  currentProblemId={problem.problem_id} 
-                  onProblemChange={handleProblemChange} 
+                <ProblemNavigator
+                  currentProblemId={problem.problem_id}
+                  onProblemChange={handleProblemChange}
                 />
               </motion.div>
             )}
@@ -204,7 +204,7 @@ export default function ContestPageClient({
                     type: sub.submission_type,
                     link:
                       sub.submission_type === "github" ||
-                      sub.submission_type === "deployment"
+                        sub.submission_type === "deployment"
                         ? sub.submission || ""
                         : "",
                     submission: sub.submission || "",
