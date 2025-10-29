@@ -62,16 +62,16 @@ export default function TimerPage() {
       <div className="w-full max-w-4xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            <span className="text-gradient">Countdown Timer</span>
+            <span className="text-gradient">ALGOVIBE</span>
           </h1>
           <p className="text-gray-400 text-lg">
-            A customizable countdown timer
+            Time Left
           </p>
         </div>
         
         <Card glow className="w-full max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-center text-3xl md:text-4xl">Countdown</CardTitle>
+            <CardTitle className="text-center text-3xl md:text-4xl">TIME LEFT</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex justify-center mb-8">
