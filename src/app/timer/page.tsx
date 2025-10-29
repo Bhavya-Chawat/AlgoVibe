@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/modern-ui/src/components/ui/Button";
 import Beams from "@/components/background/Beams";
 
 export default function TimerPage() {
-  const [time, setTime] = useState(30 * 60); // Time in seconds (30 minutes default)
+  const [time, setTime] = useState(90 * 60); // Time in seconds (90 minutes default)
   const [isRunning, setIsRunning] = useState(false);
   const [glitchText, setGlitchText] = useState("ALGOVIBE");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -71,7 +71,7 @@ export default function TimerPage() {
   };
 
   const resetTimer = () => {
-    setTime(30 * 60); // Reset to 30 minutes
+    setTime(90 * 60); // Reset to 90 minutes
     setIsRunning(false);
   };
 
