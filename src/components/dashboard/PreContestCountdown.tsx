@@ -12,9 +12,9 @@ const PreContestCountdown = () => {
     });
 
     useEffect(() => {
-        // Set the target date: October 30, 2025 at 2:30 PM IST
+        // Set the target date: August 20, 2025 at 12:00 PM IST
         // IST is UTC+5:30
-        const targetDate = new Date("2025-10-30T14:30:00+05:30");
+        const targetDate = new Date("2025-08-20T12:00:00+05:30");
 
         const calculateTimeLeft = () => {
             const now = new Date();
@@ -65,7 +65,7 @@ const PreContestCountdown = () => {
                 </div>
                 <div className="mt-12 text-center">
                     <p className="font-semibold text-xl md:text-2xl">
-                        <span className="text-gradient">October 30, 2025 at 2:30 PM IST</span>
+                        <span className="text-gradient">August 20, 2025 at 12:00 PM IST</span>
                     </p>
                 </div>
             </CardContent>
