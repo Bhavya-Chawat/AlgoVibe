@@ -66,7 +66,7 @@ export default function FormSuccess({
               transition={{ delay: 0.3 }}
               className="text-gray-400"
             >
-              Your team has been successfully registered for AlgoVibe 2025.
+              Your team has been successfully registered for AlgoVibe 2026.
               Check your email for confirmation and further details.
             </motion.p>
           </div>

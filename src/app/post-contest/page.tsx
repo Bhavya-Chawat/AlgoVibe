@@ -81,8 +81,8 @@ export default function PostContestPage() {
   const handleShareResults = () => {
     if (navigator.share) {
       navigator.share({
-        title: "AlgoVibe 2025 - Contest Results",
-        text: `I just completed AlgoVibe 2025! Ranked #${teamData.rank} out of ${teamData.totalTeams} teams with a score of ${teamData.score}!`,
+        title: "AlgoVibe 2026 - Contest Results",
+        text: `I just completed AlgoVibe 2026! Ranked #${teamData.rank} out of ${teamData.totalTeams} teams with a score of ${teamData.score}!`,
         url: window.location.href,
       });
     } else {
@@ -147,7 +147,7 @@ export default function PostContestPage() {
           <p className="text-xl text-gray-300 mb-3">
             Thank you for participating in
           </p>
-          <h2 className="text-3xl font-bold text-white mb-4">AlgoVibe 2025</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">AlgoVibe 2026</h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
             Your submissions have been recorded. Results are now available
             below.
@@ -608,7 +608,7 @@ export default function PostContestPage() {
             Thank You for Participating
           </h3>
           <p className="text-gray-400 max-w-2xl mx-auto mb-8">
-            Your skills and dedication made AlgoVibe 2025 a success. Stay
+            Your skills and dedication made AlgoVibe 2026 a success. Stay
             connected for future competitions and opportunities.
           </p>
 

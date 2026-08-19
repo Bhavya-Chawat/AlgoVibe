@@ -30,16 +30,14 @@ export default function Footer() {
 
             {/* Main Tagline */}
             <p className="text-gray-200 text-lg font-semibold mb-2">
-              Visualize the Logic. Code the Vibe.
+              Build the Future. Code the Vibe.
             </p>
             <p className="text-gray-400 mb-6 max-w-xl">
-              An exclusive algorithmic visualization challenge by the ISE
-              Department.
+              An exclusive hackathon competition by the ISE Department.
             </p>
 
-            {/* Optional: brief description */}
             <p className="text-gray-500 text-sm max-w-md">
-              AlgoVibe 2025 brings algorithms and creativity together at RVCE.
+              AlgoVibe 2026 brings innovation, web development, and creativity together at RVCE.
             </p>
           </div>
 

@@ -73,7 +73,7 @@ export default function EvaluatorLoginPage() {
             </div>
           </div>
           <h1 className="text-5xl font-bold mb-2 text-gradient-orange">{glitchText}</h1>
-          <p className="text-xl text-gray-300 mt-4">AlgoVibe 2025 - Judge Portal</p>
+          <p className="text-xl text-gray-300 mt-4">AlgoVibe 2026 - Judge Portal</p>
         </div>
 
         {/* Error Display */}

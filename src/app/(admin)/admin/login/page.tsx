@@ -76,7 +76,7 @@ export default function AdminLoginPage() {
             {glitchText}
           </h1>
           <p className="text-xl text-gray-300 mt-4">
-            AlgoVibe 2025 - Restricted Access
+            AlgoVibe 2026 - Restricted Access
           </p>
         </div>
 

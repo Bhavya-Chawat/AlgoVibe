@@ -297,7 +297,7 @@ export default function ContestEndedPage() {
           </h1>
 
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Thank you for participating in AlgoVibe 2025
+            Thank you for participating in AlgoVibe 2026
           </p>
         </div>
 
@@ -333,7 +333,7 @@ export default function ContestEndedPage() {
           </h2>
 
           <p className="text-gray-300 text-lg mb-6 max-w-3xl mx-auto">
-            Congratulations on completing AlgoVibe 2025! We've received all your
+            Congratulations on completing AlgoVibe 2026! We've received all your
             submissions and appreciate the time and effort you put into this
             competition.
           </p>
@@ -788,7 +788,7 @@ export default function ContestEndedPage() {
             Until Next Time
           </h3>
           <p className="text-gray-400 max-w-2xl mx-auto mb-8">
-            Thank you for being part of AlgoVibe 2025. We hope you enjoyed the
+            Thank you for being part of AlgoVibe 2026. We hope you enjoyed the
             challenge and learned something new. Stay connected for future
             competitions and opportunities!
           </p>

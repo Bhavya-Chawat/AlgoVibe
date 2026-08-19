@@ -108,7 +108,7 @@ export default function AdminDashboard() {
             Admin Dashboard
           </h1>
           <p className="text-gray-400">
-            Monitor and manage AlgoVibe 2025 contest in real-time
+            Monitor and manage AlgoVibe 2026 contest in real-time
           </p>
         </div>
 

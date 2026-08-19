@@ -277,7 +277,13 @@ export async function getUser() {
   } = await supabase.auth.getUser();
 
   if (error) {
-    console.error("[AUTH] Get user error:", error);
+    // AuthSessionMissingError is expected for unauthenticated visitors
+    if (
+      error.name !== "AuthSessionMissingError" &&
+      !error.message?.includes("Auth session missing")
+    ) {
+      console.error("[AUTH] Get user error:", error);
+    }
     return null;
   }
 

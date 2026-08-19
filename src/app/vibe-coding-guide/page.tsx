@@ -45,7 +45,7 @@ const Header: React.FC = () => {
             <span className="text-3xl font-bold">
               <span className="text-gradient">ALGO</span>
               <span className="text-white">VIBE</span>
-              <span className="text-cyber-blue-400 ml-2 text-xl">2025</span>
+              <span className="text-cyber-blue-400 ml-2 text-xl">2026</span>
             </span>
           </div>
         </div>
@@ -141,7 +141,7 @@ const VibeCodingGuide: React.FC = () => {
           <div className="glass-panel-strong p-8 mb-12">
             <div className="text-center mb-10">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gradient">
-                DSA Vibe Coding - Technical Reference
+                AlgoVibe Hackathon - Technical Reference
               </h1>
               <p className="text-xl text-gray-300">
                 Actually useful stuff you'll need during the hackathon

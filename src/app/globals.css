@@ -11,6 +11,7 @@
     --electric-cyan: #00fff7;
     --matrix-green: #00ff41;
     --alert-red: #ff0055;
+    --radius: 0.625rem;
   }
 
   html {
@@ -18,11 +19,12 @@
   }
 
   * {
-    @apply border-glass-border;
+    border-color: rgba(255, 255, 255, 0.1);
   }
 
   body {
-    @apply bg-hack-black text-white;
+    background-color: #000000;
+    color: #ffffff;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
@@ -41,6 +43,43 @@
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-neon-blue;
+  }
+  .theme {
+    --font-heading: var(--font-sans);
+    --font-sans: var(--font-sans);
+  }
+  .dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
   }
 }
 
@@ -166,7 +205,7 @@
       left: 100%;
     }
   }
-  
+
   /* Glitch effect for headings */
   @keyframes glitch-1 {
     0%, 100% { transform: translate(0); }
@@ -180,7 +219,7 @@
     80% { transform: translate(2px, -2px) skew(-4deg); }
     90% { transform: translate(-3px, 1px) skew(3deg); }
   }
-  
+
   @keyframes glitch-2 {
     0%, 100% { transform: translate(0); }
     5% { transform: translate(1px, -1px) skew(2deg); }
@@ -309,13 +348,75 @@
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(10, 15, 30, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(28, 171, 242, 0.15);
 }
 
 .glass-panel-strong {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 15, 30, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(28, 171, 242, 0.25);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.7);
+}
+
+/* Lenis Smooth Scroll Rules */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* Futuristic Glow & Floating Keyframes */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(28, 171, 242, 0.3); }
+  50% { border-color: rgba(0, 217, 255, 0.8); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 4s ease-in-out infinite;
+}
+
+.animate-border-glow {
+  animation: border-glow 3s linear infinite;
+}
+
+.glow-card {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 217, 255, 0.5);
+  box-shadow: 0 12px 40px -10px rgba(28, 171, 242, 0.3), 0 0 20px rgba(0, 255, 247, 0.2);
 }

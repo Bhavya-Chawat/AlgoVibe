@@ -80,8 +80,8 @@ export async function sendRegistrationEmailGmail(
     .join("\n");
 
   // Event metadata (static for this edition)
-  const eventName = "AlgoVibe 2025";
-  const eventDate = "Wednesday, 20 August 2025";
+  const eventName = "AlgoVibe 2026";
+  const eventDate = "Wednesday, 20 August 2026";
   const eventTagline = "Code. Create. Compete.";
   const brandColor = "#2563eb"; // a clean blue accent
 
@@ -216,9 +216,9 @@ export async function sendRegistrationEmailGmail(
   ].join("\n");
 
   await transporter.sendMail({
-    from: `AlgoVibe 2025 <${from}>`,
+    from: `AlgoVibe 2026 <${from}>`,
     to,
-    subject: `🎉 ${eventName} — Registration Confirmed for "${teamName}" (📅 20 Aug 2025)`,
+    subject: `🎉 ${eventName} — Registration Confirmed for "${teamName}" (📅 20 Aug 2026)`,
     html,
     text,
   });

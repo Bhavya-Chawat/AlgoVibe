@@ -22,13 +22,13 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [glitchText, setGlitchText] = useState("ALGOVIBE 2025");
+  const [glitchText, setGlitchText] = useState("ALGOVIBE 2026");
 
   // Glitch effect
   useEffect(() => {
     const glitchInterval = setInterval(() => {
       const chars = "!@#$%^&*(){}[]<>?/~`";
-      const original = "ALGOVIBE 2025";
+      const original = "ALGOVIBE 2026";
       const glitched = original
         .split("")
         .map((char) => {
