@@ -28,7 +28,7 @@
     "marked": "^16.4.1",
     "motion": "^12.43.0",
     "next": "^14.2.33",
-    "next-mdx-remote": "^5.0.0",
+    "next-mdx-remote": "^6.0.0",
     "nodemailer": "^7.0.9",
     "ogl": "^1.0.11",
     "openai": "^6.7.0",
